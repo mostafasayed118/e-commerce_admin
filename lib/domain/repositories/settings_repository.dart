@@ -1,4 +1,5 @@
 import '../../core/entities/shipping_info.dart';
+import '../../core/entities/ui_prefs.dart';
 import '../../core/error/result.dart';
 
 /// Read/write access to local user settings: the customer [ShippingInfo]
@@ -19,6 +20,21 @@ abstract interface class SettingsRepository {
   /// itself carries no timestamp — it lives on the DB row). Upserts the
   /// single row (id = 1) — never duplicates.
   Future<Result<void>> updateProfile(ShippingInfo profile);
+
+  // --- UI preferences -----------------------------------------------------
+
+  /// Reactive preferences; emits an (empty) [UiPrefs] even before any save.
+  Stream<UiPrefs> watchUiPrefs();
+
+  Future<Result<UiPrefs>> getUiPrefs();
+
+  /// Upserts the single prefs row. Fields not passed keep their stored
+  /// value (absent companion columns merge on conflict) — theme and locale
+  /// share one row with no read-modify-write.
+  Future<Result<void>> updateUiPrefs({
+    String? themeModeCode,
+    String? localeCode,
+  });
 
   // --- Admin PIN gate -----------------------------------------------------
 

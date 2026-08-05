@@ -1,9 +1,25 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/data/database/app_database.dart';
+
+/// A database pinned to schema v1, so reopening the real (v2) database on
+/// the same file exercises the on-device upgrade path (the release APK on a
+/// device ships with a v1 database).
+class _V1Database extends AppDatabase {
+  // The implicit super constructor (AppDatabase()) takes no parameters, so
+  // the executor must be forwarded explicitly — a super parameter would
+  // resolve to the unnamed constructor and fail to compile.
+  // ignore: use_super_parameters
+  _V1Database.forTesting(QueryExecutor executor) : super.forTesting(executor);
+
+  @override
+  int get schemaVersion => 1;
+}
 
 void main() {
   late AppDatabase db;
@@ -16,7 +32,45 @@ void main() {
     await db.close();
   });
 
-  test('opens with all nine tables empty', () async {
+  test('migrates a v1 database to v2: adds UiPrefs, keeps existing data',
+      () async {
+    final file = File(
+      '${Directory.systemTemp.path}/shop_admin_migration_'
+      '${DateTime.now().millisecondsSinceEpoch}.db',
+    );
+    addTearDown(() {
+      if (file.existsSync()) file.deleteSync();
+    });
+
+    // 1. Write data the way a v1 install would (a profile row exists).
+    final v1 = _V1Database.forTesting(NativeDatabase(file));
+    await v1.into(v1.profile).insert(ProfileCompanion.insert(
+          id: const Value(1),
+          name: const Value('Legacy User'),
+          phone: const Value('555-0100'),
+          address: const Value('1 Old St'),
+          updatedAt: Value(1),
+        ));
+    await v1.close();
+
+    // 2. Reopen with the real schema (v2): onUpgrade adds the UiPrefs
+    // table without touching existing rows.
+    final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+    final profile = await upgraded.select(upgraded.profile).getSingle();
+    expect(profile.name, 'Legacy User'); // existing data survived
+
+    // The new table works, and the single-row id=1 check is enforced.
+    await upgraded.into(upgraded.uiPrefs).insert(UiPrefsCompanion.insert(
+          id: const Value(1),
+          themeMode: const Value('dark'),
+        ));
+    final prefs = await upgraded.select(upgraded.uiPrefs).getSingle();
+    expect(prefs.themeMode, 'dark');
+
+    await upgraded.close();
+  });
+
+  test('opens with all ten tables empty', () async {
     expect(await db.select(db.categories).get(), isEmpty);
     expect(await db.select(db.products).get(), isEmpty);
     expect(await db.select(db.cartItems).get(), isEmpty);
@@ -25,6 +79,7 @@ void main() {
     expect(await db.select(db.orderStatusHistory).get(), isEmpty);
     expect(await db.select(db.profile).get(), isEmpty);
     expect(await db.select(db.adminSettings).get(), isEmpty);
+    expect(await db.select(db.uiPrefs).get(), isEmpty);
     expect(await db.select(db.appMeta).get(), isEmpty);
   });
 

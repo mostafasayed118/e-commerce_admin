@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:shop_admin/core/entities/shipping_info.dart';
+import 'package:shop_admin/core/entities/ui_prefs.dart';
 import 'package:shop_admin/core/error/app_error.dart';
 import 'package:shop_admin/core/error/result.dart';
 import 'package:shop_admin/core/utils/security.dart';
@@ -69,6 +70,46 @@ void main() {
 
       await pumpEventQueue();
       await repo.updateProfile(const ShippingInfo(name: 'A'));
+
+      await done;
+    });
+  });
+
+  group('ui prefs', () {
+    test('is empty before first save', () async {
+      final prefs = (await repo.getUiPrefs()).getOrThrow();
+      expect(prefs.isEmpty, isTrue);
+      expect((await repo.watchUiPrefs().first).isEmpty, isTrue);
+    });
+
+    test('theme and locale merge in one row (no read-modify-write)', () async {
+      expect(
+        await repo.updateUiPrefs(themeModeCode: 'dark'),
+        isA<Success<void>>(),
+      );
+      var prefs = (await repo.getUiPrefs()).getOrThrow();
+      expect(prefs.themeModeCode, 'dark');
+      expect(prefs.localeCode, isNull);
+
+      // A locale-only write must not wipe the stored theme.
+      await repo.updateUiPrefs(localeCode: 'ar');
+      prefs = (await repo.getUiPrefs()).getOrThrow();
+      expect(prefs.themeModeCode, 'dark');
+      expect(prefs.localeCode, 'ar');
+      expect(await (db.select(db.uiPrefs)).get(), hasLength(1));
+    });
+
+    test('watchUiPrefs emits the merged row after an update', () async {
+      final done = expectLater(
+        repo.watchUiPrefs(),
+        emitsInOrder([
+          const UiPrefs(),
+          const UiPrefs(themeModeCode: 'dark'),
+        ]),
+      );
+
+      await pumpEventQueue();
+      await repo.updateUiPrefs(themeModeCode: 'dark');
 
       await done;
     });

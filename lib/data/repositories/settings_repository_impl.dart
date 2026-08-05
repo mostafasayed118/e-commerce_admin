@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/entities/shipping_info.dart';
+import '../../core/entities/ui_prefs.dart';
 import '../../core/error/app_error.dart';
 import '../../core/error/result.dart';
 import '../../core/utils/security.dart';
@@ -50,6 +51,46 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } on Exception catch (error) {
       return Failure(
         DatabaseError(message: 'Could not save profile', cause: error),
+      );
+    }
+  }
+
+  @override
+  Stream<UiPrefs> watchUiPrefs() =>
+      _dao.watchUiPrefs().map(_toUiPrefs);
+
+  @override
+  Future<Result<UiPrefs>> getUiPrefs() async {
+    try {
+      return Success(_toUiPrefs(await _dao.getUiPrefs()));
+    } on Exception catch (error) {
+      return Failure(
+        DatabaseError(message: 'Could not load preferences', cause: error),
+      );
+    }
+  }
+
+  @override
+  Future<Result<void>> updateUiPrefs({
+    String? themeModeCode,
+    String? localeCode,
+  }) async {
+    try {
+      // Absent columns (Value.absent) keep their stored value on conflict,
+      // so a theme-only write never wipes the stored locale and vice versa.
+      await _dao.upsertUiPrefs(UiPrefsCompanion.insert(
+        id: const Value(1),
+        themeMode: themeModeCode == null
+            ? const Value.absent()
+            : Value(themeModeCode),
+        localeCode: localeCode == null
+            ? const Value.absent()
+            : Value(localeCode),
+      ));
+      return const Success<void>(null);
+    } on Exception catch (error) {
+      return Failure(
+        DatabaseError(message: 'Could not save preferences', cause: error),
       );
     }
   }
@@ -113,5 +154,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
         name: row.name ?? '',
         phone: row.phone ?? '',
         address: row.address ?? '',
+      );
+
+  UiPrefs _toUiPrefs(UiPrefsRow? row) => UiPrefs(
+        themeModeCode: row?.themeMode,
+        localeCode: row?.localeCode,
       );
 }

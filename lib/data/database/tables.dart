@@ -138,6 +138,21 @@ class Profile extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Single-row persisted UI preferences (id is always 1): the customer's
+/// theme-mode and locale choices, stored as stable codes (`ThemeMode.name`
+/// and the BCP-47 locale tag). The presentation layer maps code <-> widget
+/// types; the DB never sees ThemeMode/Locale objects.
+@DataClassName('UiPrefsRow')
+class UiPrefs extends Table {
+  // CHECK (id = 1): guards the single-row contract at the DB level.
+  IntColumn get id => integer().check(id.equals(1))();
+  TextColumn get themeMode => text().nullable()();
+  TextColumn get localeCode => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Single-row admin settings: salted PIN hash (Decision B — Option 2).
 @DataClassName('AdminSettingsRow')
 class AdminSettings extends Table {

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/entities/shipping_info.dart';
 import '../../../domain/usecases/checkout/validate_shipping.dart';
+import '../../theme/theme_cubit.dart';
 import '../../widgets/message_view.dart';
 import 'profile_cubit.dart';
 
@@ -234,6 +235,48 @@ class _ProfileFormState extends State<_ProfileForm> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Text('Save profile'),
+          ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 16),
+          Text('Preferences', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 12),
+          Text(
+            'Appearance',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Theme switch — persisted via the DI ThemeCubit (UiPrefs table),
+          // so the choice survives restarts. The explicit `bloc:` (like the
+          // shell badge) keeps this screen testable without the app root's
+          // MultiBlocProvider (the flow tests pump the raw router).
+          BlocBuilder<ThemeCubit, ThemeMode>(
+            bloc: getIt<ThemeCubit>(),
+            builder: (context, mode) => SegmentedButton<ThemeMode>(
+              key: const Key('profile-theme-mode'),
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  label: Text('System'),
+                  icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  label: Text('Light'),
+                  icon: Icon(Icons.light_mode_outlined, size: 18),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  label: Text('Dark'),
+                  icon: Icon(Icons.dark_mode_outlined, size: 18),
+                ),
+              ],
+              selected: {mode},
+              onSelectionChanged: (selection) =>
+                  getIt<ThemeCubit>().setThemeMode(selection.first),
+            ),
           ),
           const SizedBox(height: 24),
           const Divider(),

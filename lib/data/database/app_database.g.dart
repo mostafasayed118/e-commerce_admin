@@ -3250,6 +3250,257 @@ class AdminSettingsCompanion extends UpdateCompanion<AdminSettingsRow> {
   }
 }
 
+class $UiPrefsTable extends UiPrefs with TableInfo<$UiPrefsTable, UiPrefsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UiPrefsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    check: () => id.equals(1),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _themeModeMeta = const VerificationMeta(
+    'themeMode',
+  );
+  @override
+  late final GeneratedColumn<String> themeMode = GeneratedColumn<String>(
+    'theme_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _localeCodeMeta = const VerificationMeta(
+    'localeCode',
+  );
+  @override
+  late final GeneratedColumn<String> localeCode = GeneratedColumn<String>(
+    'locale_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, themeMode, localeCode];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ui_prefs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UiPrefsRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('theme_mode')) {
+      context.handle(
+        _themeModeMeta,
+        themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta),
+      );
+    }
+    if (data.containsKey('locale_code')) {
+      context.handle(
+        _localeCodeMeta,
+        localeCode.isAcceptableOrUnknown(data['locale_code']!, _localeCodeMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UiPrefsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UiPrefsRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      themeMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_mode'],
+      ),
+      localeCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}locale_code'],
+      ),
+    );
+  }
+
+  @override
+  $UiPrefsTable createAlias(String alias) {
+    return $UiPrefsTable(attachedDatabase, alias);
+  }
+}
+
+class UiPrefsRow extends DataClass implements Insertable<UiPrefsRow> {
+  final int id;
+  final String? themeMode;
+  final String? localeCode;
+  const UiPrefsRow({required this.id, this.themeMode, this.localeCode});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || themeMode != null) {
+      map['theme_mode'] = Variable<String>(themeMode);
+    }
+    if (!nullToAbsent || localeCode != null) {
+      map['locale_code'] = Variable<String>(localeCode);
+    }
+    return map;
+  }
+
+  UiPrefsCompanion toCompanion(bool nullToAbsent) {
+    return UiPrefsCompanion(
+      id: Value(id),
+      themeMode: themeMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(themeMode),
+      localeCode: localeCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localeCode),
+    );
+  }
+
+  factory UiPrefsRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UiPrefsRow(
+      id: serializer.fromJson<int>(json['id']),
+      themeMode: serializer.fromJson<String?>(json['themeMode']),
+      localeCode: serializer.fromJson<String?>(json['localeCode']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'themeMode': serializer.toJson<String?>(themeMode),
+      'localeCode': serializer.toJson<String?>(localeCode),
+    };
+  }
+
+  UiPrefsRow copyWith({
+    int? id,
+    Value<String?> themeMode = const Value.absent(),
+    Value<String?> localeCode = const Value.absent(),
+  }) => UiPrefsRow(
+    id: id ?? this.id,
+    themeMode: themeMode.present ? themeMode.value : this.themeMode,
+    localeCode: localeCode.present ? localeCode.value : this.localeCode,
+  );
+  UiPrefsRow copyWithCompanion(UiPrefsCompanion data) {
+    return UiPrefsRow(
+      id: data.id.present ? data.id.value : this.id,
+      themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
+      localeCode: data.localeCode.present
+          ? data.localeCode.value
+          : this.localeCode,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UiPrefsRow(')
+          ..write('id: $id, ')
+          ..write('themeMode: $themeMode, ')
+          ..write('localeCode: $localeCode')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, themeMode, localeCode);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UiPrefsRow &&
+          other.id == this.id &&
+          other.themeMode == this.themeMode &&
+          other.localeCode == this.localeCode);
+}
+
+class UiPrefsCompanion extends UpdateCompanion<UiPrefsRow> {
+  final Value<int> id;
+  final Value<String?> themeMode;
+  final Value<String?> localeCode;
+  const UiPrefsCompanion({
+    this.id = const Value.absent(),
+    this.themeMode = const Value.absent(),
+    this.localeCode = const Value.absent(),
+  });
+  UiPrefsCompanion.insert({
+    this.id = const Value.absent(),
+    this.themeMode = const Value.absent(),
+    this.localeCode = const Value.absent(),
+  });
+  static Insertable<UiPrefsRow> custom({
+    Expression<int>? id,
+    Expression<String>? themeMode,
+    Expression<String>? localeCode,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (themeMode != null) 'theme_mode': themeMode,
+      if (localeCode != null) 'locale_code': localeCode,
+    });
+  }
+
+  UiPrefsCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? themeMode,
+    Value<String?>? localeCode,
+  }) {
+    return UiPrefsCompanion(
+      id: id ?? this.id,
+      themeMode: themeMode ?? this.themeMode,
+      localeCode: localeCode ?? this.localeCode,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (themeMode.present) {
+      map['theme_mode'] = Variable<String>(themeMode.value);
+    }
+    if (localeCode.present) {
+      map['locale_code'] = Variable<String>(localeCode.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UiPrefsCompanion(')
+          ..write('id: $id, ')
+          ..write('themeMode: $themeMode, ')
+          ..write('localeCode: $localeCode')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppMetaTable extends AppMeta with TableInfo<$AppMetaTable, AppMetaRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -3458,6 +3709,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $OrderStatusHistoryTable(this);
   late final $ProfileTable profile = $ProfileTable(this);
   late final $AdminSettingsTable adminSettings = $AdminSettingsTable(this);
+  late final $UiPrefsTable uiPrefs = $UiPrefsTable(this);
   late final $AppMetaTable appMeta = $AppMetaTable(this);
   late final Index idxProductsCategory = Index(
     'idx_products_category',
@@ -3488,6 +3740,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     orderStatusHistory,
     profile,
     adminSettings,
+    uiPrefs,
     appMeta,
     idxProductsCategory,
     idxOrdersStatus,
@@ -6308,6 +6561,161 @@ typedef $$AdminSettingsTableProcessedTableManager =
       AdminSettingsRow,
       PrefetchHooks Function()
     >;
+typedef $$UiPrefsTableCreateCompanionBuilder =
+    UiPrefsCompanion Function({
+      Value<int> id,
+      Value<String?> themeMode,
+      Value<String?> localeCode,
+    });
+typedef $$UiPrefsTableUpdateCompanionBuilder =
+    UiPrefsCompanion Function({
+      Value<int> id,
+      Value<String?> themeMode,
+      Value<String?> localeCode,
+    });
+
+class $$UiPrefsTableFilterComposer
+    extends Composer<_$AppDatabase, $UiPrefsTable> {
+  $$UiPrefsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localeCode => $composableBuilder(
+    column: $table.localeCode,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UiPrefsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UiPrefsTable> {
+  $$UiPrefsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localeCode => $composableBuilder(
+    column: $table.localeCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UiPrefsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UiPrefsTable> {
+  $$UiPrefsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get themeMode =>
+      $composableBuilder(column: $table.themeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get localeCode => $composableBuilder(
+    column: $table.localeCode,
+    builder: (column) => column,
+  );
+}
+
+class $$UiPrefsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UiPrefsTable,
+          UiPrefsRow,
+          $$UiPrefsTableFilterComposer,
+          $$UiPrefsTableOrderingComposer,
+          $$UiPrefsTableAnnotationComposer,
+          $$UiPrefsTableCreateCompanionBuilder,
+          $$UiPrefsTableUpdateCompanionBuilder,
+          (
+            UiPrefsRow,
+            BaseReferences<_$AppDatabase, $UiPrefsTable, UiPrefsRow>,
+          ),
+          UiPrefsRow,
+          PrefetchHooks Function()
+        > {
+  $$UiPrefsTableTableManager(_$AppDatabase db, $UiPrefsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UiPrefsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UiPrefsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UiPrefsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> themeMode = const Value.absent(),
+                Value<String?> localeCode = const Value.absent(),
+              }) => UiPrefsCompanion(
+                id: id,
+                themeMode: themeMode,
+                localeCode: localeCode,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> themeMode = const Value.absent(),
+                Value<String?> localeCode = const Value.absent(),
+              }) => UiPrefsCompanion.insert(
+                id: id,
+                themeMode: themeMode,
+                localeCode: localeCode,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UiPrefsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UiPrefsTable,
+      UiPrefsRow,
+      $$UiPrefsTableFilterComposer,
+      $$UiPrefsTableOrderingComposer,
+      $$UiPrefsTableAnnotationComposer,
+      $$UiPrefsTableCreateCompanionBuilder,
+      $$UiPrefsTableUpdateCompanionBuilder,
+      (UiPrefsRow, BaseReferences<_$AppDatabase, $UiPrefsTable, UiPrefsRow>),
+      UiPrefsRow,
+      PrefetchHooks Function()
+    >;
 typedef $$AppMetaTableCreateCompanionBuilder =
     AppMetaCompanion Function({Value<int> id, Value<int> seedVersion});
 typedef $$AppMetaTableUpdateCompanionBuilder =
@@ -6452,6 +6860,8 @@ class $AppDatabaseManager {
       $$ProfileTableTableManager(_db, _db.profile);
   $$AdminSettingsTableTableManager get adminSettings =>
       $$AdminSettingsTableTableManager(_db, _db.adminSettings);
+  $$UiPrefsTableTableManager get uiPrefs =>
+      $$UiPrefsTableTableManager(_db, _db.uiPrefs);
   $$AppMetaTableTableManager get appMeta =>
       $$AppMetaTableTableManager(_db, _db.appMeta);
 }

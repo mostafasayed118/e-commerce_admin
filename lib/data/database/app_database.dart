@@ -21,6 +21,7 @@ part 'app_database.g.dart';
   OrderStatusHistory,
   Profile,
   AdminSettings,
+  UiPrefs,
   AppMeta,
 ])
 class AppDatabase extends _$AppDatabase {
@@ -30,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -38,9 +39,14 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (m, from, to) async {
-          // Schema v1 ships with no upgrades yet. Future versions chain
-          // migration steps here (PLAN: migrations versioned from v1; seed
-          // re-runs are decoupled via AppMeta.seedVersion, not migrations).
+          // The first real migration: v2 adds the single-row UiPrefs table
+          // (persisted theme/locale). Existing v1 installs (e.g. the release
+          // APK on a device) get the table added without touching their data;
+          // new installs create everything in onCreate. Seed re-runs stay
+          // decoupled via AppMeta.seedVersion, not migrations.
+          if (from < 2) {
+            await m.createTable(uiPrefs);
+          }
         },
         beforeOpen: (details) async {
           // Drift does NOT enable foreign-key enforcement by default; without

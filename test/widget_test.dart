@@ -5,6 +5,7 @@ import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/presentation/app.dart';
 import 'package:shop_admin/presentation/shells/shell_scaffold.dart';
+import 'package:shop_admin/presentation/theme/theme_cubit.dart';
 
 import 'helpers/drift_settle.dart';
 import 'helpers/test_di.dart';
@@ -44,6 +45,28 @@ void main() {
     await settleDrift(tester); // CartCubit watch streams
     await tester.pumpAndSettle();
     expect(find.text('Your cart is empty'), findsOneWidget);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('the root wires the ThemeCubit choice into MaterialApp',
+      (WidgetTester tester) async {
+    await pumpApp(tester);
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.system,
+    );
+
+    // A persisted choice flows to the MaterialApp (light/dark switching is
+    // driven by this single cubit everywhere).
+    await getIt<ThemeCubit>().setThemeMode(ThemeMode.dark);
+    await tester.pump();
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
 
     await unmountApp(tester);
   });

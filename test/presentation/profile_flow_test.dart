@@ -9,6 +9,7 @@ import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/domain/repositories/settings_repository.dart';
 import 'package:shop_admin/presentation/features/admin/gate/admin_gate_screen.dart';
 import 'package:shop_admin/presentation/router/app_router.dart';
+import 'package:shop_admin/presentation/theme/theme_cubit.dart';
 
 import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
@@ -140,13 +141,46 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('the Appearance switch applies and persists the theme',
+      (WidgetTester tester) async {
+    await pumpApp(tester);
+    await goToProfile(tester);
+
+    // Default: follows the OS (the DI singleton's initial state).
+    expect(getIt<ThemeCubit>().state, ThemeMode.system);
+
+    await tester.tap(find.text('Dark'));
+    await tester.pump();
+    await settleDrift(tester); // ThemeCubit persistence write
+    await tester.pumpAndSettle();
+
+    // Applied immediately to the DI singleton that drives the real app's
+    // MaterialApp (root wiring is asserted in widget_test, which pumps
+    // ShopAdminApp)…
+    expect(getIt<ThemeCubit>().state, ThemeMode.dark);
+    // …and persisted to the UiPrefs row (survives restarts).
+    final prefs = await tester.runAsync(
+      () => getIt<SettingsRepository>().getUiPrefs(),
+    );
+    expect(prefs?.getOrThrow().themeModeCode, 'dark');
+
+    await unmountApp(tester);
+  });
+
   testWidgets('the Admin entry on the profile tab reaches the locked gate',
       (WidgetTester tester) async {
     await pumpApp(tester);
     await goToProfile(tester);
 
     // The one on-screen path to the admin area (everything else is deep
-    // links behind the redirect guard). Fresh DB → the gate asks to set a PIN.
+    // links behind the redirect guard). The Preferences section sits above
+    // it, so scroll it into the 844px viewport first. Fresh DB → the gate
+    // asks to set a PIN.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('profile-admin-entry')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const Key('profile-admin-entry')));
     await tester.pump();
     await settleDrift(tester); // gate's isPinSet() query

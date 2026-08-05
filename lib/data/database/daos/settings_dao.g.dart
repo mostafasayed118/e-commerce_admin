@@ -6,6 +6,7 @@ part of 'settings_dao.dart';
 mixin _$SettingsDaoMixin on DatabaseAccessor<AppDatabase> {
   $ProfileTable get profile => attachedDatabase.profile;
   $AdminSettingsTable get adminSettings => attachedDatabase.adminSettings;
+  $UiPrefsTable get uiPrefs => attachedDatabase.uiPrefs;
   SettingsDaoManager get managers => SettingsDaoManager(this);
 }
 
@@ -16,4 +17,6 @@ class SettingsDaoManager {
       $$ProfileTableTableManager(_db.attachedDatabase, _db.profile);
   $$AdminSettingsTableTableManager get adminSettings =>
       $$AdminSettingsTableTableManager(_db.attachedDatabase, _db.adminSettings);
+  $$UiPrefsTableTableManager get uiPrefs =>
+      $$UiPrefsTableTableManager(_db.attachedDatabase, _db.uiPrefs);
 }

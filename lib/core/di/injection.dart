@@ -34,6 +34,8 @@ import '../../presentation/features/cart/cart_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/features/orders/orders_cubit.dart';
 import '../../presentation/features/profile/profile_cubit.dart';
+import '../../presentation/locale/locale_cubit.dart';
+import '../../presentation/theme/theme_cubit.dart';
 import '../../presentation/router/admin_session.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
@@ -146,4 +148,14 @@ void setupDependencies() {
     getIt<SettingsRepository>(),
     getIt<SaveProfile>(),
   ));
+
+  // App-level settings cubits (persisted via UiPrefs): theme + locale. Both
+  // restore from the DB on construction, so DI singletons are the single
+  // source of truth consumed by app.dart and the Profile switches.
+  getIt.registerLazySingleton<ThemeCubit>(
+    () => ThemeCubit(getIt<SettingsRepository>()),
+  );
+  getIt.registerLazySingleton<LocaleCubit>(
+    () => LocaleCubit(getIt<SettingsRepository>()),
+  );
 }
