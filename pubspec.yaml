@@ -48,6 +48,14 @@ dependencies:
   # Value equality for immutable state classes and entities.
   equatable: ^2.1.0
 
+  # Local database: type-safe relational SQLite with reactive streams + migrations.
+  # Why drift: relational data (products/orders/cart) with cross-entity invariants;
+  # sqflite is untyped and has no streams, Isar/Hive are not relational.
+  drift: ^2.34.3
+
+  # Official drift setup for Flutter: handles native sqlite3 init on Android/Windows.
+  drift_flutter: ^0.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,6 +72,20 @@ dev_dependencies:
 
   # Mocking without codegen.
   mocktail: ^1.0.5
+
+  # Code generation for drift tables/DAOs (approved Phase 1 exception to the
+  # no-codegen rule; generated .g.dart files are committed).
+  # Relaxed to ^2.34.0: drift_dev >=2.34.1+1 pulls analyzer ^13.0.0, which
+  # conflicts with the SDK's test_api pin via bloc_test (Section D.3 — the
+  # solver picks the newest compatible 2.34.x). Keep drift_dev aligned with
+  # the drift runtime on future upgrades (currently dev 2.34.0 vs 2.34.3;
+  # compatible, verified by codegen + tests).
+  drift_dev: ^2.34.0
+  # Pinned below 2.15.2: build_runner >=2.15.2 requires meta ^1.18.3, which
+  # conflicts with the Flutter SDK's flutter_test pin on meta 1.18.0. 2.15.1 is
+  # the newest compatible version (Section D.3: deviation from "latest stable"
+  # is justified by the SDK constraint; revisit on next Flutter upgrade).
+  build_runner: 2.15.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

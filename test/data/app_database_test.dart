@@ -1,0 +1,316 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:shop_admin/core/entities/order_status.dart';
+import 'package:shop_admin/data/database/app_database.dart';
+
+void main() {
+  late AppDatabase db;
+
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  test('opens with all nine tables empty', () async {
+    expect(await db.select(db.categories).get(), isEmpty);
+    expect(await db.select(db.products).get(), isEmpty);
+    expect(await db.select(db.cartItems).get(), isEmpty);
+    expect(await db.select(db.orders).get(), isEmpty);
+    expect(await db.select(db.orderItems).get(), isEmpty);
+    expect(await db.select(db.orderStatusHistory).get(), isEmpty);
+    expect(await db.select(db.profile).get(), isEmpty);
+    expect(await db.select(db.adminSettings).get(), isEmpty);
+    expect(await db.select(db.appMeta).get(), isEmpty);
+  });
+
+  test('single-row tables reject any row other than id 1', () async {
+    await expectLater(
+      db.into(db.profile).insert(ProfileCompanion.insert(id: Value(2))),
+      throwsA(isA<SqliteException>()),
+    );
+    await expectLater(
+      db.into(db.appMeta).insert(AppMetaCompanion.insert(id: Value(2))),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('category and product rows round-trip', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'Clothing', createdAt: 1),
+        );
+    await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'T-Shirt',
+          priceCents: 2000,
+          discountPercent: 25,
+          stock: 10,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+
+    final product = await db.select(db.products).getSingle();
+    expect(product.name, 'T-Shirt');
+    expect(product.priceCents, 2000);
+    expect(product.discountPercent, 25);
+    expect(product.stock, 10);
+    expect(product.imagePath, isNull);
+    expect(product.description, '');
+  });
+
+  test('CHECK constraints reject invalid product rows', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+
+    Future<void> insertProduct({
+      required String name,
+      required int priceCents,
+      int discountPercent = 0,
+      int stock = 1,
+    }) {
+      return db.into(db.products).insert(ProductsCompanion.insert(
+            categoryId: categoryId,
+            name: name,
+            priceCents: priceCents,
+            discountPercent: discountPercent,
+            stock: stock,
+            createdAt: 1,
+            updatedAt: 1,
+          ));
+    }
+
+    await expectLater(
+      insertProduct(name: 'negative price', priceCents: -1),
+      throwsA(isA<SqliteException>()),
+    );
+    await expectLater(
+      insertProduct(name: 'discount over 100', priceCents: 100, discountPercent: 101),
+      throwsA(isA<SqliteException>()),
+    );
+    await expectLater(
+      insertProduct(name: 'negative stock', priceCents: 100, stock: -2),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('CHECK constraint rejects a zero-quantity cart row', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    final productId = await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'P',
+          priceCents: 100,
+          discountPercent: 0,
+          stock: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+
+    await expectLater(
+      db.into(db.cartItems).insert(
+        CartItemsCompanion.insert(
+          productId: Value(productId),
+          quantity: 0,
+          addedAt: 1,
+        ),
+      ),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('foreign keys are enforced: unknown category is rejected', () async {
+    await expectLater(
+      db.into(db.products).insert(ProductsCompanion.insert(
+            categoryId: 999,
+            name: 'Orphan',
+            priceCents: 100,
+            discountPercent: 0,
+            stock: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          )),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('a category with products cannot be deleted (RESTRICT)', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'P',
+          priceCents: 100,
+          discountPercent: 0,
+          stock: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+
+    await expectLater(
+      (db.delete(db.categories)..where((t) => t.id.equals(categoryId))).go(),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('deleting a product cascades its cart rows away', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    final productId = await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'P',
+          priceCents: 100,
+          discountPercent: 0,
+          stock: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    await db.into(db.cartItems).insert(
+      CartItemsCompanion.insert(
+        productId: Value(productId),
+        quantity: 2,
+        addedAt: 1,
+      ),
+    );
+    expect(await db.select(db.cartItems).get(), hasLength(1));
+
+    await (db.delete(db.products)..where((t) => t.id.equals(productId))).go();
+
+    expect(await db.select(db.cartItems).get(), isEmpty);
+  });
+
+  test('deleting a product sets order item productId null but keeps snapshots', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    final productId = await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'T',
+          priceCents: 2000,
+          discountPercent: 25,
+          stock: 3,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    final orderId = await db.into(db.orders).insert(OrdersCompanion.insert(
+          orderNumber: 'ORD-000001',
+          status: OrderStatus.pending,
+          subtotalCents: 1500,
+          discountCents: 500,
+          totalCents: 1000,
+          shippingName: 'Ada',
+          shippingPhone: '1',
+          shippingAddress: 'X',
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    await db.into(db.orderItems).insert(OrderItemsCompanion.insert(
+          orderId: orderId,
+          productId: Value(productId),
+          productName: 'T',
+          unitPriceCents: 2000,
+          quantity: 1,
+        ));
+    await db.into(db.orderStatusHistory).insert(
+      OrderStatusHistoryCompanion.insert(
+        orderId: orderId,
+        status: OrderStatus.pending,
+        changedAt: 1,
+      ),
+    );
+
+    await (db.delete(db.products)..where((t) => t.id.equals(productId))).go();
+
+    final item = await db.select(db.orderItems).getSingle();
+    expect(item.productId, isNull);
+    expect(item.productName, 'T'); // snapshot preserved after product deletion
+    expect(item.unitPriceCents, 2000);
+    expect(item.quantity, 1);
+  });
+
+  test('deleting an order cascades its items and status history', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'T',
+          priceCents: 1000,
+          discountPercent: 0,
+          stock: 3,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    final orderId = await db.into(db.orders).insert(OrdersCompanion.insert(
+          orderNumber: 'ORD-000001',
+          status: OrderStatus.pending,
+          subtotalCents: 1000,
+          discountCents: 0,
+          totalCents: 1000,
+          shippingName: 'Ada',
+          shippingPhone: '1',
+          shippingAddress: 'X',
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    await db.into(db.orderItems).insert(OrderItemsCompanion.insert(
+          orderId: orderId,
+          productName: 'T',
+          unitPriceCents: 1000,
+          quantity: 1,
+        ));
+    await db.into(db.orderStatusHistory).insert(
+      OrderStatusHistoryCompanion.insert(
+        orderId: orderId,
+        status: OrderStatus.pending,
+        changedAt: 1,
+      ),
+    );
+
+    await (db.delete(db.orders)..where((t) => t.id.equals(orderId))).go();
+
+    expect(await db.select(db.orderItems).get(), isEmpty);
+    expect(await db.select(db.orderStatusHistory).get(), isEmpty);
+  });
+
+  test('order status enum round-trips through intEnum', () async {
+    await db.into(db.orders).insert(OrdersCompanion.insert(
+          orderNumber: 'ORD-000001',
+          status: OrderStatus.shipped,
+          subtotalCents: 1000,
+          discountCents: 0,
+          totalCents: 1000,
+          shippingName: 'Ada',
+          shippingPhone: '123',
+          shippingAddress: 'X',
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+
+    final row = await db.select(db.orders).getSingle();
+    expect(row.status, OrderStatus.shipped);
+    expect(row.orderNumber, 'ORD-000001');
+    expect(row.totalCents, 1000);
+  });
+
+  test('watch() re-emits when data changes', () async {
+    final done = expectLater(
+      db.select(db.categories).watch(),
+      emitsInOrder([isEmpty, hasLength(1)]),
+    );
+
+    await pumpEventQueue();
+    await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'Clothing', createdAt: 1),
+        );
+
+    await done;
+  });
+}
