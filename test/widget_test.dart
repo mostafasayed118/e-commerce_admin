@@ -1,30 +1,54 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:shop_admin/main.dart';
+import 'package:shop_admin/core/di/injection.dart';
+import 'package:shop_admin/data/database/app_database.dart';
+import 'package:shop_admin/presentation/app.dart';
+import 'package:shop_admin/presentation/shells/shell_scaffold.dart';
+
+import 'helpers/test_di.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  late AppDatabase db;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUp(() {
+    db = setupTestDi();
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  tearDown(() async {
+    await db.close();
+    await getIt.reset();
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('boots into the shop shell and navigates branches',
+      (WidgetTester tester) async {
+    // Narrow phone-like viewport -> the constraint-based layout picks the
+    // bottom NavigationBar (800x600 default would pick the rail instead).
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const ShopAdminApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('Shop'), findsWidgets); // nav label + placeholder title
+
+    await tester.tap(find.text('Cart'));
+    await tester.pumpAndSettle();
+    expect(find.text('This screen arrives in Task 15.'), findsOneWidget);
+  });
+
+  testWidgets('switches to the rail layout on wide viewports',
+      (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const ShopAdminApp());
+    await tester.pumpAndSettle();
+
+    // The 720px breakpoint: wide means NavigationRail, no bottom bar.
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(ShellScaffold.wideBreakpoint, 720);
   });
 }
