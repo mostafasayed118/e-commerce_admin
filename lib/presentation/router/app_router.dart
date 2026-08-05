@@ -10,6 +10,8 @@ import '../features/cart/cart_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/catalog/product_detail_screen.dart';
 import '../features/checkout/checkout_screen.dart';
+import '../features/orders/order_detail_screen.dart';
+import '../features/orders/orders_screen.dart';
 import '../placeholder_screen.dart';
 import '../shells/admin_shell.dart';
 import '../shells/shop_shell.dart';
@@ -26,6 +28,7 @@ abstract final class RouteNames {
   // Top-level shop pages (above the shell).
   static const String productDetail = 'product-detail';
   static const String checkout = 'checkout';
+  static const String orderDetail = 'order-detail';
   // Admin.
   static const String adminGate = 'admin-gate';
   static const String adminOverview = 'admin-overview';
@@ -79,8 +82,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/orders',
                 name: RouteNames.orders,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'My Orders', arrivingIn: 'Task 16'),
+                builder: (context, state) => const OrdersScreen(),
               ),
             ],
           ),
@@ -116,6 +118,17 @@ GoRouter buildAppRouter() {
         path: '/admin/gate',
         name: RouteNames.adminGate,
         builder: (context, state) => const AdminGateScreen(),
+      ),
+
+      // --- Order detail: pushed on the root navigator (same pattern as the
+      // product detail page). ---
+      GoRoute(
+        path: '/orders/:orderId',
+        name: RouteNames.orderDetail,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => OrderDetailScreen(
+          orderId: int.tryParse(state.pathParameters['orderId'] ?? '') ?? -1,
+        ),
       ),
 
       // --- Checkout: pushed on the root navigator (full-screen form over

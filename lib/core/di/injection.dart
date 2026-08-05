@@ -29,6 +29,7 @@ import '../../domain/usecases/checkout/place_order.dart';
 import '../../presentation/features/admin/catalog/admin_catalog_cubit.dart';
 import '../../presentation/features/cart/cart_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
+import '../../presentation/features/orders/orders_cubit.dart';
 import '../../presentation/router/admin_session.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
@@ -124,4 +125,7 @@ void setupDependencies() {
     getIt<RemoveFromCart>(),
     getIt<ClearCart>(),
   ));
+  getIt.registerLazySingleton<OrdersCubit>(
+    () => OrdersCubit(getIt<OrderRepository>()),
+  );
 }
