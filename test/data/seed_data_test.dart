@@ -1,0 +1,100 @@
+import 'dart:io';
+
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:shop_admin/core/entities/order_status.dart';
+import 'package:shop_admin/data/database/app_database.dart';
+import 'package:shop_admin/data/database/seed_data.dart';
+
+void main() {
+  test('seeds categories, products, orders, items and history on a fresh DB', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+
+    expect(await db.select(db.categories).get(), isNotEmpty);
+    expect(await db.select(db.products).get(), isNotEmpty);
+    expect(await db.select(db.orders).get(), isNotEmpty);
+    expect(await db.select(db.orderItems).get(), isNotEmpty);
+    expect(await db.select(db.orderStatusHistory).get(), isNotEmpty);
+
+    final meta = await (db.select(db.appMeta)..where((t) => t.id.equals(1)))
+        .getSingle();
+    expect(meta.seedVersion, SeedData.version);
+  });
+
+  test('seed covers the required demo scenarios', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+
+    final products = await db.select(db.products).get();
+    expect(products.any((p) => p.stock == 0), isTrue,
+        reason: 'an out-of-stock product for the stock badge demo');
+    expect(products.any((p) => p.stock > 0 && p.stock <= 5), isTrue,
+        reason: 'a low-stock product for the admin alert demo');
+    expect(products.any((p) => p.discountPercent > 0), isTrue,
+        reason: 'a discounted product for the pricing demo');
+
+    final statuses = (await db.select(db.orders).get())
+        .map((o) => o.status)
+        .toSet();
+    expect(statuses, containsAll(OrderStatus.values),
+        reason: 'demo orders exist in every status for the dashboard');
+  });
+
+  test('seeded orders are internally consistent', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+
+    final orders = await db.select(db.orders).get();
+    final history = await db.select(db.orderStatusHistory).get();
+
+    for (final order in orders) {
+      expect(order.subtotalCents - order.discountCents, order.totalCents,
+          reason: '${order.orderNumber} totals must balance');
+
+      final timeline = history
+          .where((h) => h.orderId == order.id)
+          .toList()
+        ..sort((a, b) => a.changedAt.compareTo(b.changedAt));
+      expect(timeline, isNotEmpty,
+          reason: '${order.orderNumber} needs a status timeline');
+      expect(timeline.last.status, order.status,
+          reason: '${order.orderNumber} history must end at its current status');
+    }
+  });
+
+  test('seeds once across database opens (idempotent via seedVersion)', () async {
+    final tempDir = await Directory.systemTemp.createTemp('seed_test_');
+    addTearDown(() => tempDir.delete(recursive: true));
+    final dbFile = File('${tempDir.path}/seed.db');
+
+    final first = AppDatabase.forTesting(NativeDatabase(dbFile));
+    await SeedData(first).seedIfNeeded();
+    final counts = (
+      categories: (await first.select(first.categories).get()).length,
+      products: (await first.select(first.products).get()).length,
+      orders: (await first.select(first.orders).get()).length,
+    );
+    expect(counts.categories, greaterThan(0));
+    await first.close();
+
+    final second = AppDatabase.forTesting(NativeDatabase(dbFile));
+    await SeedData(second).seedIfNeeded();
+    expect((await second.select(second.categories).get()).length,
+        counts.categories,
+        reason: 'categories must not duplicate on reopen');
+    expect((await second.select(second.products).get()).length,
+        counts.products,
+        reason: 'products must not duplicate on reopen');
+    expect((await second.select(second.orders).get()).length, counts.orders,
+        reason: 'orders must not duplicate on reopen');
+    await second.close();
+  });
+}

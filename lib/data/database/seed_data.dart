@@ -1,0 +1,276 @@
+import 'package:drift/drift.dart';
+
+import '../../core/entities/order_status.dart';
+import 'app_database.dart';
+
+/// Demo data for the app's first launch, so every screen is demoable
+/// immediately (spec A6).
+///
+/// Idempotency is tracked in [AppMeta.seedVersion]: seeding runs only when the
+/// stored version is older than [version]. Bumping [version] reseeds existing
+/// installs *without* a schema migration — deliberately decoupled from
+/// `schemaVersion` (see PLAN, risks section).
+class SeedData {
+  const SeedData(this._db);
+
+  final AppDatabase _db;
+
+  /// Version of the seed dataset. Bump to refresh demo data on existing
+  /// installs (assumes a demo/clean database — see class docs).
+  static const int version = 1;
+
+  /// Seeds if needed. Safe to call on every launch: the version check is a
+  /// single SELECT, and the seed itself runs atomically in one transaction —
+  /// a failure mid-seed writes nothing and the next launch retries.
+  Future<void> seedIfNeeded() async {
+    final meta = await (_db.select(_db.appMeta)..where((t) => t.id.equals(1)))
+        .getSingleOrNull();
+    if (meta != null && meta.seedVersion >= version) return;
+
+    await _db.transaction(() async {
+      final base = DateTime(2026, 7, 1, 9).millisecondsSinceEpoch;
+      final day = const Duration(days: 1).inMilliseconds;
+      final hour = const Duration(hours: 1).inMilliseconds;
+
+      // --- Categories -------------------------------------------------------
+      final categoryIds = <String, int>{};
+      for (final name in [
+        'Clothing',
+        'Electronics',
+        'Home & Kitchen',
+        'Books',
+        'Sports',
+      ]) {
+        categoryIds[name] = await _db.into(_db.categories).insert(
+              CategoriesCompanion.insert(name: name, createdAt: base),
+            );
+      }
+
+      // --- Products ---------------------------------------------------------
+      Future<int> insertProduct({
+        required String category,
+        required String name,
+        required int priceCents,
+        int discountPercent = 0,
+        int stock = 0,
+        String description = '',
+      }) {
+        return _db.into(_db.products).insert(ProductsCompanion.insert(
+              categoryId: categoryIds[category]!,
+              name: name,
+              description: Value(description),
+              priceCents: priceCents,
+              discountPercent: discountPercent,
+              stock: stock,
+              createdAt: base,
+              updatedAt: base,
+            ));
+      }
+
+      final tee =
+          await insertProduct(category: 'Clothing', name: 'Classic Tee', priceCents: 2000, discountPercent: 25, stock: 25, description: 'A wardrobe staple in soft organic cotton.');
+      final jacket =
+          await insertProduct(category: 'Clothing', name: 'Denim Jacket', priceCents: 4500, stock: 8, description: 'Timeless denim with a tailored fit.');
+      await insertProduct(category: 'Clothing', name: 'Wool Beanie', priceCents: 1200, stock: 4, description: 'Keep warm in style.');
+      final belt =
+          await insertProduct(category: 'Clothing', name: 'Leather Belt', priceCents: 2800, stock: 0, description: 'Full-grain leather, sadly out of stock.');
+
+      final earbuds =
+          await insertProduct(category: 'Electronics', name: 'Wireless Earbuds', priceCents: 9900, discountPercent: 15, stock: 30, description: 'Crisp sound, all-day battery.');
+      await insertProduct(category: 'Electronics', name: 'USB-C Hub', priceCents: 4500, stock: 5, description: 'Seven ports, one cable.');
+      final keyboard =
+          await insertProduct(category: 'Electronics', name: 'Mechanical Keyboard', priceCents: 12000, stock: 15, description: 'Tactile switches, hot-swappable.');
+
+      final mugSet =
+          await insertProduct(category: 'Home & Kitchen', name: 'Ceramic Mug Set', priceCents: 2500, discountPercent: 10, stock: 40, description: 'Set of four, dishwasher safe.');
+      await insertProduct(category: 'Home & Kitchen', name: 'Cast Iron Pan', priceCents: 6500, stock: 12, description: 'Seasoned, oven-safe, forever.');
+
+      final flutterBook =
+          await insertProduct(category: 'Books', name: 'Flutter in Action', priceCents: 3500, stock: 20, description: 'A practical guide to building apps.');
+      final cleanArch =
+          await insertProduct(category: 'Books', name: 'Clean Architecture', priceCents: 4500, discountPercent: 20, stock: 3, description: 'A craftsman guide to software structure.');
+
+      final yogaMat =
+          await insertProduct(category: 'Sports', name: 'Yoga Mat', priceCents: 2900, stock: 0, description: 'Extra grip, easy to roll.');
+      final bands =
+          await insertProduct(category: 'Sports', name: 'Resistance Bands', priceCents: 1500, stock: 60, description: 'Five levels of resistance.');
+
+      // --- Demo orders ------------------------------------------------------
+      Future<void> insertOrder({
+        required String number,
+        required OrderStatus status,
+        required int subtotalCents,
+        required int discountCents,
+        required int totalCents,
+        required String name,
+        required String phone,
+        required String address,
+        required int placedAt,
+        required List<({int? productId, String productName, int unitPriceCents, int discountPercent, int quantity})> items,
+        required List<({OrderStatus status, int changedAt})> history,
+      }) async {
+        final orderId = await _db.into(_db.orders).insert(OrdersCompanion.insert(
+              orderNumber: number,
+              status: status,
+              subtotalCents: subtotalCents,
+              discountCents: discountCents,
+              totalCents: totalCents,
+              shippingName: name,
+              shippingPhone: phone,
+              shippingAddress: address,
+              createdAt: placedAt,
+              updatedAt: history.last.changedAt,
+            ));
+        for (final item in items) {            await _db.into(_db.orderItems).insert(OrderItemsCompanion.insert(
+                orderId: orderId,
+                // productId is Value<int?> — Value() accepts null, so no ternary.
+                productId: Value(item.productId),
+                productName: item.productName,
+                unitPriceCents: item.unitPriceCents,
+                discountPercent: Value(item.discountPercent),
+                quantity: item.quantity,
+              ));
+        }
+        for (final entry in history) {
+          await _db.into(_db.orderStatusHistory).insert(
+            OrderStatusHistoryCompanion.insert(
+              orderId: orderId,
+              status: entry.status,
+              changedAt: entry.changedAt,
+            ),
+          );
+        }
+      }
+
+      // Every order satisfies subtotal - discount == total (tested).
+      await insertOrder(
+        number: 'ORD-000001',
+        status: OrderStatus.delivered,
+        subtotalCents: 6800,
+        discountCents: 1000,
+        totalCents: 5800,
+        name: 'Amira Hassan',
+        phone: '0100 000 0001',
+        address: '14 Nile St, Cairo',
+        placedAt: base - 6 * day,
+        items: [
+          (productId: tee, productName: 'Classic Tee', unitPriceCents: 2000, discountPercent: 25, quantity: 2),
+          (productId: belt, productName: 'Leather Belt', unitPriceCents: 2800, discountPercent: 0, quantity: 1),
+        ],
+        history: [
+          (status: OrderStatus.pending, changedAt: base - 6 * day),
+          (status: OrderStatus.confirmed, changedAt: base - 6 * day + hour),
+          (status: OrderStatus.shipped, changedAt: base - 5 * day),
+          (status: OrderStatus.delivered, changedAt: base - 4 * day),
+        ],
+      );
+
+      await insertOrder(
+        number: 'ORD-000002',
+        status: OrderStatus.shipped,
+        subtotalCents: 9900,
+        discountCents: 1485,
+        totalCents: 8415,
+        name: 'Karim Adel',
+        phone: '0100 000 0002',
+        address: '8 Tahrir Sq, Cairo',
+        placedAt: base - 2 * day,
+        items: [
+          (productId: earbuds, productName: 'Wireless Earbuds', unitPriceCents: 9900, discountPercent: 15, quantity: 1),
+        ],
+        history: [
+          (status: OrderStatus.pending, changedAt: base - 2 * day),
+          (status: OrderStatus.confirmed, changedAt: base - 2 * day + hour),
+          (status: OrderStatus.shipped, changedAt: base - day),
+        ],
+      );
+
+      await insertOrder(
+        number: 'ORD-000003',
+        status: OrderStatus.confirmed,
+        subtotalCents: 17000,
+        discountCents: 500,
+        totalCents: 16500,
+        name: 'Lina Fathy',
+        phone: '0100 000 0003',
+        address: '22 Corniche Rd, Alexandria',
+        placedAt: base - day + 2 * hour,
+        items: [
+          (productId: keyboard, productName: 'Mechanical Keyboard', unitPriceCents: 12000, discountPercent: 0, quantity: 1),
+          (productId: mugSet, productName: 'Ceramic Mug Set', unitPriceCents: 2500, discountPercent: 10, quantity: 2),
+        ],
+        history: [
+          (status: OrderStatus.pending, changedAt: base - day + 2 * hour),
+          (status: OrderStatus.confirmed, changedAt: base - day + 3 * hour),
+        ],
+      );
+
+      await insertOrder(
+        number: 'ORD-000004',
+        status: OrderStatus.pending,
+        subtotalCents: 5900,
+        discountCents: 0,
+        totalCents: 5900,
+        name: 'Omar Khaled',
+        phone: '0100 000 0004',
+        address: '3 Zamalek St, Cairo',
+        placedAt: base - 3 * hour,
+        items: [
+          (productId: yogaMat, productName: 'Yoga Mat', unitPriceCents: 2900, discountPercent: 0, quantity: 1),
+          (productId: bands, productName: 'Resistance Bands', unitPriceCents: 1500, discountPercent: 0, quantity: 2),
+        ],
+        history: [
+          (status: OrderStatus.pending, changedAt: base - 3 * hour),
+        ],
+      );
+
+      await insertOrder(
+        number: 'ORD-000005',
+        status: OrderStatus.cancelled,
+        subtotalCents: 4500,
+        discountCents: 0,
+        totalCents: 4500,
+        name: 'Sara Nabil',
+        phone: '0100 000 0005',
+        address: '5 Dokki St, Giza',
+        placedAt: base - 8 * day,
+        items: [
+          (productId: jacket, productName: 'Denim Jacket', unitPriceCents: 4500, discountPercent: 0, quantity: 1),
+        ],
+        history: [
+          (status: OrderStatus.pending, changedAt: base - 8 * day),
+          (status: OrderStatus.cancelled, changedAt: base - 7 * day),
+        ],
+      );
+
+      await insertOrder(
+        number: 'ORD-000006',
+        status: OrderStatus.delivered,
+        subtotalCents: 8000,
+        discountCents: 900,
+        totalCents: 7100,
+        name: 'Hany Ibrahim',
+        phone: '0100 000 0006',
+        address: '19 Nasr City, Cairo',
+        placedAt: base - 10 * day,
+        items: [
+          (productId: flutterBook, productName: 'Flutter in Action', unitPriceCents: 3500, discountPercent: 0, quantity: 1),
+          (productId: cleanArch, productName: 'Clean Architecture', unitPriceCents: 4500, discountPercent: 20, quantity: 1),
+        ],
+        history: [
+          (status: OrderStatus.pending, changedAt: base - 10 * day),
+          (status: OrderStatus.confirmed, changedAt: base - 10 * day + hour),
+          (status: OrderStatus.shipped, changedAt: base - 9 * day),
+          (status: OrderStatus.delivered, changedAt: base - 8 * day),
+        ],
+      );
+
+      await _db.into(_db.appMeta).insertOnConflictUpdate(
+            const AppMetaCompanion(
+              id: Value(1),
+              seedVersion: Value(version),
+            ),
+          );
+    });
+  }
+}

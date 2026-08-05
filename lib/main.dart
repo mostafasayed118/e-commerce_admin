@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 
-void main() {
+import 'data/database/app_database.dart';
+import 'data/database/seed_data.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Minimal seed wiring so the app is demoable on first launch. Task 12
+  // (app shell) replaces this bootstrap with proper GetIt-based initialization.
+  try {
+    await SeedData(AppDatabase()).seedIfNeeded();
+  } catch (error) {
+    // Never let a seed failure kill startup silently; the app still opens
+    // and the error is visible in the console (Section D.4: no silent
+    // failures). Seeding retries on the next launch (version guard).
+    debugPrint('Seeding failed: $error');
+  }
   runApp(const MyApp());
 }
 
