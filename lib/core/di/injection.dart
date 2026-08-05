@@ -25,6 +25,7 @@ import '../../domain/usecases/cart/clear_cart.dart';
 import '../../domain/usecases/cart/remove_from_cart.dart';
 import '../../domain/usecases/cart/update_cart_quantity.dart';
 import '../../domain/usecases/checkout/place_order.dart';
+import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/router/admin_session.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
@@ -98,4 +99,10 @@ void setupDependencies() {
 
   // App shell: the admin unlock flag consulted by the router guard.
   getIt.registerLazySingleton<AdminSession>(AdminSession.new);
+
+  // Features: one Cubit per feature, injected with its repositories.
+  getIt.registerLazySingleton<CatalogCubit>(() => CatalogCubit(
+    getIt<ProductRepository>(),
+    getIt<CategoryRepository>(),
+  ));
 }

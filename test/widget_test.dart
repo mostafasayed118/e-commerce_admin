@@ -6,6 +6,7 @@ import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/presentation/app.dart';
 import 'package:shop_admin/presentation/shells/shell_scaffold.dart';
 
+import 'helpers/drift_settle.dart';
 import 'helpers/test_di.dart';
 
 void main() {
@@ -20,22 +21,29 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('boots into the shop shell and navigates branches',
-      (WidgetTester tester) async {
-    // Narrow phone-like viewport -> the constraint-based layout picks the
-    // bottom NavigationBar (800x600 default would pick the rail instead).
+  Future<void> pumpApp(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-
     await tester.pumpWidget(const ShopAdminApp());
+    // The catalog cubit subscribes to drift watch streams on startup; give
+    // the background isolate a chance to deliver (FakeAsync cannot see it).
+    await settleDrift(tester);
     await tester.pumpAndSettle();
+  }
 
+  testWidgets('boots into the shop shell and navigates branches',
+      (WidgetTester tester) async {
+    await pumpApp(tester);
+
+    // Narrow viewport -> the constraint-based layout picks the bottom bar.
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.text('Shop'), findsWidgets); // nav label + placeholder title
+    expect(find.text('Shop'), findsWidgets); // nav label + screen title
 
     await tester.tap(find.text('Cart'));
     await tester.pumpAndSettle();
     expect(find.text('This screen arrives in Task 15.'), findsOneWidget);
+
+    await unmountApp(tester);
   });
 
   testWidgets('switches to the rail layout on wide viewports',
@@ -44,11 +52,14 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(const ShopAdminApp());
+    await settleDrift(tester);
     await tester.pumpAndSettle();
 
     // The 720px breakpoint: wide means NavigationRail, no bottom bar.
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
     expect(ShellScaffold.wideBreakpoint, 720);
+
+    await unmountApp(tester);
   });
 }

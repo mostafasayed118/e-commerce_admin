@@ -7,6 +7,11 @@ import 'package:shop_admin/data/database/app_database.dart';
 /// [AppDatabase] registration for an in-memory one, so presentation tests
 /// never touch the device database.
 ///
+/// NOTE: drift's NativeDatabase runs queries on a background isolate, so
+/// `testWidgets` (FakeAsync zone) cannot see stream emissions without
+/// yielding to the real event loop — use the `settleDrift` helper after
+/// pumping the app (see helpers/drift_settle.dart).
+///
 /// The caller owns the returned database: close it and call `getIt.reset()`
 /// in tearDown.
 AppDatabase setupTestDi() {

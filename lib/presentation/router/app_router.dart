@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection.dart';
 import '../features/admin/gate/admin_gate_screen.dart';
+import '../features/catalog/catalog_screen.dart';
+import '../features/catalog/product_detail_screen.dart';
 import '../placeholder_screen.dart';
 import '../shells/admin_shell.dart';
 import '../shells/shop_shell.dart';
@@ -16,6 +18,8 @@ abstract final class RouteNames {
   static const String cart = 'cart';
   static const String orders = 'orders';
   static const String profile = 'profile';
+  // Top-level shop pages (above the shell).
+  static const String productDetail = 'product-detail';
   // Admin.
   static const String adminGate = 'admin-gate';
   static const String adminOverview = 'admin-overview';
@@ -31,8 +35,11 @@ abstract final class RouteNames {
 /// only when [AdminSession.unlocked] is true; otherwise it is redirected to
 /// `/admin/gate`, which either asks for the PIN or (first run) sets one
 /// (Task 9's SettingsRepository decides which).
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 GoRouter buildAppRouter() {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     redirect: _adminRedirect,
     routes: [
@@ -46,8 +53,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/',
                 name: RouteNames.shop,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Shop', arrivingIn: 'Task 13'),
+                builder: (context, state) => const CatalogScreen(),
               ),
             ],
           ),
@@ -82,6 +88,20 @@ GoRouter buildAppRouter() {
             ],
           ),
         ],
+      ),
+
+      // --- Product detail: pushed on the root navigator so it covers the
+      // shell (full-screen, standard shop UX). ---
+      GoRoute(
+        path: '/product/:productId',
+        name: RouteNames.productDetail,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => ProductDetailScreen(
+          // Guarded: a malformed deep link resolves to -1, which the detail
+          // screen's watch stream maps to its "Product not found" view.
+          productId:
+              int.tryParse(state.pathParameters['productId'] ?? '') ?? -1,
+        ),
       ),
 
       // --- Admin gate: outside any shell so it can float above them. ---

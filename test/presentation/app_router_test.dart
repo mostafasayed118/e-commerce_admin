@@ -8,6 +8,7 @@ import 'package:shop_admin/presentation/features/admin/gate/admin_gate_screen.da
 import 'package:shop_admin/presentation/router/admin_session.dart';
 import 'package:shop_admin/presentation/router/app_router.dart';
 
+import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
 
 void main() {
@@ -27,10 +28,15 @@ void main() {
 
   Future<void> pumpRouter(WidgetTester tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    // Initial route is the catalog (drift-backed) — settle the streams.
+    await settleDrift(tester);
     await tester.pumpAndSettle();
   }
 
   Future<String> currentPath(WidgetTester tester) async {
+    // The gate screen queries isPinSet on build (drift) — settle before
+    // asserting, and settle animations.
+    await settleDrift(tester);
     await tester.pumpAndSettle();
     return router.routerDelegate.currentConfiguration.uri.path;
   }
@@ -43,6 +49,8 @@ void main() {
       router.go('/admin/overview');
       expect(await currentPath(tester), '/admin/gate');
       expect(find.byType(AdminGateScreen), findsOneWidget);
+
+      await unmountApp(tester);
     });
 
     testWidgets('lets admin routes through once the session is unlocked',
@@ -53,6 +61,8 @@ void main() {
       router.go('/admin/products');
       expect(await currentPath(tester), '/admin/products');
       expect(find.text('This screen arrives in Task 14.'), findsOneWidget);
+
+      await unmountApp(tester);
     });
 
     testWidgets('the gate itself is always reachable, even while locked',
@@ -62,6 +72,8 @@ void main() {
       router.go('/admin/gate');
       expect(await currentPath(tester), '/admin/gate');
       expect(find.byType(AdminGateScreen), findsOneWidget);
+
+      await unmountApp(tester);
     });
 
     testWidgets('a fresh session starts locked', (WidgetTester tester) async {
@@ -76,6 +88,8 @@ void main() {
       router.go('/cart');
       expect(await currentPath(tester), '/cart');
       expect(find.text('This screen arrives in Task 15.'), findsOneWidget);
+
+      await unmountApp(tester);
     });
   });
 }
