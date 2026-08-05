@@ -7,8 +7,8 @@
 /// **Index stability contract:** drift's `intEnum` persists `index` values to
 /// SQLite, so the declaration order below is permanent — only *append* new
 /// statuses, never reorder or insert in the middle, or existing rows will
-/// silently map to the wrong status. (Task 4 may switch to an explicit int
-/// mapping to make reordering safe.)
+/// silently map to the wrong status. (A future change could switch to an
+/// explicit int mapping to make reordering safe.)
 enum OrderStatus {
   pending('Pending'),
   confirmed('Confirmed'),

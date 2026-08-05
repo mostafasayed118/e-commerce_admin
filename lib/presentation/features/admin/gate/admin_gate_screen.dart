@@ -10,8 +10,9 @@ import '../../../router/admin_session.dart';
 /// form afterwards (the repository decides which). On success it unlocks the
 /// [AdminSession] and the router guard lets navigation through.
 ///
-/// Deliberately a plain StatefulWidget for now — the full gate feature
-/// (Task 17) replaces it with a proper Cubit + state handling.
+/// Deliberately a plain StatefulWidget, not a Cubit (Section C.3): the gate
+/// is a single two-branch form with one action — the same judgment as the
+/// checkout screen. A state machine would be ceremony for a set/enter flow.
 class AdminGateScreen extends StatefulWidget {
   const AdminGateScreen({super.key});
 

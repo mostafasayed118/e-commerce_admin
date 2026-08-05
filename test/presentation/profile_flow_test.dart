@@ -7,6 +7,7 @@ import 'package:shop_admin/core/entities/shipping_info.dart';
 import 'package:shop_admin/core/error/result.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/domain/repositories/settings_repository.dart';
+import 'package:shop_admin/presentation/features/admin/gate/admin_gate_screen.dart';
 import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
@@ -135,6 +136,24 @@ void main() {
     await settleDrift(tester);
     await tester.pumpAndSettle();
     expect(fieldText(tester, 'profile-name'), 'Partially typed…');
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('the Admin entry on the profile tab reaches the locked gate',
+      (WidgetTester tester) async {
+    await pumpApp(tester);
+    await goToProfile(tester);
+
+    // The one on-screen path to the admin area (everything else is deep
+    // links behind the redirect guard). Fresh DB → the gate asks to set a PIN.
+    await tester.tap(find.byKey(const Key('profile-admin-entry')));
+    await tester.pump();
+    await settleDrift(tester); // gate's isPinSet() query
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AdminGateScreen), findsOneWidget);
+    expect(find.text('Set an admin PIN'), findsOneWidget);
 
     await unmountApp(tester);
   });

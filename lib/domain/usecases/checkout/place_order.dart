@@ -8,7 +8,7 @@ import 'validate_shipping.dart';
 
 /// Places an order from the current cart.
 ///
-/// The single entry point the checkout screen (Task 20) will call: trims and
+/// The single entry point the checkout screen calls: trims and
 /// validates the shipping form, delegates the atomic placement to
 /// [OrderRepository.placeOrder] (stock re-validation, snapshot, cart clear —
 /// Task 8), then persists the shipping details as the customer profile for

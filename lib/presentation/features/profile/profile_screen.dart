@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/entities/shipping_info.dart';
@@ -233,6 +234,27 @@ class _ProfileFormState extends State<_ProfileForm> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Text('Save profile'),
+          ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 8),
+          // The one on-screen entry to the admin area (everything else under
+          // /admin/ is reached after the PIN gate; the router guard keeps it
+          // locked). Placed here — the profile tab is "your account" — so the
+          // dashboard is discoverable without cluttering the shop shell.
+          ListTile(
+            key: const Key('profile-admin-entry'),
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              child: Icon(
+                Icons.admin_panel_settings_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            title: const Text('Admin dashboard'),
+            subtitle: const Text('PIN-protected shop management'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/admin/gate'),
           ),
         ],
       ),
