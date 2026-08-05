@@ -4,7 +4,8 @@ import '../../../core/entities/order_status.dart';
 
 /// Icon + color mapping for an [OrderStatus], from Material 3 scheme tokens
 /// only (no hardcoded colors). Used by the list avatars, the chips, and the
-/// detail timeline so every status looks identical everywhere.
+/// detail timeline so every status looks identical everywhere. Shared by the
+/// customer and admin order features (admin imports from here).
 ({IconData icon, Color color, Color background}) orderStatusVisuals(
   OrderStatus status,
   ColorScheme scheme,

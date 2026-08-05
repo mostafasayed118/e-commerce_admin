@@ -4,11 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
-import '../../../core/utils/money.dart';
 import '../../widgets/message_view.dart';
-import 'order_date_format.dart';
+import 'order_list_tile.dart';
 import 'orders_cubit.dart';
-import 'status_visuals.dart';
 
 /// The customer's order history. Reactive via [OrdersCubit]; each tile opens
 /// the detail screen with the full timeline. DI-owned cubit provided by
@@ -74,36 +72,14 @@ class _OrderList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: orders.length,
       separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        final visuals = orderStatusVisuals(order.status, scheme);
-        // The date part is omitted when absent rather than fabricated — a
-        // made-up timestamp would be a lie on the history screen.
-        final subtitleParts = [
-          if (order.createdAt != null) formatOrderDate(order.createdAt!),
-          '${order.items.length} item${order.items.length == 1 ? '' : 's'}',
-          formatCents(order.totalCents),
-        ];
-        return ListTile(
-          onTap: () => context.push('/orders/${order.id}'),
-          leading: CircleAvatar(
-            backgroundColor: visuals.background,
-            foregroundColor: visuals.color,
-            child: Icon(visuals.icon),
-          ),
-          title: Text(
-            order.orderNumber,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(subtitleParts.join(' · ')),
-          trailing: StatusChip(order.status),
-        );
-      },
+      itemBuilder: (context, index) => OrderListTile(
+        order: orders[index],
+        onTap: () => context.push('/orders/${orders[index].id}'),
+      ),
     );
   }
 }

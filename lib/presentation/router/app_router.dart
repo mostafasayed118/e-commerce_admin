@@ -6,6 +6,8 @@ import '../features/admin/catalog/categories_screen.dart';
 import '../features/admin/catalog/product_form_screen.dart';
 import '../features/admin/catalog/products_screen.dart';
 import '../features/admin/gate/admin_gate_screen.dart';
+import '../features/admin/orders/admin_order_detail_screen.dart';
+import '../features/admin/orders/admin_orders_screen.dart';
 import '../features/cart/cart_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/catalog/product_detail_screen.dart';
@@ -37,6 +39,7 @@ abstract final class RouteNames {
   static const String adminProductEdit = 'admin-product-edit';
   static const String adminCategories = 'admin-categories';
   static const String adminOrders = 'admin-orders';
+  static const String adminOrderDetail = 'admin-order-detail';
 }
 
 /// The app's single router: a shop shell, an admin shell, and the admin gate
@@ -140,6 +143,17 @@ GoRouter buildAppRouter() {
         builder: (context, state) => const CheckoutScreen(),
       ),
 
+      // --- Admin order detail: pushed on the root navigator (gated by the
+      // same /admin/ guard as everything else). ---
+      GoRoute(
+        path: '/admin/orders/:orderId',
+        name: RouteNames.adminOrderDetail,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => AdminOrderDetailScreen(
+          orderId: int.tryParse(state.pathParameters['orderId'] ?? '') ?? -1,
+        ),
+      ),
+
       // --- Product create/edit forms: pushed on the root navigator so they
       // cover the admin shell (same pattern as /product/:productId). The
       // redirect guard gates them automatically (they live under /admin/). ---
@@ -197,8 +211,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/admin/orders',
                 name: RouteNames.adminOrders,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Orders', arrivingIn: 'Task 17'),
+                builder: (context, state) => const AdminOrdersScreen(),
               ),
             ],
           ),
