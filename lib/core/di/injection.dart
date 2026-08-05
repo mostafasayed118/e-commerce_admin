@@ -19,6 +19,10 @@ import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/repositories/settings_repository.dart';
+import '../../domain/usecases/cart/add_to_cart.dart';
+import '../../domain/usecases/cart/clear_cart.dart';
+import '../../domain/usecases/cart/remove_from_cart.dart';
+import '../../domain/usecases/cart/update_cart_quantity.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
 /// registration, no codegen (Section B.3). Feature tasks extend this as they
@@ -65,5 +69,22 @@ void setupDependencies() {
   ));
   getIt.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(getIt<SettingsDao>()),
+  );
+
+  // Domain use cases (Decision A): cart business rules live here; the
+  // repositories stay dumb storage gates.
+  getIt.registerLazySingleton<AddToCart>(() => AddToCart(
+    getIt<CartRepository>(),
+    getIt<ProductRepository>(),
+  ));
+  getIt.registerLazySingleton<UpdateCartQuantity>(() => UpdateCartQuantity(
+    getIt<CartRepository>(),
+    getIt<ProductRepository>(),
+  ));
+  getIt.registerLazySingleton<RemoveFromCart>(
+    () => RemoveFromCart(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<ClearCart>(
+    () => ClearCart(getIt<CartRepository>()),
   );
 }
