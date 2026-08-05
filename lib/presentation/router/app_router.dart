@@ -15,7 +15,7 @@ import '../features/catalog/product_detail_screen.dart';
 import '../features/checkout/checkout_screen.dart';
 import '../features/orders/order_detail_screen.dart';
 import '../features/orders/orders_screen.dart';
-import '../placeholder_screen.dart';
+import '../features/profile/profile_screen.dart';
 import '../shells/admin_shell.dart';
 import '../shells/shop_shell.dart';
 import 'admin_session.dart';
@@ -95,8 +95,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/profile',
                 name: RouteNames.profile,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Profile', arrivingIn: 'Task 21'),
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

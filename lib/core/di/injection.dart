@@ -26,12 +26,14 @@ import '../../domain/usecases/cart/clear_cart.dart';
 import '../../domain/usecases/cart/remove_from_cart.dart';
 import '../../domain/usecases/cart/update_cart_quantity.dart';
 import '../../domain/usecases/checkout/place_order.dart';
+import '../../domain/usecases/profile/save_profile.dart';
 import '../../presentation/features/admin/catalog/admin_catalog_cubit.dart';
 import '../../presentation/features/admin/orders/admin_orders_cubit.dart';
 import '../../presentation/features/admin/overview/admin_overview_cubit.dart';
 import '../../presentation/features/cart/cart_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/features/orders/orders_cubit.dart';
+import '../../presentation/features/profile/profile_cubit.dart';
 import '../../presentation/router/admin_session.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
@@ -102,6 +104,9 @@ void setupDependencies() {
     getIt<OrderRepository>(),
     getIt<SettingsRepository>(),
   ));
+  getIt.registerLazySingleton<SaveProfile>(
+    () => SaveProfile(getIt<SettingsRepository>()),
+  );
 
   // App shell: the admin unlock flag consulted by the router guard.
   getIt.registerLazySingleton<AdminSession>(AdminSession.new);
@@ -136,5 +141,9 @@ void setupDependencies() {
   getIt.registerLazySingleton<AdminOverviewCubit>(() => AdminOverviewCubit(
     getIt<OrderRepository>(),
     getIt<ProductRepository>(),
+  ));
+  getIt.registerLazySingleton<ProfileCubit>(() => ProfileCubit(
+    getIt<SettingsRepository>(),
+    getIt<SaveProfile>(),
   ));
 }
