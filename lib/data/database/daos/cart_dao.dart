@@ -22,6 +22,13 @@ class CartDao extends DatabaseAccessor<AppDatabase> with _$CartDaoMixin {
         .getSingleOrNull();
   }
 
+  /// One-shot read of the whole cart, in addition order. Used by the order
+  /// repository's transactional `placeOrder` (no stream needed there).
+  Future<List<CartItemRow>> getAll() {
+    return (select(cartItems)..orderBy([(t) => OrderingTerm.asc(t.addedAt)]))
+        .get();
+  }
+
   /// Stamps a new row; throws on an existing productId (callers upsert
   /// read-modify-write instead).
   Future<void> insert(CartItemsCompanion companion) =>
