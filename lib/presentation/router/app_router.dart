@@ -8,6 +8,7 @@ import '../features/admin/catalog/products_screen.dart';
 import '../features/admin/gate/admin_gate_screen.dart';
 import '../features/admin/orders/admin_order_detail_screen.dart';
 import '../features/admin/orders/admin_orders_screen.dart';
+import '../features/admin/overview/admin_overview_screen.dart';
 import '../features/cart/cart_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/catalog/product_detail_screen.dart';
@@ -183,8 +184,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/admin/overview',
                 name: RouteNames.adminOverview,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Overview', arrivingIn: 'Task 13'),
+                builder: (context, state) => const AdminOverviewScreen(),
               ),
             ],
           ),

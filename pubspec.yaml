@@ -76,6 +76,17 @@ dependencies:
   # Dart SDK.
   path_provider: ^2.1.5
 
+  # Admin overview chart (Task 18). Section D.3 — why now: the dashboard's
+  # orders-by-status bar chart; the SDK has no charting. Why this: fl_chart is
+  # the de-facto standard, pure-Dart canvas drawing (no platform channels —
+  # works on Android + Windows, our two targets), and battle-tested.
+  # Alternatives rejected: hand-rolled CustomPaint (re-inventing a chart
+  # library for one bar chart), syncfusion_flutter_charts (commercial-grade
+  # licensing for a demo dashboard). Deferral considered: the chart is
+  # replaceable later without touching the data layer (the cubit exposes
+  # plain counts).
+  fl_chart: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

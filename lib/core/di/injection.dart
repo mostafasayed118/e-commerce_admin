@@ -28,6 +28,7 @@ import '../../domain/usecases/cart/update_cart_quantity.dart';
 import '../../domain/usecases/checkout/place_order.dart';
 import '../../presentation/features/admin/catalog/admin_catalog_cubit.dart';
 import '../../presentation/features/admin/orders/admin_orders_cubit.dart';
+import '../../presentation/features/admin/overview/admin_overview_cubit.dart';
 import '../../presentation/features/cart/cart_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/features/orders/orders_cubit.dart';
@@ -132,4 +133,8 @@ void setupDependencies() {
   getIt.registerLazySingleton<AdminOrdersCubit>(
     () => AdminOrdersCubit(getIt<OrderRepository>()),
   );
+  getIt.registerLazySingleton<AdminOverviewCubit>(() => AdminOverviewCubit(
+    getIt<OrderRepository>(),
+    getIt<ProductRepository>(),
+  ));
 }
