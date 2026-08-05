@@ -8,6 +8,7 @@ import '../../data/database/daos/order_dao.dart';
 import '../../data/database/daos/product_dao.dart';
 import '../../data/database/daos/settings_dao.dart';
 import '../../data/database/mappers/category_mapper.dart';
+import '../../data/services/image_store.dart';
 import '../../data/database/mappers/order_mapper.dart';
 import '../../data/database/mappers/product_mapper.dart';
 import '../../data/repositories/cart_repository_impl.dart';
@@ -25,6 +26,7 @@ import '../../domain/usecases/cart/clear_cart.dart';
 import '../../domain/usecases/cart/remove_from_cart.dart';
 import '../../domain/usecases/cart/update_cart_quantity.dart';
 import '../../domain/usecases/checkout/place_order.dart';
+import '../../presentation/features/admin/catalog/admin_catalog_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/router/admin_session.dart';
 
@@ -100,9 +102,18 @@ void setupDependencies() {
   // App shell: the admin unlock flag consulted by the router guard.
   getIt.registerLazySingleton<AdminSession>(AdminSession.new);
 
+  // Product images (Task 14): resolves the documents dir, copies picks into
+  // images/, deletes on product deletion.
+  getIt.registerLazySingleton<ImageStore>(ImageStore.new);
+
   // Features: one Cubit per feature, injected with its repositories.
   getIt.registerLazySingleton<CatalogCubit>(() => CatalogCubit(
     getIt<ProductRepository>(),
     getIt<CategoryRepository>(),
+  ));
+  getIt.registerLazySingleton<AdminCatalogCubit>(() => AdminCatalogCubit(
+    getIt<ProductRepository>(),
+    getIt<CategoryRepository>(),
+    getIt<ImageStore>(),
   ));
 }

@@ -65,6 +65,17 @@ dependencies:
   # Salt entropy comes from dart:math Random.secure(), so no further deps.
   crypto: ^3.0.6
 
+  # Admin product images (Task 14): pick from the gallery. Section D.3 —
+  # image_picker is the standard platform-channel wrapper (Android/Windows
+  # supported); the alternative is hand-rolling platform channels (no). The
+  # picked file is COPIED into the app documents dir by ImageStore.
+  image_picker: ^1.2.0
+
+  # Resolves the app documents directory for stored product images
+  # (path_provider). Required for local file storage — no alternative in the
+  # Dart SDK.
+  path_provider: ^2.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection.dart';
+import '../features/admin/catalog/categories_screen.dart';
+import '../features/admin/catalog/product_form_screen.dart';
+import '../features/admin/catalog/products_screen.dart';
 import '../features/admin/gate/admin_gate_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/catalog/product_detail_screen.dart';
@@ -24,6 +27,8 @@ abstract final class RouteNames {
   static const String adminGate = 'admin-gate';
   static const String adminOverview = 'admin-overview';
   static const String adminProducts = 'admin-products';
+  static const String adminProductNew = 'admin-product-new';
+  static const String adminProductEdit = 'admin-product-edit';
   static const String adminCategories = 'admin-categories';
   static const String adminOrders = 'admin-orders';
 }
@@ -111,6 +116,25 @@ GoRouter buildAppRouter() {
         builder: (context, state) => const AdminGateScreen(),
       ),
 
+      // --- Product create/edit forms: pushed on the root navigator so they
+      // cover the admin shell (same pattern as /product/:productId). The
+      // redirect guard gates them automatically (they live under /admin/). ---
+      GoRoute(
+        path: '/admin/products/new',
+        name: RouteNames.adminProductNew,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ProductFormScreen(),
+      ),
+      GoRoute(
+        path: '/admin/products/:productId/edit',
+        name: RouteNames.adminProductEdit,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => ProductFormScreen(
+          productId:
+              int.tryParse(state.pathParameters['productId'] ?? '') ?? -1,
+        ),
+      ),
+
       // --- Admin dashboard: gated shell with its own four branches. ---
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -131,8 +155,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/admin/products',
                 name: RouteNames.adminProducts,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Products', arrivingIn: 'Task 14'),
+                builder: (context, state) => const ProductsScreen(),
               ),
             ],
           ),
@@ -141,8 +164,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/admin/categories',
                 name: RouteNames.adminCategories,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Categories', arrivingIn: 'Task 14'),
+                builder: (context, state) => const CategoriesScreen(),
               ),
             ],
           ),

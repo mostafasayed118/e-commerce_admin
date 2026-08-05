@@ -1,13 +1,37 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
-/// Product image placeholder.
-///
-/// The seed data ships with no images, so today every product renders this
-/// tonal placeholder. Real file loading (path_provider + image_picker) lands
-/// with Task 14, when admin-uploaded images start to exist; this widget is
-/// where that implementation goes.
+import '../../../../core/di/injection.dart';
+import '../../../../data/services/image_store.dart';
+
+/// Product image: renders the stored file for [imagePath] (a relative path in
+/// the app documents dir, resolved via [ImageStore]) and falls back to a
+/// tonal placeholder when there is no image or the file is missing.
 class ProductImage extends StatelessWidget {
-  const ProductImage({super.key, this.iconSize = 40});
+  const ProductImage({super.key, this.imagePath, this.iconSize = 40});
+
+  final String? imagePath;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imagePath == null) return _Placeholder(iconSize: iconSize);
+    return FutureBuilder<File>(
+      future: getIt<ImageStore>().fileFor(imagePath!),
+      builder: (context, snapshot) {
+        final file = snapshot.data;
+        if (file != null && file.existsSync()) {
+          return Image.file(file, fit: BoxFit.cover);
+        }
+        return _Placeholder(iconSize: iconSize);
+      },
+    );
+  }
+}
+
+class _Placeholder extends StatelessWidget {
+  const _Placeholder({required this.iconSize});
 
   final double iconSize;
 
