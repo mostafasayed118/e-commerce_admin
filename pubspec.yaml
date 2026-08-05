@@ -56,6 +56,15 @@ dependencies:
   # Official drift setup for Flutter: handles native sqlite3 init on Android/Windows.
   drift_flutter: ^0.3.1
 
+  # SHA-256 for the admin PIN gate (Decision B, Option 2: salted hash, never
+  # the raw PIN). Section D.3 — why now: the gate needs a one-way hash and
+  # dart:core has none. Why this: `crypto` is the minimal standard (SHA-256);
+  # alternatives rejected — pointycastle/PBKDF2 (real-auth-grade KDF for a
+  # mock gate), flutter_secure_storage (stores the PIN recoverably, contrary
+  # to the hash-not-store decision), hand-rolled (never for security code).
+  # Salt entropy comes from dart:math Random.secure(), so no further deps.
+  crypto: ^3.0.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

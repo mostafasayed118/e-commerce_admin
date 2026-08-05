@@ -5,6 +5,7 @@ import '../../data/database/daos/cart_dao.dart';
 import '../../data/database/daos/category_dao.dart';
 import '../../data/database/daos/order_dao.dart';
 import '../../data/database/daos/product_dao.dart';
+import '../../data/database/daos/settings_dao.dart';
 import '../../data/database/mappers/category_mapper.dart';
 import '../../data/database/mappers/order_mapper.dart';
 import '../../data/database/mappers/product_mapper.dart';
@@ -12,10 +13,12 @@ import '../../data/repositories/cart_repository_impl.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../data/repositories/order_repository_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
+import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/repositories/product_repository.dart';
+import '../../domain/repositories/settings_repository.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
 /// registration, no codegen (Section B.3). Feature tasks extend this as they
@@ -33,6 +36,9 @@ void setupDependencies() {
   getIt.registerLazySingleton<CategoryDao>(() => CategoryDao(getIt<AppDatabase>()));
   getIt.registerLazySingleton<CartDao>(() => CartDao(getIt<AppDatabase>()));
   getIt.registerLazySingleton<OrderDao>(() => OrderDao(getIt<AppDatabase>()));
+  getIt.registerLazySingleton<SettingsDao>(
+    () => SettingsDao(getIt<AppDatabase>()),
+  );
   getIt.registerLazySingleton<ProductMapper>(ProductMapper.new);
   getIt.registerLazySingleton<CategoryMapper>(CategoryMapper.new);
   getIt.registerLazySingleton<OrderMapper>(OrderMapper.new);
@@ -57,4 +63,7 @@ void setupDependencies() {
     getIt<OrderMapper>(),
     getIt<AppDatabase>(),
   ));
+  getIt.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(getIt<SettingsDao>()),
+  );
 }
