@@ -23,6 +23,7 @@ import '../../domain/usecases/cart/add_to_cart.dart';
 import '../../domain/usecases/cart/clear_cart.dart';
 import '../../domain/usecases/cart/remove_from_cart.dart';
 import '../../domain/usecases/cart/update_cart_quantity.dart';
+import '../../domain/usecases/checkout/place_order.dart';
 
 /// The composition root: the one place that may touch every layer. Manual
 /// registration, no codegen (Section B.3). Feature tasks extend this as they
@@ -87,4 +88,8 @@ void setupDependencies() {
   getIt.registerLazySingleton<ClearCart>(
     () => ClearCart(getIt<CartRepository>()),
   );
+  getIt.registerLazySingleton<PlaceOrder>(() => PlaceOrder(
+    getIt<OrderRepository>(),
+    getIt<SettingsRepository>(),
+  ));
 }
