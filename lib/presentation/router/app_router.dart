@@ -6,8 +6,10 @@ import '../features/admin/catalog/categories_screen.dart';
 import '../features/admin/catalog/product_form_screen.dart';
 import '../features/admin/catalog/products_screen.dart';
 import '../features/admin/gate/admin_gate_screen.dart';
+import '../features/cart/cart_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/catalog/product_detail_screen.dart';
+import '../features/checkout/checkout_screen.dart';
 import '../placeholder_screen.dart';
 import '../shells/admin_shell.dart';
 import '../shells/shop_shell.dart';
@@ -23,6 +25,7 @@ abstract final class RouteNames {
   static const String profile = 'profile';
   // Top-level shop pages (above the shell).
   static const String productDetail = 'product-detail';
+  static const String checkout = 'checkout';
   // Admin.
   static const String adminGate = 'admin-gate';
   static const String adminOverview = 'admin-overview';
@@ -67,8 +70,7 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/cart',
                 name: RouteNames.cart,
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Cart', arrivingIn: 'Task 15'),
+                builder: (context, state) => const CartScreen(),
               ),
             ],
           ),
@@ -114,6 +116,15 @@ GoRouter buildAppRouter() {
         path: '/admin/gate',
         name: RouteNames.adminGate,
         builder: (context, state) => const AdminGateScreen(),
+      ),
+
+      // --- Checkout: pushed on the root navigator (full-screen form over
+      // the shell), customer side — no guard. ---
+      GoRoute(
+        path: '/checkout',
+        name: RouteNames.checkout,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CheckoutScreen(),
       ),
 
       // --- Product create/edit forms: pushed on the root navigator so they

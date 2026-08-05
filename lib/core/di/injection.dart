@@ -27,6 +27,7 @@ import '../../domain/usecases/cart/remove_from_cart.dart';
 import '../../domain/usecases/cart/update_cart_quantity.dart';
 import '../../domain/usecases/checkout/place_order.dart';
 import '../../presentation/features/admin/catalog/admin_catalog_cubit.dart';
+import '../../presentation/features/cart/cart_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/router/admin_session.dart';
 
@@ -115,5 +116,12 @@ void setupDependencies() {
     getIt<ProductRepository>(),
     getIt<CategoryRepository>(),
     getIt<ImageStore>(),
+  ));
+  getIt.registerLazySingleton<CartCubit>(() => CartCubit(
+    getIt<CartRepository>(),
+    getIt<ProductRepository>(),
+    getIt<UpdateCartQuantity>(),
+    getIt<RemoveFromCart>(),
+    getIt<ClearCart>(),
   ));
 }

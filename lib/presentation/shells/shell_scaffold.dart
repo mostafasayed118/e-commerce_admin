@@ -7,11 +7,16 @@ class ShellDestination {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.badgeCount,
   });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+
+  /// When non-null, the destination icon shows a Material 3 [Badge] with this
+  /// count (hidden at 0) — e.g. the shop shell's cart item count.
+  final int? badgeCount;
 }
 
 /// Responsive scaffold shared by the shop and admin shells.
@@ -50,8 +55,8 @@ class ShellScaffold extends StatelessWidget {
                   destinations: [
                     for (final d in destinations)
                       NavigationRailDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
+                        icon: _icon(d, d.icon),
+                        selectedIcon: _icon(d, d.selectedIcon),
                         label: Text(d.label),
                       ),
                   ],
@@ -70,14 +75,23 @@ class ShellScaffold extends StatelessWidget {
             destinations: [
               for (final d in destinations)
                 NavigationDestination(
-                  icon: Icon(d.icon),
-                  selectedIcon: Icon(d.selectedIcon),
+                  icon: _icon(d, d.icon),
+                  selectedIcon: _icon(d, d.selectedIcon),
                   label: d.label,
                 ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _icon(ShellDestination destination, IconData icon) {
+    final count = destination.badgeCount ?? 0;
+    return Badge(
+      label: Text('$count'),
+      isLabelVisible: count > 0,
+      child: Icon(icon),
     );
   }
 

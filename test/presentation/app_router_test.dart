@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/presentation/features/admin/catalog/products_screen.dart';
+import 'package:shop_admin/presentation/features/cart/cart_screen.dart';
 import 'package:shop_admin/presentation/features/admin/gate/admin_gate_screen.dart';
 import 'package:shop_admin/presentation/router/admin_session.dart';
 import 'package:shop_admin/presentation/router/app_router.dart';
@@ -88,7 +89,7 @@ void main() {
 
       router.go('/cart');
       expect(await currentPath(tester), '/cart');
-      expect(find.text('This screen arrives in Task 15.'), findsOneWidget);
+      expect(find.byType(CartScreen), findsOneWidget);
 
       await unmountApp(tester);
     });

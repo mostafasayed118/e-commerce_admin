@@ -40,8 +40,10 @@ void main() {
     expect(find.text('Shop'), findsWidgets); // nav label + screen title
 
     await tester.tap(find.text('Cart'));
+    await tester.pump();
+    await settleDrift(tester); // CartCubit watch streams
     await tester.pumpAndSettle();
-    expect(find.text('This screen arrives in Task 15.'), findsOneWidget);
+    expect(find.text('Your cart is empty'), findsOneWidget);
 
     await unmountApp(tester);
   });
