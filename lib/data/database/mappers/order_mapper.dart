@@ -46,6 +46,7 @@ class OrderMapper {
         orderId: row.orderId,
         productId: row.productId,
         productName: row.productName,
+        productNameAr: row.productNameAr,
         unitPriceCents: row.unitPriceCents,
         discountPercent: row.discountPercent,
         quantity: row.quantity,

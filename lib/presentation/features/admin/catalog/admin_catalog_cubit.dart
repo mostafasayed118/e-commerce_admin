@@ -120,8 +120,8 @@ class AdminCatalogCubit extends Cubit<AdminCatalogState> {
 
   // --- Category CRUD -------------------------------------------------------
 
-  Future<Result<Category>> createCategory(String name) =>
-      _categories.createCategory(Category(id: 0, name: name));
+  Future<Result<Category>> createCategory(String name, {String? nameAr}) =>
+      _categories.createCategory(Category(id: 0, name: name, nameAr: nameAr));
 
   Future<Result<Category>> updateCategory(Category category) =>
       _categories.updateCategory(category);

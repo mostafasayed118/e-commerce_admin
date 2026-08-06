@@ -53,7 +53,10 @@ class OrderRepositoryImpl implements OrderRepository {
     try {
       final row = await _orderDao.getById(id);
       if (row == null) {
-        return const Failure(NotFoundError(message: 'Order not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.orderNotFound,
+          message: 'Order not found',
+        ));
       }
       return Success(await _loadAggregate(row.id, row));
     } on Exception catch (error) {
@@ -68,24 +71,39 @@ class OrderRepositoryImpl implements OrderRepository {
     try {
       final cartRows = await _cartDao.getAll();
       if (cartRows.isEmpty) {
-        return const Failure(ValidationError(message: 'Cart is empty'));
+        return const Failure(ValidationError(
+          code: AppErrorCode.cartEmpty,
+          message: 'Cart is empty',
+        ));
       }
 
       // Validate everything BEFORE the transaction: read current products and
       // compute the snapshot totals with the domain's integer money math.
       // Nothing is written until every line is provably placeable.
-      final lines = <({int productId, String name, int priceCents, int discountPercent, int quantity, int stock})>[];
+      final lines = <({
+        int productId,
+        String name,
+        String? nameAr,
+        int priceCents,
+        int discountPercent,
+        int quantity,
+        int stock,
+      })>[];
       var subtotalCents = 0;
       var discountCents = 0;
       for (final cart in cartRows) {
         final productRow = await _productDao.getById(cart.productId);
         if (productRow == null) {
-          return const Failure(
-            NotFoundError(message: 'A product in your cart is no longer available'),
-          );
+          return const Failure(NotFoundError(
+            code: AppErrorCode.cartProductUnavailable,
+            message: 'A product in your cart is no longer available',
+          ));
         }
         if (productRow.stock < cart.quantity) {
-          return Failure(ValidationError(
+          return Failure(StockLimitError(
+            productName: productRow.name,
+            stock: productRow.stock,
+            currentInCart: cart.quantity,
             message: 'Not enough stock for ${productRow.name}',
           ));
         }
@@ -95,6 +113,7 @@ class OrderRepositoryImpl implements OrderRepository {
         lines.add((
           productId: product.id,
           name: product.name,
+          nameAr: product.nameAr,
           priceCents: product.priceCents,
           discountPercent: product.discountPercent,
           quantity: cart.quantity,
@@ -126,6 +145,7 @@ class OrderRepositoryImpl implements OrderRepository {
             // productId is nullable -> Value<T?> (no ternary needed).
             productId: Value(line.productId),
             productName: line.name,
+            productNameAr: Value(line.nameAr),
             unitPriceCents: line.priceCents,
             discountPercent: Value(line.discountPercent),
             quantity: line.quantity,
@@ -162,10 +182,14 @@ class OrderRepositoryImpl implements OrderRepository {
     try {
       final row = await _orderDao.getById(orderId);
       if (row == null) {
-        return const Failure(NotFoundError(message: 'Order not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.orderNotFound,
+          message: 'Order not found',
+        ));
       }
       if (!row.status.canTransitionTo(newStatus)) {
         return Failure(ValidationError(
+          code: AppErrorCode.invalidStatusTransition,
           message:
               'Cannot move order from ${row.status.label} to ${newStatus.label}',
         ));

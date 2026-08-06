@@ -10,6 +10,7 @@ import '../../../../core/entities/category.dart';
 import '../../../../core/entities/product.dart';
 import '../../../../core/error/result.dart';
 import '../../../../data/services/image_store.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import '../../catalog/widgets/product_image.dart';
 import 'admin_catalog_cubit.dart';
@@ -40,14 +41,14 @@ class ProductFormScreen extends StatelessWidget {
           AdminCatalogLoading() => const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),
-          AdminCatalogError(:final message) => Scaffold(
+          AdminCatalogError() => Scaffold(
               body: MessageView(
                 icon: Icons.error_outline,
-                title: 'Something went wrong',
-                message: message,
+                title: context.l10n.somethingWentWrong,
+                message: context.l10n.errorLoadFailed,
               ),
             ),
-          AdminCatalogLoaded() => _buildForm(state),
+          AdminCatalogLoaded() => _buildForm(context, state),
         },
       ),
     );
@@ -55,16 +56,16 @@ class ProductFormScreen extends StatelessWidget {
 
   /// Resolves the edited product from the loaded state and builds the form.
   /// A cold deep link to an unknown id resolves to a not-found view.
-  Widget _buildForm(AdminCatalogLoaded state) {
+  Widget _buildForm(BuildContext context, AdminCatalogLoaded state) {
     final product = productId == null
         ? null
         : state.products.where((p) => p.id == productId).firstOrNull;
     if (productId != null && product == null) {
-      return const Scaffold(
+      return Scaffold(
         body: MessageView(
           icon: Icons.search_off,
-          title: 'Product not found',
-          message: 'This product may have been deleted.',
+          title: context.l10n.productNotFound,
+          message: context.l10n.productRemovedFromCatalog,
         ),
       );
     }
@@ -91,8 +92,14 @@ class _ProductFormState extends State<_ProductForm> {
   late final TextEditingController _name = TextEditingController(
     text: widget.product?.name ?? '',
   );
+  late final TextEditingController _nameAr = TextEditingController(
+    text: widget.product?.nameAr ?? '',
+  );
   late final TextEditingController _description = TextEditingController(
     text: widget.product?.description ?? '',
+  );
+  late final TextEditingController _descriptionAr = TextEditingController(
+    text: widget.product?.descriptionAr ?? '',
   );
   late final TextEditingController _price = TextEditingController(
     text: widget.product == null ? '' : _centsToInput(widget.product!.priceCents),
@@ -153,7 +160,9 @@ class _ProductFormState extends State<_ProductForm> {
       getIt<ImageStore>().deleteImage(picked);
     }
     _name.dispose();
+    _nameAr.dispose();
     _description.dispose();
+    _descriptionAr.dispose();
     _price.dispose();
     _discount.dispose();
     _stock.dispose();
@@ -170,7 +179,7 @@ class _ProductFormState extends State<_ProductForm> {
       if (!mounted) return;
       result.fold(
         onSuccess: (path) => setState(() => _imagePath = path),
-        onFailure: (error) => _showError(error.message),
+        onFailure: (error) => _showError(context.errorText(error)),
       );
     } finally {
       if (mounted) setState(() => _pickingImage = false);
@@ -202,6 +211,11 @@ class _ProductFormState extends State<_ProductForm> {
     final stock = int.parse(_stock.text);
     final cubit = getIt<AdminCatalogCubit>();
 
+    // Arabic fields are optional: an empty box is persisted as null so the
+    // display falls back to the canonical English text (never a blank).
+    final nameAr = emptyToNull(_nameAr.text);
+    final descriptionAr = emptyToNull(_descriptionAr.text);
+
     setState(() => _saving = true);
     final result = widget.product == null
         ? await cubit.createProduct(Product(
@@ -209,6 +223,8 @@ class _ProductFormState extends State<_ProductForm> {
             categoryId: _categoryId!,
             name: _name.text.trim(),
             description: _description.text.trim(),
+            nameAr: nameAr,
+            descriptionAr: descriptionAr,
             priceCents: priceCents,
             discountPercent: discount,
             stock: stock,
@@ -218,6 +234,8 @@ class _ProductFormState extends State<_ProductForm> {
             categoryId: _categoryId!,
             name: _name.text.trim(),
             description: _description.text.trim(),
+            nameAr: nameAr,
+            descriptionAr: descriptionAr,
             priceCents: priceCents,
             discountPercent: discount,
             stock: stock,
@@ -234,19 +252,20 @@ class _ProductFormState extends State<_ProductForm> {
       onFailure: (error) {
         setState(() {
           _saving = false;
-          _error = error.message;
+          _error = context.errorText(error);
         });
       },
     );
   }
 
-  String? _validateRequired(String? value) =>
-      (value == null || value.trim().isEmpty) ? 'Required' : null;
+  String? _validateRequired(String? value) => (value == null || value.trim().isEmpty)
+      ? context.l10n.requiredField
+      : null;
 
   String? _validatePrice(String? value) {
     final cents = value == null ? null : _parseCents(value);
     if (cents == null || cents <= 0) {
-      return 'Enter a price greater than 0';
+      return context.l10n.priceGreaterThanZero;
     }
     return null;
   }
@@ -254,25 +273,26 @@ class _ProductFormState extends State<_ProductForm> {
   String? _validatePercent(String? value) {
     final parsed = int.tryParse(value ?? '');
     if (parsed == null || parsed < 0 || parsed > 100) {
-      return '0-100';
+      return context.l10n.percentRange;
     }
     return null;
   }
 
   String? _validateStock(String? value) {
     final parsed = int.tryParse(value ?? '');
-    if (parsed == null || parsed < 0) return '0 or more';
+    if (parsed == null || parsed < 0) return context.l10n.stockNonNegative;
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final isEditing = widget.product != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit product' : 'New product'),
+        title: Text(isEditing ? l10n.editProduct : l10n.newProduct),
       ),
       body: Form(
         key: _formKey,
@@ -300,14 +320,16 @@ class _ProductFormState extends State<_ProductForm> {
                         onPressed: _pickingImage ? null : _pickImage,
                         icon: const Icon(Icons.photo_library_outlined),
                         label: Text(
-                          _imagePath == null ? 'Add image' : 'Replace image',
+                          _imagePath == null
+                              ? l10n.addImage
+                              : l10n.replaceImage,
                         ),
                       ),
                       if (_imagePath != null)
                         TextButton.icon(
                           onPressed: _removeImage,
                           icon: const Icon(Icons.close),
-                          label: const Text('Remove image'),
+                          label: Text(l10n.removeImage),
                         ),
                     ],
                   ),
@@ -319,28 +341,45 @@ class _ProductFormState extends State<_ProductForm> {
             TextFormField(
               key: const Key('product-name'),
               controller: _name,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.name,
+                border: const OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
               validator: _validateRequired,
             ),
             const SizedBox(height: 16),
 
+            // Optional localized content (Task 23 follow-up): the canonical
+            // English fields above, with an Arabic variant below. Left empty,
+            // the product renders its English text in Arabic mode too.
+            TextFormField(
+              key: const Key('product-name-ar'),
+              controller: _nameAr,
+              decoration: InputDecoration(
+                labelText: l10n.arabicNameOptional,
+                border: const OutlineInputBorder(),
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+
             DropdownButtonFormField<int>(
               key: const Key('product-category'),
               initialValue: _categoryId,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.category,
+                border: const OutlineInputBorder(),
               ),
               items: [
                 for (final category in widget.categories)
-                  DropdownMenuItem(value: category.id, child: Text(category.name)),
+                  DropdownMenuItem(
+                    value: category.id,
+                    child: Text(context.categoryName(category)),
+                  ),
               ],
               onChanged: (value) => setState(() => _categoryId = value),
-              validator: (value) => value == null ? 'Choose a category' : null,
+              validator: (value) => value == null ? l10n.chooseCategory : null,
             ),
             const SizedBox(height: 16),
 
@@ -354,10 +393,10 @@ class _ProductFormState extends State<_ProductForm> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Price',
+                    decoration: InputDecoration(
+                      labelText: l10n.price,
                       prefixText: r'$ ',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     textInputAction: TextInputAction.next,
                     validator: _validatePrice,
@@ -369,9 +408,9 @@ class _ProductFormState extends State<_ProductForm> {
                     key: const Key('product-discount'),
                     controller: _discount,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Discount %',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.discountPercent,
+                      border: const OutlineInputBorder(),
                     ),
                     textInputAction: TextInputAction.next,
                     validator: _validatePercent,
@@ -385,9 +424,9 @@ class _ProductFormState extends State<_ProductForm> {
               key: const Key('product-stock'),
               controller: _stock,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Stock',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.stock,
+                border: const OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
               validator: _validateStock,
@@ -397,9 +436,20 @@ class _ProductFormState extends State<_ProductForm> {
             TextFormField(
               key: const Key('product-description'),
               controller: _description,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.descriptionOptional,
+                border: const OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              key: const Key('product-description-ar'),
+              controller: _descriptionAr,
+              decoration: InputDecoration(
+                labelText: l10n.arabicDescriptionOptional,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -420,7 +470,7 @@ class _ProductFormState extends State<_ProductForm> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save product'),
+                  : Text(l10n.saveProduct),
             ),
           ],
         ),

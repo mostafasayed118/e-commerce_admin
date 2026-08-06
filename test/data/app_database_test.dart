@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 
-/// A database pinned to schema v1, so reopening the real (v2) database on
-/// the same file exercises the on-device upgrade path (the release APK on a
-/// device ships with a v1 database).
+/// A database pinned to schema v1, so reopening the real (current-version)
+/// database on the same file exercises the on-device upgrade path (a release
+/// build on a device ships with an older schema version).
 class _V1Database extends AppDatabase {
   // The implicit super constructor (AppDatabase()) takes no parameters, so
   // the executor must be forwarded explicitly — a super parameter would
@@ -32,7 +32,7 @@ void main() {
     await db.close();
   });
 
-  test('migrates a v1 database to v2: adds UiPrefs, keeps existing data',
+  test('migrates an old install: adds UiPrefs + Arabic columns, keeps data',
       () async {
     final file = File(
       '${Directory.systemTemp.path}/shop_admin_migration_'
@@ -42,7 +42,7 @@ void main() {
       if (file.existsSync()) file.deleteSync();
     });
 
-    // 1. Write data the way a v1 install would (a profile row exists).
+    // 1. Write data the way an old install would (a profile row exists).
     final v1 = _V1Database.forTesting(NativeDatabase(file));
     await v1.into(v1.profile).insert(ProfileCompanion.insert(
           id: const Value(1),
@@ -51,10 +51,23 @@ void main() {
           address: const Value('1 Old St'),
           updatedAt: Value(1),
         ));
+
+    // The simulated old install is created from the CURRENT table
+    // definitions (tables.dart is shared), so drop the v3 Arabic columns to
+    // match the real v2-era shape — otherwise the upgrade's ALTER TABLE
+    // would collide with columns that already exist.
+    for (final statement in [
+      'ALTER TABLE products DROP COLUMN name_ar;',
+      'ALTER TABLE products DROP COLUMN description_ar;',
+      'ALTER TABLE categories DROP COLUMN name_ar;',
+      'ALTER TABLE order_items DROP COLUMN product_name_ar;',
+    ]) {
+      await v1.customStatement(statement);
+    }
     await v1.close();
 
-    // 2. Reopen with the real schema (v2): onUpgrade adds the UiPrefs
-    // table without touching existing rows.
+    // 2. Reopen with the real (current) schema: onUpgrade adds the UiPrefs
+    // table and the Arabic columns without touching existing rows.
     final upgraded = AppDatabase.forTesting(NativeDatabase(file));
     final profile = await upgraded.select(upgraded.profile).getSingle();
     expect(profile.name, 'Legacy User'); // existing data survived
@@ -66,6 +79,27 @@ void main() {
         ));
     final prefs = await upgraded.select(upgraded.uiPrefs).getSingle();
     expect(prefs.themeMode, 'dark');
+
+    // The added Arabic columns accept and return data.
+    final categoryId = await upgraded.into(upgraded.categories).insert(
+          CategoriesCompanion.insert(
+            name: 'Clothing',
+            nameAr: const Value('ملابس'),
+            createdAt: 1,
+          ),
+        );
+    await upgraded.into(upgraded.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'T-Shirt',
+          nameAr: const Value('تيشيرت'),
+          priceCents: 2000,
+          discountPercent: 0,
+          stock: 5,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    final product = await upgraded.select(upgraded.products).getSingle();
+    expect(product.nameAr, 'تيشيرت');
 
     await upgraded.close();
   });

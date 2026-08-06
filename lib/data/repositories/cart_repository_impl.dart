@@ -28,7 +28,10 @@ class CartRepositoryImpl implements CartRepository {
   Future<Result<void>> setQuantity(int productId, int quantity) async {
     if (quantity < 1) {
       return const Failure(
-        ValidationError(message: 'Quantity must be at least 1'),
+        ValidationError(
+          code: AppErrorCode.quantityMin,
+          message: 'Quantity must be at least 1',
+        ),
       );
     }
     try {

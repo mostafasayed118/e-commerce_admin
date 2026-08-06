@@ -1,0 +1,13 @@
+# gen-l10n configuration (Task 23: AR/EN localization).
+#
+# - arb-dir / template-arb-file: source-of-truth English strings in app_en.arb,
+#   translations in app_ar.arb.
+# - Generated code lands in lib/l10n/ and is COMMITTED, matching the
+#   project's drift .g.dart convention (the no-codegen rule's approved
+#   exception). Requires `flutter: generate: true` in pubspec.yaml.
+# - nullable-getter: false — AppLocalizations.of(context) is non-null, so the
+#   context.l10n extension needs no null checks.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+nullable-getter: false

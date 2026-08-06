@@ -1,0 +1,331 @@
+{
+  "@@locale": "en",
+
+  "@@last_modified": "2026-08-06T00:00:00.000",
+
+  "somethingWentWrong": "Something went wrong",
+
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "save": "Save",
+  "create": "Create",
+  "all": "All",
+
+  "tabShop": "Shop",
+  "tabCart": "Cart",
+  "tabOrders": "Orders",
+  "tabProfile": "Profile",
+  "tabOverview": "Overview",
+  "tabProducts": "Products",
+  "tabCategories": "Categories",
+
+  "statusPending": "Pending",
+  "statusConfirmed": "Confirmed",
+  "statusShipped": "Shipped",
+  "statusDelivered": "Delivered",
+  "statusCancelled": "Cancelled",
+
+  "sortNewest": "Newest",
+  "sortName": "Name A-Z",
+  "sortPriceAsc": "Price: low to high",
+  "sortPriceDesc": "Price: high to low",
+
+  "shopTitle": "Shop",
+  "catalogEmptyTitle": "The catalog is empty",
+  "catalogEmptyMessage": "Products will appear here once they exist.",
+  "searchProducts": "Search products",
+  "productCount": "{count, plural, one{1 product} other{{count} products}}",
+  "@productCount": {
+    "description": "Product count line on the catalog header and the admin categories rows.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "noMatches": "No matches",
+  "noMatchesMessage": "Nothing matches your current search or filter.",
+  "noProductsInCategory": "No products in this category yet.",
+  "clearFilters": "Clear filters",
+
+  "outOfStock": "Out of stock",
+  "lowStockLeft": "Low stock: {stock} left",
+  "@lowStockLeft": {
+    "placeholders": {
+      "stock": { "type": "int" }
+    }
+  },
+  "productTitle": "Product",
+  "couldNotLoadProduct": "Could not load product",
+  "productNotFound": "Product not found",
+  "productRemovedFromCatalog": "This product may have been deleted.",
+  "inStock": "In stock",
+  "noDescription": "No description available.",
+  "adding": "Adding…",
+  "addToCart": "Add to Cart",
+  "addedToCart": "{product} added to cart",
+  "@addedToCart": {
+    "placeholders": {
+      "product": { "type": "String" }
+    }
+  },
+
+  "cartTitle": "Cart",
+  "clearCart": "Clear cart",
+  "clearCartTitle": "Clear cart?",
+  "clearCartMessage": "Every item will be removed from your cart.",
+  "clear": "Clear",
+  "cartEmptyTitle": "Your cart is empty",
+  "cartEmptyMessage": "Add something you like from the catalog.",
+  "browseProducts": "Browse products",
+  "onlyXLeftInStock": "Only {stock} left in stock",
+  "@onlyXLeftInStock": {
+    "placeholders": {
+      "stock": { "type": "int" }
+    }
+  },
+  "removeOne": "Remove one",
+  "addOne": "Add one",
+  "subtotal": "Subtotal",
+  "savings": "Savings",
+  "total": "Total",
+  "checkout": "Checkout",
+
+  "checkoutTitle": "Checkout",
+  "shippingDetails": "Shipping details",
+  "codOnlyNote": "Cash on delivery only — pay when your order arrives.",
+  "fullName": "Full name",
+  "phone": "Phone",
+  "deliveryAddress": "Delivery address",
+  "saveDetailsNextTime": "Save my details for next time",
+  "placeOrderCod": "Place order — Cash on delivery",
+  "orderPlaced": "Order placed!",
+  "orderPlacedSummary": "Order {number} · {total}",
+  "@orderPlacedSummary": {
+    "placeholders": {
+      "number": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "weWillCall": "We will call {phone} to confirm delivery details.",
+  "@weWillCall": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
+  "backToShop": "Back to shop",
+  "nameRequired": "Name is required",
+  "phoneRequired": "Phone is required",
+  "addressRequired": "Address is required",
+
+  "profileTitle": "Profile",
+  "yourDetails": "Your details",
+  "profileHint": "Used to pre-fill the checkout form. Orders always carry their own snapshot of these details.",
+  "noSavedDetails": "No saved details yet — fill them in here, or checkout will save them automatically.",
+  "profileSaved": "Profile saved.",
+  "saveProfile": "Save profile",
+  "preferences": "Preferences",
+  "appearance": "Appearance",
+  "language": "Language",
+  "system": "System",
+  "light": "Light",
+  "dark": "Dark",
+  "adminDashboard": "Admin dashboard",
+  "adminDashboardSubtitle": "PIN-protected shop management",
+
+  "adminTitle": "Admin",
+  "couldNotCheckPin": "Could not check PIN status. Please restart the app.",
+  "setAdminPin": "Set an admin PIN",
+  "enterAdminPin": "Enter admin PIN",
+  "setPinHint": "Create a 4-6 digit PIN to lock the dashboard.",
+  "enterPinHint": "Unlock the dashboard with your PIN.",
+  "pinLabel": "PIN",
+  "setPin": "Set PIN",
+  "unlock": "Unlock",
+  "pinFormatError": "PIN must be 4-6 digits",
+  "pinNotSet": "PIN has not been set",
+  "pinIncorrect": "Incorrect PIN",
+
+  "overviewTitle": "Overview",
+  "revenue": "Revenue",
+  "orders": "Orders",
+  "lowStock": "Low stock",
+  "ordersByStatus": "Orders by status",
+  "recentOrders": "Recent orders",
+  "noOrdersYet": "No orders yet.",
+  "allStockedUp": "All stocked up.",
+  "onlyXLeft": "Only {stock} left",
+  "@onlyXLeft": {
+    "placeholders": {
+      "stock": { "type": "int" }
+    }
+  },
+
+  "myOrders": "My Orders",
+  "noOrdersTitle": "No orders yet",
+  "noOrdersMessage": "Your order history will appear here after your first checkout.",
+  "orderTitle": "Order",
+  "couldNotLoadOrder": "Could not load order",
+  "orderNotFound": "Order not found",
+  "orderRemoved": "This order may have been removed.",
+  "itemCount": "{count, plural, one{1 item} other{{count} items}}",
+  "@itemCount": {
+    "description": "Line item count on order tiles and category rows.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "placedAt": "Placed {date}",
+  "@placedAt": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "deliverTo": "Deliver to",
+  "items": "Items",
+  "status": "Status",
+  "noStatusHistory": "No status history yet.",
+  "percentOff": "({percent}% off)",
+  "@percentOff": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+
+  "noFilterOrdersTitle": "No {status} orders",
+  "@noFilterOrdersTitle": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "ordersWillAppear": "Orders will appear here once customers check out.",
+  "tryDifferentFilter": "Try a different status filter.",
+  "showAllOrders": "Show all orders",
+  "markedAs": "{order} marked as {status}",
+  "@markedAs": {
+    "placeholders": {
+      "order": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "orderTerminalNote": "This order is {status} — no further actions.",
+  "@orderTerminalNote": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "noFurtherActions": "No further actions available.",
+  "actions": "Actions",
+  "cancelOrder": "Cancel order",
+  "markAs": "Mark {status}",
+  "@markAs": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "productsTitle": "Products",
+  "newProduct": "New product",
+  "deleteProductTitle": "Delete product?",
+  "deleteProductMessage": "{name} will be removed permanently. Orders that reference it keep their snapshot.",
+  "@deleteProductMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "noProductsTitle": "No products yet",
+  "noProductsMessage": "Create the first product to start selling.",
+  "lowStockShort": "Low stock",
+  "stockInStock": "{stock} in stock",
+  "@stockInStock": {
+    "placeholders": {
+      "stock": { "type": "int" }
+    }
+  },
+  "deleteProductTooltip": "Delete {name}",
+  "@deleteProductTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "categoriesTitle": "Categories",
+  "newCategory": "New category",
+  "renameCategory": "Rename category",
+  "deleteCategoryTitle": "Delete \"{name}\"?",
+  "@deleteCategoryTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteCategoryMessage": "Categories that still have products cannot be deleted.",
+  "categoryName": "Category name",
+  "noCategoriesTitle": "No categories yet",
+  "noCategoriesMessage": "Create a category before adding products.",
+  "renameTooltip": "Rename {name}",
+  "@renameTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteCategoryTooltip": "Delete {name}",
+  "@deleteCategoryTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "editProduct": "Edit product",
+  "addImage": "Add image",
+  "replaceImage": "Replace image",
+  "removeImage": "Remove image",
+  "name": "Name",
+  "category": "Category",
+  "chooseCategory": "Choose a category",
+  "price": "Price",
+  "discountPercent": "Discount %",
+  "stock": "Stock",
+  "descriptionOptional": "Description (optional)",
+  "arabicNameOptional": "Arabic name (optional)",
+  "arabicDescriptionOptional": "Arabic description (optional)",
+  "saveProduct": "Save product",
+  "requiredField": "Required",
+  "priceGreaterThanZero": "Enter a price greater than 0",
+  "percentRange": "0-100",
+  "stockNonNegative": "0 or more",
+
+  "errorLoadFailed": "Couldn't load this right now. Please try again.",
+  "errorDatabase": "Something went wrong. Please try again.",
+  "errorProductNotFound": "Product not found.",
+  "errorCategoryNotFound": "Category not found.",
+  "errorOrderNotFound": "Order not found.",
+  "errorCartProductUnavailable": "A product in your cart is no longer available.",
+  "errorQuantityMin": "Quantity must be at least 1.",
+  "errorProductOutOfStock": "{product} is out of stock.",
+  "@errorProductOutOfStock": {
+    "placeholders": {
+      "product": { "type": "String" }
+    }
+  },
+  "errorStockLimit": "Only {stock} left in stock for {product}.",
+  "@errorStockLimit": {
+    "placeholders": {
+      "stock": { "type": "int" },
+      "product": { "type": "String" }
+    }
+  },
+  "errorStockLimitHint": "You already have {count} in your cart.",
+  "@errorStockLimitHint": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "errorCartEmpty": "Your cart is empty.",
+  "errorInvalidStatusTransition": "This status change is not allowed.",
+  "errorCategoryInUse": "{count, plural, one{This category has 1 product. Delete it before deleting the category.} other{This category has {count} products. Delete them before deleting the category.}}",
+  "@errorCategoryInUse": {
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "errorImageSave": "Could not save the image.",
+  "errorImageDelete": "Could not delete the image."
+}

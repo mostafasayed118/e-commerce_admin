@@ -31,7 +31,10 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final row = await _dao.getById(id);
       if (row == null) {
-        return const Failure(NotFoundError(message: 'Product not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.productNotFound,
+          message: 'Product not found',
+        ));
       }
       return Success(_mapper.toEntity(row));
     } on Exception catch (error) {
@@ -49,6 +52,8 @@ class ProductRepositoryImpl implements ProductRepository {
             categoryId: product.categoryId,
             name: product.name,
             description: Value(product.description),
+            nameAr: Value(product.nameAr),
+            descriptionAr: Value(product.descriptionAr),
             priceCents: product.priceCents,
             discountPercent: product.discountPercent,
             stock: product.stock,
@@ -63,6 +68,8 @@ class ProductRepositoryImpl implements ProductRepository {
         categoryId: product.categoryId,
         name: product.name,
         description: product.description,
+        nameAr: product.nameAr,
+        descriptionAr: product.descriptionAr,
         priceCents: product.priceCents,
         discountPercent: product.discountPercent,
         stock: product.stock,
@@ -87,6 +94,8 @@ class ProductRepositoryImpl implements ProductRepository {
           categoryId: Value(product.categoryId),
           name: Value(product.name),
           description: Value(product.description),
+          nameAr: Value(product.nameAr),
+          descriptionAr: Value(product.descriptionAr),
           priceCents: Value(product.priceCents),
           discountPercent: Value(product.discountPercent),
           stock: Value(product.stock),
@@ -95,7 +104,10 @@ class ProductRepositoryImpl implements ProductRepository {
         ),
       );
       if (updated == 0) {
-        return const Failure(NotFoundError(message: 'Product not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.productNotFound,
+          message: 'Product not found',
+        ));
       }
       return Success(product.copyWith(updatedAt: now));
     } on Exception catch (error) {
@@ -110,7 +122,10 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final deleted = await _dao.deleteById(id);
       if (deleted == 0) {
-        return const Failure(NotFoundError(message: 'Product not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.productNotFound,
+          message: 'Product not found',
+        ));
       }
       return const Success<void>(null);
     } on Exception catch (error) {

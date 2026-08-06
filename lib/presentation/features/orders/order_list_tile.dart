@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/entities/order.dart';
-import '../../../core/utils/money.dart';
+import '../../l10n/l10n_ext.dart';
 import 'order_date_format.dart';
 import 'status_visuals.dart';
 
@@ -18,13 +18,16 @@ class OrderListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final visuals = orderStatusVisuals(order.status, scheme);
+    final locale = Localizations.localeOf(context).languageCode;
     // The date part is omitted when absent rather than fabricated — a
     // made-up timestamp would be a lie on the history screen.
     final subtitleParts = [
-      if (order.createdAt != null) formatOrderDate(order.createdAt!),
-      '${order.items.length} item${order.items.length == 1 ? '' : 's'}',
-      formatCents(order.totalCents),
+      if (order.createdAt != null)
+        formatOrderDate(order.createdAt!, locale: locale),
+      l10n.itemCount(order.items.length),
+      context.formatCents(order.totalCents),
     ];
     return ListTile(
       onTap: onTap,

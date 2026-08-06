@@ -150,9 +150,13 @@ class CatalogCubit extends Cubit<CatalogState> {
     final filtered = all.where((product) {
       final inCategory =
           _selectedCategoryId == null || product.categoryId == _selectedCategoryId;
+      // Matches against BOTH languages so an Arabic shopper can search in
+      // Arabic while the canonical text stays searchable in English.
       final matchesQuery = query.isEmpty ||
           product.name.toLowerCase().contains(query) ||
-          product.description.toLowerCase().contains(query);
+          product.description.toLowerCase().contains(query) ||
+          (product.nameAr?.toLowerCase().contains(query) ?? false) ||
+          (product.descriptionAr?.toLowerCase().contains(query) ?? false);
       return inCategory && matchesQuery;
     }).toList()
       ..sort(_sort.compare);

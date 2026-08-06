@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection.dart';
 import '../features/cart/cart_cubit.dart';
+import '../l10n/l10n_ext.dart';
 import 'shell_scaffold.dart';
 
 /// The customer-facing shell: Shop, Cart (with a live item-count badge),
@@ -13,28 +14,30 @@ class ShopShell extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  static const List<ShellDestination> baseDestinations = [
-    ShellDestination(
-      icon: Icons.storefront_outlined,
-      selectedIcon: Icons.storefront,
-      label: 'Shop',
-    ),
-    ShellDestination(
-      icon: Icons.shopping_cart_outlined,
-      selectedIcon: Icons.shopping_cart,
-      label: 'Cart',
-    ),
-    ShellDestination(
-      icon: Icons.receipt_long_outlined,
-      selectedIcon: Icons.receipt_long,
-      label: 'Orders',
-    ),
-    ShellDestination(
-      icon: Icons.person_outline,
-      selectedIcon: Icons.person,
-      label: 'Profile',
-    ),
-  ];
+  /// The labels are resolved per-build (not `static const`) so they follow
+  /// the active locale (Task 23).
+  static List<ShellDestination> baseDestinations(BuildContext context) => [
+        ShellDestination(
+          icon: Icons.storefront_outlined,
+          selectedIcon: Icons.storefront,
+          label: context.l10n.tabShop,
+        ),
+        ShellDestination(
+          icon: Icons.shopping_cart_outlined,
+          selectedIcon: Icons.shopping_cart,
+          label: context.l10n.tabCart,
+        ),
+        ShellDestination(
+          icon: Icons.receipt_long_outlined,
+          selectedIcon: Icons.receipt_long,
+          label: context.l10n.tabOrders,
+        ),
+        ShellDestination(
+          icon: Icons.person_outline,
+          selectedIcon: Icons.person,
+          label: context.l10n.tabProfile,
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +56,13 @@ class ShopShell extends StatelessWidget {
           CartLoaded(:final itemCount) => itemCount,
           _ => 0,
         };
-        final destinations = List<ShellDestination>.of(baseDestinations);
+        final destinations = List<ShellDestination>.of(
+          baseDestinations(context),
+        );
         destinations[1] = ShellDestination(
-          icon: baseDestinations[1].icon,
-          selectedIcon: baseDestinations[1].selectedIcon,
-          label: baseDestinations[1].label,
+          icon: destinations[1].icon,
+          selectedIcon: destinations[1].selectedIcon,
+          label: destinations[1].label,
           badgeCount: count,
         );
         return ShellScaffold(

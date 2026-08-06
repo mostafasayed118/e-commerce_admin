@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/entities/product.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/utils/money.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import '../../catalog/widgets/product_image.dart';
 import 'admin_catalog_cubit.dart';
@@ -31,21 +31,22 @@ class _ProductsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Products')),
+      appBar: AppBar(title: Text(l10n.productsTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/admin/products/new'),
         icon: const Icon(Icons.add),
-        label: const Text('New product'),
+        label: Text(l10n.newProduct),
       ),
       body: BlocBuilder<AdminCatalogCubit, AdminCatalogState>(
         builder: (context, state) => switch (state) {
           AdminCatalogLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminCatalogError(:final message) => MessageView(
+          AdminCatalogError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
           AdminCatalogLoaded() => _ProductList(state: state),
         },
@@ -59,28 +60,26 @@ class _ProductList extends StatelessWidget {
 
   final AdminCatalogLoaded state;
 
-  String _categoryName(int id) => state.categories
-      .where((c) => c.id == id)
-      .firstOrNull
-      ?.name ?? '—';
+  String _categoryName(BuildContext context, int id) {
+    final category = state.categories.where((c) => c.id == id).firstOrNull;
+    return category == null ? '—' : context.categoryName(category);
+  }
 
   Future<void> _confirmDelete(BuildContext context, Product product) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete product?'),
-        content: Text(
-          '${product.name} will be removed permanently. '
-          'Orders that reference it keep their snapshot.',
-        ),
+        title: Text(l10n.deleteProductTitle),
+        content: Text(l10n.deleteProductMessage(context.productName(product))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -96,7 +95,7 @@ class _ProductList extends StatelessWidget {
       // Success is silent — the watch stream re-emits the shorter list.
       onFailure: (error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(content: Text(context.errorText(error))),
         );
       },
     );
@@ -104,15 +103,16 @@ class _ProductList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (state.products.isEmpty) {
       return MessageView(
         icon: Icons.inventory_2_outlined,
-        title: 'No products yet',
-        message: 'Create the first product to start selling.',
+        title: l10n.noProductsTitle,
+        message: l10n.noProductsMessage,
         action: FilledButton.tonalIcon(
           onPressed: () => context.push('/admin/products/new'),
           icon: const Icon(Icons.add),
-          label: const Text('New product'),
+          label: Text(l10n.newProduct),
         ),
       );
     }
@@ -134,35 +134,35 @@ class _ProductList extends StatelessWidget {
               child: ProductImage(imagePath: product.imagePath, iconSize: 24),
             ),
           ),
-          title: Text(product.name),
+          title: Text(context.productName(product)),
           subtitle: Text(
-            '${_categoryName(product.categoryId)} · '
-            '${formatCents(product.finalPriceCents)}'
-            '${product.hasDiscount ? ' (${product.discountPercent}% off)' : ''}',
+            '${_categoryName(context, product.categoryId)} · '
+            '${context.formatCents(product.finalPriceCents)}'
+            '${product.hasDiscount ? ' ${context.l10n.percentOff(product.discountPercent)}' : ''}',
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (product.isOutOfStock)
                 _StockChip(
-                  label: 'Out of stock',
+                  label: l10n.outOfStock,
                   color: scheme.error,
                   background: scheme.errorContainer,
                 )
               else if (product.isLowStock)
                 _StockChip(
-                  label: 'Low stock',
+                  label: l10n.lowStockShort,
                   color: scheme.tertiary,
                   background: scheme.tertiaryContainer,
                 )
               else
                 _StockChip(
-                  label: '${product.stock} in stock',
+                  label: l10n.stockInStock(product.stock),
                   color: scheme.primary,
                   background: scheme.primaryContainer,
                 ),
               IconButton(
-                tooltip: 'Delete ${product.name}',
+                tooltip: l10n.deleteProductTooltip(context.productName(product)),
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () => _confirmDelete(context, product),
               ),

@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/entities/order.dart';
 import '../../../../core/entities/order_status.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import '../../orders/order_list_tile.dart';
+import '../../orders/status_visuals.dart';
 import 'admin_orders_cubit.dart';
 
 /// Admin order management: every order with a status filter chip row, tap to
@@ -29,16 +31,17 @@ class _AdminOrdersView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Orders')),
+      appBar: AppBar(title: Text(l10n.orders)),
       body: BlocBuilder<AdminOrdersCubit, AdminOrdersState>(
         builder: (context, state) => switch (state) {
           AdminOrdersLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminOrdersError(:final message) => MessageView(
+          AdminOrdersError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
           AdminOrdersLoaded() => _LoadedOrders(state: state),
         },
@@ -55,6 +58,7 @@ class _LoadedOrders extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<AdminOrdersCubit>();
+    final l10n = context.l10n;
     return Column(
       children: [
         _FilterChips(
@@ -66,16 +70,20 @@ class _LoadedOrders extends StatelessWidget {
               ? MessageView(
                   icon: Icons.receipt_long_outlined,
                   title: state.filter == null
-                      ? 'No orders yet'
-                      : 'No ${state.filter!.label.toLowerCase()} orders',
+                      ? l10n.noOrdersTitle
+                      // toLowerCase() is the English "sentence case" shape the
+                      // original used; it is a no-op for Arabic (no letter case).
+                      : l10n.noFilterOrdersTitle(
+                          orderStatusLabel(context, state.filter!).toLowerCase(),
+                        ),
                   message: state.filter == null
-                      ? 'Orders will appear here once customers check out.'
-                      : 'Try a different status filter.',
+                      ? l10n.ordersWillAppear
+                      : l10n.tryDifferentFilter,
                   action: state.filter == null
                       ? null
                       : TextButton(
                           onPressed: () => cubit.setFilter(null),
-                          child: const Text('Show all orders'),
+                          child: Text(l10n.showAllOrders),
                         ),
                 )
               : _OrderList(orders: state.visibleOrders),
@@ -100,9 +108,10 @@ class _FilterChips extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         children: [
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            // Directional so the gap flips to the leading edge in RTL (Task 23).
+            padding: const EdgeInsetsDirectional.only(end: 8),
             child: ChoiceChip(
-              label: const Text('All'),
+              label: Text(context.l10n.all),
               selected: selected == null,
               onSelected: (_) => onSelected(null),
               showCheckmark: false,
@@ -110,9 +119,9 @@ class _FilterChips extends StatelessWidget {
           ),
           for (final status in OrderStatus.values)
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsetsDirectional.only(end: 8),
               child: ChoiceChip(
-                label: Text(status.label),
+                label: Text(orderStatusLabel(context, status)),
                 selected: selected == status,
                 onSelected: (_) => onSelected(status),
                 showCheckmark: false,

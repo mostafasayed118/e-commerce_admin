@@ -7,6 +7,7 @@ class CategoryMapper {
   Category toEntity(CategoryRow row) => Category(
         id: row.id,
         name: row.name,
+        nameAr: row.nameAr,
         createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt),
       );
 

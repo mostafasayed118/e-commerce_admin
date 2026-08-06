@@ -26,6 +26,15 @@ void main() {
     test('handles negative amounts', () {
       expect(formatCents(-1234), r'-$12.34');
     });
+
+    test('follows the active locale (Task 23)', () {
+      // intl's 'ar' renders Western digits with RTL-adjusted placement and
+      // a space before the symbol (Gulf convention); assert the stable
+      // parts, not the leading RTL mark.
+      final ar = formatCents(1234, locale: 'ar');
+      expect(ar, contains('12.34'));
+      expect(ar, contains(r'$'));
+    });
   });
 
   group('discountedPriceCents', () {

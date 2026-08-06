@@ -86,6 +86,13 @@ dependencies:
   # replaceable later without touching the data layer (the cubit exposes
   # plain counts).
   fl_chart: ^1.2.0
+  # AR/EN localization (Task 23). flutter_localizations provides the
+  # Global Material/Widgets/Cupertino delegates; intl powers the generated
+  # AppLocalizations (ARB) plus locale-aware money/date formatting. Version
+  # pinned by flutter_localizations (0.20.2) — never bump independently.
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -128,6 +135,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Task 23 (AR/EN localization): runs `flutter gen-l10n` on pub get/build,
+  # generating AppLocalizations into lib/l10n/ (see l10n.yaml).
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

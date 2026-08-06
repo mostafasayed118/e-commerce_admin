@@ -25,7 +25,10 @@ class AddToCart {
   Future<Result<void>> call(int productId, {int quantity = 1}) async {
     if (quantity < 1) {
       return const Failure(
-        ValidationError(message: 'Quantity must be at least 1'),
+        ValidationError(
+          code: AppErrorCode.quantityMin,
+          message: 'Quantity must be at least 1',
+        ),
       );
     }
     return (await _products.getById(productId)).fold(
@@ -36,9 +39,10 @@ class AddToCart {
 
   Future<Result<void>> _add(Product product, int quantity) async {
     if (product.isOutOfStock) {
-      return Failure(
-        ValidationError(message: '${product.name} is out of stock'),
-      );
+      return Failure(ProductOutOfStockError(
+        productName: product.name,
+        message: '${product.name} is out of stock',
+      ));
     }
 
     // Current quantity in the cart (0 when absent — one row per product).
@@ -50,7 +54,10 @@ class AddToCart {
     final target = current + quantity;
     if (target > product.stock) {
       final hint = current > 0 ? ' (you have $current in your cart)' : '';
-      return Failure(ValidationError(
+      return Failure(StockLimitError(
+        productName: product.name,
+        stock: product.stock,
+        currentInCart: current,
         message:
             'Only ${product.stock} left in stock for ${product.name}$hint',
       ));

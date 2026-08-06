@@ -18,6 +18,10 @@ import '../../core/entities/order_status.dart';
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()(); // implicit primary key
   TextColumn get name => text().unique()();
+
+  /// Optional Arabic label. `null` = English-only (the UI falls back to
+  /// [name]). Admin-created categories can carry one; seed data always does.
+  TextColumn get nameAr => text().nullable()();
   IntColumn get createdAt => integer()(); // epoch ms
 }
 
@@ -33,6 +37,12 @@ class Products extends Table {
   IntColumn get categoryId => integer().references(Categories, #id)();
   TextColumn get name => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
+
+  /// Optional Arabic name/description. `null` = English-only (the UI falls
+  /// back to [name]/[description]). Seed data carries them; admin-created
+  /// products can too (the form's optional Arabic fields).
+  TextColumn get nameAr => text().nullable()();
+  TextColumn get descriptionAr => text().nullable()();
   IntColumn get priceCents =>
       integer().check(priceCents.isBiggerOrEqualValue(0))();
   IntColumn get discountPercent => integer().check(
@@ -100,6 +110,13 @@ class OrderItems extends Table {
       .references(Products, #id, onDelete: KeyAction.setNull)
       .nullable()();
   TextColumn get productName => text()();
+
+  /// Snapshot of the product's Arabic label at purchase time (nullable: the
+  /// shopper's locale or the product's data may not have one). The receipt
+  /// renders whichever label matches the *viewer's* locale — the same stored
+  /// order displays English to an English admin and Arabic to an Arabic
+  /// customer.
+  TextColumn get productNameAr => text().nullable()();
   IntColumn get unitPriceCents =>
       integer().check(unitPriceCents.isBiggerOrEqualValue(0))();
   IntColumn get discountPercent => integer()

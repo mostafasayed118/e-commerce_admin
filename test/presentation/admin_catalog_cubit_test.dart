@@ -181,7 +181,10 @@ void main() {
 
       when(() => products.deleteProduct(1)).thenAnswer(
         (_) async => const Failure<void>(
-          NotFoundError(message: 'gone'),
+          NotFoundError(
+            code: AppErrorCode.productNotFound,
+            message: 'gone',
+          ),
         ),
       );
 

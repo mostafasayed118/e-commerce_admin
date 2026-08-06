@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
+import '../../l10n/l10n_ext.dart';
 import '../../widgets/message_view.dart';
 import 'order_list_tile.dart';
 import 'orders_cubit.dart';
@@ -28,18 +29,19 @@ class _OrdersView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('My Orders')),
+      appBar: AppBar(title: Text(l10n.myOrders)),
       body: BlocBuilder<OrdersCubit, OrdersState>(
         builder: (context, state) => switch (state) {
           OrdersLoading() => const Center(child: CircularProgressIndicator()),
-          OrdersError(:final message) => MessageView(
+          OrdersError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
           OrdersLoaded(:final orders) => orders.isEmpty
-              ? const _EmptyOrders()
+              ? _EmptyOrders()
               : _OrderList(orders: orders),
         },
       ),
@@ -52,14 +54,15 @@ class _EmptyOrders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return MessageView(
       icon: Icons.receipt_long_outlined,
-      title: 'No orders yet',
-      message: 'Your order history will appear here after your first checkout.',
+      title: l10n.noOrdersTitle,
+      message: l10n.noOrdersMessage,
       action: FilledButton.tonalIcon(
         onPressed: () => context.go('/'),
         icon: const Icon(Icons.storefront_outlined),
-        label: const Text('Browse products'),
+        label: Text(l10n.browseProducts),
       ),
     );
   }

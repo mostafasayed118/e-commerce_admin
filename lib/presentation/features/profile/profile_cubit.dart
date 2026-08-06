@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/entities/shipping_info.dart';
+import '../../../core/error/app_error.dart';
 import '../../../core/error/result.dart';
 import '../../../domain/repositories/settings_repository.dart';
 import '../../../domain/usecases/profile/save_profile.dart';
@@ -41,16 +42,25 @@ final class ProfileLoaded extends ProfileState {
     required this.profile,
     required this.saving,
     required this.saveError,
+    required this.saveErrorCode,
     required this.justSaved,
   });
 
   final ShippingInfo profile;
   final bool saving;
+
+  /// Developer-facing text for logs (kept for tooling); the screen renders
+  /// [saveErrorCode], not this string, so failures localize (Task 23
+  /// refactor).
   final String? saveError;
+
+  /// Stable code the screen maps to a localized message.
+  final AppErrorCode? saveErrorCode;
   final bool justSaved;
 
   @override
-  List<Object?> get props => [profile, saving, saveError, justSaved];
+  List<Object?> get props =>
+      [profile, saving, saveError, saveErrorCode, justSaved];
 }
 
 /// Drives the profile tab: the customer's saved shipping details.
@@ -73,6 +83,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   // Save feedback, preserved across recomputes (see ProfileLoaded doc).
   bool _saving = false;
   String? _saveError;
+  AppErrorCode? _saveErrorCode;
   bool _justSaved = false;
 
   StreamSubscription<ShippingInfo?>? _sub;
@@ -98,6 +109,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       profile: profile,
       saving: _saving,
       saveError: _saveError,
+      saveErrorCode: _saveErrorCode,
       justSaved: _justSaved,
     ));
   }
@@ -107,6 +119,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> save(ShippingInfo profile) async {
     if (_saving) return; // ignore double-taps while a save is in flight
     _saveError = null;
+    _saveErrorCode = null;
     _justSaved = false;
     _saving = true;
     _recompute();
@@ -115,13 +128,17 @@ class ProfileCubit extends Cubit<ProfileState> {
       final result = await _saveProfile(profile);
       result.fold(
         onSuccess: (_) => _justSaved = true,
-        onFailure: (error) => _saveError = error.message,
+        onFailure: (error) {
+          _saveError = error.message;
+          _saveErrorCode = error.code;
+        },
       );
     } on Exception {
       // The repository returns Failures for storage errors, but a *throwing*
       // path must never wedge the Save button in the `saving` state — the
       // same defensive posture as PlaceOrder's best-effort profile save.
       _saveError = 'Could not save profile';
+      _saveErrorCode = AppErrorCode.database;
     } finally {
       _saving = false;
       _recompute();

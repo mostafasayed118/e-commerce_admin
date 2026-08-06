@@ -11,6 +11,7 @@ import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
+import '../helpers/test_app.dart';
 
 /// End-to-end cart + checkout: real DI graph (memory DB + seed) + the real
 /// router. Adds Classic Tee (25% off: $20.00 → $15.00) from the catalog,
@@ -35,7 +36,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
     router = buildAppRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(testApp(router));
     await settleDrift(tester);
     await tester.pumpAndSettle();
   }

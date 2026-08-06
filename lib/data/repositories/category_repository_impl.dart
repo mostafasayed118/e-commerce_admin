@@ -24,7 +24,10 @@ class CategoryRepositoryImpl implements CategoryRepository {
     try {
       final row = await _dao.getById(id);
       if (row == null) {
-        return const Failure(NotFoundError(message: 'Category not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.categoryNotFound,
+          message: 'Category not found',
+        ));
       }
       return Success(_mapper.toEntity(row));
     } on Exception catch (error) {
@@ -40,11 +43,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final now = DateTime.now();
       final id = await _dao.insert(CategoriesCompanion.insert(
             name: category.name,
+            nameAr: Value(category.nameAr),
             createdAt: now.millisecondsSinceEpoch,
           ));
       // Category.copyWith has no id parameter, so the entity is constructed
       // with the generated id explicitly.
-      return Success(Category(id: id, name: category.name, createdAt: now));
+      return Success(
+        Category(id: id, name: category.name, nameAr: category.nameAr, createdAt: now),
+      );
     } on Exception catch (error) {
       return Failure(
         DatabaseError(message: 'Could not create category', cause: error),
@@ -57,10 +63,13 @@ class CategoryRepositoryImpl implements CategoryRepository {
     try {
       final updated = await _dao.updateById(
         category.id,
-        CategoriesCompanion(name: Value(category.name)),
+        CategoriesCompanion(name: Value(category.name), nameAr: Value(category.nameAr)),
       );
       if (updated == 0) {
-        return const Failure(NotFoundError(message: 'Category not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.categoryNotFound,
+          message: 'Category not found',
+        ));
       }
       return Success(category);
     } on Exception catch (error) {
@@ -75,13 +84,18 @@ class CategoryRepositoryImpl implements CategoryRepository {
     try {
       final productCount = await _dao.productCount(id);
       if (productCount > 0) {
-        return Failure(ValidationError(
-          message: 'Category has $productCount product(s); delete them first',
+        return Failure(CategoryInUseError(
+          productCount: productCount,
+          message:
+              'Category has $productCount product(s); delete them first',
         ));
       }
       final deleted = await _dao.deleteById(id);
       if (deleted == 0) {
-        return const Failure(NotFoundError(message: 'Category not found'));
+        return const Failure(NotFoundError(
+          code: AppErrorCode.categoryNotFound,
+          message: 'Category not found',
+        ));
       }
       return const Success<void>(null);
     } on Exception catch (error) {

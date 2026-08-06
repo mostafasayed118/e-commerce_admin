@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/entities/product.dart';
 import '../../../core/error/result.dart';
-import '../../../core/utils/money.dart';
 import '../../../domain/repositories/product_repository.dart';
 import '../../../domain/usecases/cart/add_to_cart.dart';
+import '../../l10n/l10n_ext.dart';
 import '../../widgets/message_view.dart';
 import 'widgets/product_image.dart';
 
@@ -37,25 +37,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final messenger = ScaffoldMessenger.of(context);
     result.fold(
       onSuccess: (_) => messenger.showSnackBar(
-        SnackBar(content: Text('${product.name} added to cart')),
+        SnackBar(content: Text(context.l10n.addedToCart(context.productName(product)))),
       ),
       onFailure: (error) => messenger.showSnackBar(
-        SnackBar(content: Text(error.message)),
+        SnackBar(content: Text(context.errorText(error))),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Product')),
+      appBar: AppBar(title: Text(l10n.productTitle)),
       body: StreamBuilder<Product?>(
         stream: getIt<ProductRepository>().watchProductById(widget.productId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const MessageView(
+            return MessageView(
               icon: Icons.error_outline,
-              title: 'Could not load product',
+              title: l10n.couldNotLoadProduct,
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -63,9 +64,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           }
           final product = snapshot.data;
           if (product == null) {
-            return const MessageView(
+            return MessageView(
               icon: Icons.search_off,
-              title: 'Product not found',
+              title: l10n.productNotFound,
             );
           }
           return _ProductDetailBody(
@@ -94,6 +95,7 @@ class _ProductDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final outOfStock = product.isOutOfStock;
 
     return ListView(
@@ -107,14 +109,14 @@ class _ProductDetailBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        Text(product.name, style: theme.textTheme.headlineSmall),
+        Text(context.productName(product), style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
-              formatCents(product.finalPriceCents),
+              context.formatCents(product.finalPriceCents),
               style: theme.textTheme.headlineMedium?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.w600,
@@ -123,7 +125,7 @@ class _ProductDetailBody extends StatelessWidget {
             if (product.hasDiscount) ...[
               const SizedBox(width: 8),
               Text(
-                formatCents(product.priceCents),
+                context.formatCents(product.priceCents),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                   decoration: TextDecoration.lineThrough,
@@ -150,26 +152,26 @@ class _ProductDetailBody extends StatelessWidget {
         const SizedBox(height: 8),
         if (outOfStock)
           Text(
-            'Out of stock',
+            l10n.outOfStock,
             style: theme.textTheme.titleSmall?.copyWith(color: scheme.error),
           )
         else if (product.isLowStock)
           Text(
-            'Low stock: ${product.stock} left',
+            l10n.lowStockLeft(product.stock),
             style: theme.textTheme.titleSmall?.copyWith(color: scheme.error),
           )
         else
           Text(
-            'In stock',
+            l10n.inStock,
             style: theme.textTheme.titleSmall?.copyWith(
               color: scheme.primary,
             ),
           ),
         const SizedBox(height: 20),
         Text(
-          product.description.isEmpty
-              ? 'No description available.'
-              : product.description,
+          context.productDescription(product).isEmpty
+              ? l10n.noDescription
+              : context.productDescription(product),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -186,8 +188,8 @@ class _ProductDetailBody extends StatelessWidget {
               : const Icon(Icons.add_shopping_cart),
           label: Text(
             outOfStock
-                ? 'Out of stock'
-                : (adding ? 'Adding…' : 'Add to Cart'),
+                ? l10n.outOfStock
+                : (adding ? l10n.adding : l10n.addToCart),
           ),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),

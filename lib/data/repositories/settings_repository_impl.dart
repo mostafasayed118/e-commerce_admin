@@ -110,7 +110,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<Result<void>> setPin(String pin) async {
     if (!isValidPin(pin)) {
       return const Failure(
-        ValidationError(message: 'PIN must be 4-6 digits'),
+        ValidationError(
+          code: AppErrorCode.pinFormat,
+          message: 'PIN must be 4-6 digits',
+        ),
       );
     }
     try {
@@ -134,13 +137,19 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final row = await _dao.getAdminSettings();
       if (row == null) {
-        return const Failure(PinError(message: 'PIN has not been set'));
+        return const Failure(PinError(
+          code: AppErrorCode.pinNotSet,
+          message: 'PIN has not been set',
+        ));
       }
       // Compare the hash of the presented PIN against the stored hash. The
       // equality check is not constant-time; acceptable for a mock local
       // gate where the attacker already has the DB on the same device.
       if (hashPin(pin, row.pinSalt) != row.pinHash) {
-        return const Failure(PinError(message: 'Incorrect PIN'));
+        return const Failure(PinError(
+          code: AppErrorCode.pinIncorrect,
+          message: 'Incorrect PIN',
+        ));
       }
       return const Success<void>(null);
     } on Exception catch (error) {

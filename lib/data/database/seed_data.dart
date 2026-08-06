@@ -9,7 +9,15 @@ import 'app_database.dart';
 /// Idempotency is tracked in [AppMeta.seedVersion]: seeding runs only when the
 /// stored version is older than [version]. Bumping [version] reseeds existing
 /// installs *without* a schema migration — deliberately decoupled from
-/// `schemaVersion` (see PLAN, risks section).
+/// `schemaVersion` (see PLAN, risks section). To make that contract real, the
+/// seed clears its own tables before inserting, so a re-seed never collides
+/// with the previous dataset's unique rows. User-owned data (profile, PIN,
+/// UI prefs) is never touched.
+///
+/// Content is bilingual: every category, product, and demo order item carries
+/// an Arabic variant ([nameAr]/[descriptionAr]/[productNameAr]) alongside the
+/// canonical English text. The UI picks by the viewer's locale with an
+/// English fallback (Task 23 follow-up: localized seed content).
 class SeedData {
   const SeedData(this._db);
 
@@ -17,7 +25,7 @@ class SeedData {
 
   /// Version of the seed dataset. Bump to refresh demo data on existing
   /// installs (assumes a demo/clean database — see class docs).
-  static const int version = 1;
+  static const int version = 2;
 
   /// Seeds if needed. Safe to call on every launch: the version check is a
   /// single SELECT, and the seed itself runs atomically in one transaction —
@@ -28,6 +36,14 @@ class SeedData {
     if (meta != null && meta.seedVersion >= version) return;
 
     await _db.transaction(() async {
+      // Reseed contract: a bumped version refreshes demo data on an existing
+      // install. Wipe only the seed-owned tables (orders cascade their items
+      // and history; products cascade cart rows) so the insert below starts
+      // from a clean slate. Profile/PIN/prefs are user data — untouched.
+      await _db.delete(_db.orders).go();
+      await _db.delete(_db.products).go();
+      await _db.delete(_db.categories).go();
+
       final base = DateTime(2026, 7, 1, 9).millisecondsSinceEpoch;
       final day = const Duration(days: 1).inMilliseconds;
       final hour = const Duration(hours: 1).inMilliseconds;
@@ -42,7 +58,11 @@ class SeedData {
         'Sports',
       ]) {
         categoryIds[name] = await _db.into(_db.categories).insert(
-              CategoriesCompanion.insert(name: name, createdAt: base),
+              CategoriesCompanion.insert(
+                name: name,
+                nameAr: Value(_categoryAr[name]),
+                createdAt: base,
+              ),
             );
       }
 
@@ -59,6 +79,8 @@ class SeedData {
               categoryId: categoryIds[category]!,
               name: name,
               description: Value(description),
+              nameAr: Value(_productAr[name]?.$1),
+              descriptionAr: Value(_productAr[name]?.$2),
               priceCents: priceCents,
               discountPercent: discountPercent,
               stock: stock,
@@ -121,11 +143,13 @@ class SeedData {
               createdAt: placedAt,
               updatedAt: history.last.changedAt,
             ));
-        for (final item in items) {            await _db.into(_db.orderItems).insert(OrderItemsCompanion.insert(
+        for (final item in items) {
+          await _db.into(_db.orderItems).insert(OrderItemsCompanion.insert(
                 orderId: orderId,
                 // productId is Value<int?> — Value() accepts null, so no ternary.
                 productId: Value(item.productId),
                 productName: item.productName,
+                productNameAr: Value(_productAr[item.productName]?.$1),
                 unitPriceCents: item.unitPriceCents,
                 discountPercent: Value(item.discountPercent),
                 quantity: item.quantity,
@@ -273,4 +297,32 @@ class SeedData {
           );
     });
   }
+
+  /// Arabic category labels, keyed by the canonical English name.
+  static const Map<String, String> _categoryAr = {
+    'Clothing': 'ملابس',
+    'Electronics': 'إلكترونيات',
+    'Home & Kitchen': 'المنزل والمطبخ',
+    'Books': 'كتب',
+    'Sports': 'رياضة',
+  };
+
+  /// Arabic (name, description) pairs for the seeded products, keyed by the
+  /// canonical English name — the single source for both the product rows and
+  /// the order-item snapshots, so the two can never drift apart.
+  static const Map<String, (String, String)> _productAr = {
+    'Classic Tee': ('تيشيرت كلاسيك', 'قطعة أساسية من قطن عضوي ناعم.'),
+    'Denim Jacket': ('جاكيت دنيم', 'دنيم خالد بقصّة مصمّمة بدقة.'),
+    'Wool Beanie': ('قبعة صوف', 'ابقَ دافئًا بأناقة.'),
+    'Leather Belt': ('حزام جلدي', 'جلد فاخر، للأسف نفد من المخزون.'),
+    'Wireless Earbuds': ('سماعات لاسلكية', 'صوت نقي وبطارية تدوم طوال اليوم.'),
+    'USB-C Hub': ('موزّع USB-C', 'سبعة منافذ بكابل واحد.'),
+    'Mechanical Keyboard': ('لوحة مفاتيح ميكانيكية', 'مفاتيح لمسية قابلة للتبديل السريع.'),
+    'Ceramic Mug Set': ('طقم أكواب سيراميك', 'طقم من أربعة، آمن للغسالة.'),
+    'Cast Iron Pan': ('مقلاة من حديد الزهر', 'متبلّة، آمنة للفرن، تدوم للأبد.'),
+    'Flutter in Action': ('فلاتر في العمل', 'دليل عملي لبناء التطبيقات.'),
+    'Clean Architecture': ('العمارة النظيفة', 'دليل حِرفي لبنية البرمجيات.'),
+    'Yoga Mat': ('سجادة يوجا', 'قبضة إضافية وسهلة اللف.'),
+    'Resistance Bands': ('أربطة المقاومة', 'خمس مستويات من المقاومة.'),
+  };
 }

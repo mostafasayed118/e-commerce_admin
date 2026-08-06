@@ -9,6 +9,7 @@ import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
+import '../helpers/test_app.dart';
 
 /// End-to-end order history: real DI graph + router. The seed provides six
 /// demo orders with full status histories (spec A6), so the list and the
@@ -34,7 +35,7 @@ void main() {
       await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
     }
     router = buildAppRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(testApp(router));
     await settleDrift(tester);
     await tester.pumpAndSettle();
   }

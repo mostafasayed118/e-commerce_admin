@@ -5,8 +5,10 @@ import '../../../../core/entities/order.dart';
 import '../../../../core/entities/order_status.dart';
 import '../../../../core/error/result.dart';
 import '../../../../domain/repositories/order_repository.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import '../../orders/order_detail_view.dart';
+import '../../orders/status_visuals.dart';
 import 'admin_orders_cubit.dart';
 
 /// Admin order detail: the shared [OrderDetailView] plus a status action bar
@@ -40,25 +42,33 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
     final messenger = ScaffoldMessenger.of(context);
     result.fold(
       onSuccess: (updated) => messenger.showSnackBar(
-        SnackBar(content: Text('${updated.orderNumber} marked as ${next.label}')),
+        SnackBar(
+          content: Text(
+            context.l10n.markedAs(
+              updated.orderNumber,
+              orderStatusLabel(context, next),
+            ),
+          ),
+        ),
       ),
       onFailure: (error) => messenger.showSnackBar(
-        SnackBar(content: Text(error.message)),
+        SnackBar(content: Text(context.errorText(error))),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Order')),
+      appBar: AppBar(title: Text(l10n.orderTitle)),
       body: StreamBuilder<Order?>(
         stream: getIt<OrderRepository>().watchOrderById(widget.orderId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const MessageView(
+            return MessageView(
               icon: Icons.error_outline,
-              title: 'Could not load order',
+              title: l10n.couldNotLoadOrder,
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -66,10 +76,10 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
           }
           final order = snapshot.data;
           if (order == null) {
-            return const MessageView(
+            return MessageView(
               icon: Icons.search_off,
-              title: 'Order not found',
-              message: 'This order may have been removed.',
+              title: l10n.orderNotFound,
+              message: l10n.orderRemoved,
             );
           }
           return OrderDetailView(
@@ -103,14 +113,19 @@ class _StatusActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     final legalTargets =
         OrderStatus.values.where(order.status.canTransitionTo).toList();
     if (legalTargets.isEmpty) {
       return Text(
         order.status.isTerminal
-            ? 'This order is ${order.status.label.toLowerCase()} — no further actions.'
-            : 'No further actions available.',
+            // toLowerCase() is the English "sentence case" shape the original
+            // used; it is a no-op for Arabic (no letter case).
+            ? l10n.orderTerminalNote(
+                orderStatusLabel(context, order.status).toLowerCase(),
+              )
+            : l10n.noFurtherActions,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: scheme.onSurfaceVariant,
         ),
@@ -121,10 +136,12 @@ class _StatusActions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Actions',
+          l10n.actions,
           style: theme.textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
-            letterSpacing: 1.2,
+            // Latin-only tracking — spaced-out Arabic glyphs look broken.
+            letterSpacing:
+                Directionality.of(context) == TextDirection.rtl ? 0 : 1.2,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -142,12 +159,16 @@ class _StatusActions extends StatelessWidget {
                         side: BorderSide(color: scheme.error),
                       ),
                       icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('Cancel order'),
+                      label: Text(l10n.cancelOrder),
                     )
                   : FilledButton.icon(
                       onPressed: updating ? null : () => onUpdate(target),
                       icon: Icon(_forwardIcon(target), size: 18),
-                      label: Text('Mark ${target.label.toLowerCase()}'),
+                      label: Text(
+                        l10n.markAs(
+                          orderStatusLabel(context, target).toLowerCase(),
+                        ),
+                      ),
                     ),
           ],
         ),

@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -59,6 +60,7 @@ void main() {
   Future<int> insertProduct(
     int categoryId,
     String name, {
+    String? nameAr,
     int priceCents = 1000,
     int discountPercent = 0,
     int stock = 10,
@@ -66,6 +68,7 @@ void main() {
     return db.into(db.products).insert(ProductsCompanion.insert(
           categoryId: categoryId,
           name: name,
+          nameAr: Value(nameAr),
           priceCents: priceCents,
           discountPercent: discountPercent,
           stock: stock,
@@ -92,7 +95,7 @@ void main() {
     test('creates a pending order with snapshot items and shipping', () async {
       final categoryId = await insertCategory('Clothing');
       final productId = await insertProduct(categoryId, 'T-Shirt',
-          priceCents: 2000, discountPercent: 25);
+          nameAr: 'تيشيرت', priceCents: 2000, discountPercent: 25);
       await addToCart(productId, 2);
 
       final result = await repo.placeOrder(shipping);
@@ -107,6 +110,8 @@ void main() {
       final item = order.items.single;
       expect(item.productId, productId);
       expect(item.productName, 'T-Shirt');
+      expect(item.productNameAr, 'تيشيرت',
+          reason: 'the receipt snapshot carries both labels');
       expect(item.unitPriceCents, 2000);
       expect(item.discountPercent, 25);
       expect(item.quantity, 2);

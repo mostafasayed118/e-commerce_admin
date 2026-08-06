@@ -9,6 +9,7 @@ import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
+import '../helpers/test_app.dart';
 
 /// End-to-end admin catalog: real DI graph (memory DB + seed) + the real
 /// router. Drives the PIN gate, unlocks, then exercises product and category
@@ -39,7 +40,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
     router = buildAppRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(testApp(router));
     await settleDrift(tester);
     await tester.pumpAndSettle();
   }
@@ -97,6 +98,8 @@ void main() {
     expect(find.text('Enter a price greater than 0'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('product-name')), 'Test Product');
+    await tester.enterText(
+        find.byKey(const Key('product-name-ar')), 'قميص تجريبي');
     await tester.enterText(find.byKey(const Key('product-price')), '19.99');
     await tester.tap(find.text('Save product'));
     await tester.pump();
@@ -110,6 +113,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Edit product'), findsOneWidget);
     expect(find.text('19.99'), findsOneWidget); // price prefilled from cents
+    // The optional Arabic name persisted through form -> DB -> form.
+    expect(find.text('قميص تجريبي'), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('product-name')),
       'Test Product V2',
@@ -156,11 +161,25 @@ void main() {
       find.byKey(const Key('category-name-field')),
       'Gadgets',
     );
+    await tester.enterText(
+      find.byKey(const Key('category-name-ar-field')),
+      'أجهزة',
+    );
     await tester.tap(find.text('Create'));
     await tester.pump();
     await settleDrift(tester, delay: const Duration(milliseconds: 200));
     await tester.pumpAndSettle();
     expect(find.text('Gadgets'), findsOneWidget);
+
+    // The optional Arabic label persisted: the rename dialog pre-fills it.
+    await tester.tap(find.descendant(
+      of: find.widgetWithText(ListTile, 'Gadgets'),
+      matching: find.byIcon(Icons.edit_outlined),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('أجهزة'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
 
     // --- Blocked delete: 'Clothing' still has products (spec A4) -----------
     await tester.tap(find.descendant(
@@ -172,7 +191,7 @@ void main() {
     await tester.pump();
     await settleDrift(tester, delay: const Duration(milliseconds: 200));
     await tester.pumpAndSettle();
-    expect(find.textContaining('delete them first'), findsOneWidget);
+    expect(find.textContaining('before deleting the category'), findsOneWidget);
     expect(find.text('Clothing'), findsOneWidget); // still there
 
     // Flush the SnackBar's auto-dismiss timer before interacting again.

@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/entities/order_status.dart';
 import '../../../../core/entities/product.dart';
-import '../../../../core/utils/money.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import '../../orders/order_list_tile.dart';
 import '../../orders/status_visuals.dart';
@@ -33,16 +33,17 @@ class _OverviewView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Overview')),
+      appBar: AppBar(title: Text(l10n.overviewTitle)),
       body: BlocBuilder<AdminOverviewCubit, AdminOverviewState>(
         builder: (context, state) => switch (state) {
           AdminOverviewLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminOverviewError(:final message) => MessageView(
+          AdminOverviewError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
           AdminOverviewLoaded() => _Dashboard(state: state),
         },
@@ -59,6 +60,7 @@ class _Dashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -69,17 +71,17 @@ class _Dashboard extends StatelessWidget {
           children: [
             _StatCard(
               icon: Icons.attach_money,
-              label: 'Revenue',
-              value: formatCents(state.revenueCents),
+              label: l10n.revenue,
+              value: context.formatCents(state.revenueCents),
             ),
             _StatCard(
               icon: Icons.receipt_long_outlined,
-              label: 'Orders',
+              label: l10n.orders,
               value: '${state.totalOrders}',
             ),
             _StatCard(
               icon: Icons.warning_amber_outlined,
-              label: 'Low stock',
+              label: l10n.lowStock,
               value: '${state.lowStockProducts.length}',
             ),
           ],
@@ -87,7 +89,7 @@ class _Dashboard extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- Orders by status chart ---------------------------------------
-        const _SectionHeader('Orders by status'),
+        _SectionHeader(l10n.ordersByStatus),
         const SizedBox(height: 12),
         _OrdersByStatusChart(
           byStatus: state.ordersByStatus,
@@ -95,13 +97,13 @@ class _Dashboard extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- Recent orders -------------------------------------------------
-        const _SectionHeader('Recent orders'),
+        _SectionHeader(l10n.recentOrders),
         const SizedBox(height: 4),
         if (state.recentOrders.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'No orders yet.',
+              l10n.noOrdersYet,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -116,13 +118,13 @@ class _Dashboard extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- Low stock alerts ---------------------------------------------
-        const _SectionHeader('Low stock'),
+        _SectionHeader(l10n.lowStock),
         const SizedBox(height: 4),
         if (state.lowStockProducts.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'All stocked up.',
+              l10n.allStockedUp,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -203,10 +205,13 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Text(
+      // All-caps for Latin scripts; a no-op for Arabic (no letter case).
+      // The tracking is Latin-only too — spaced-out Arabic glyphs look broken.
       label.toUpperCase(),
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
-            letterSpacing: 1.2,
+            letterSpacing:
+                Directionality.of(context) == TextDirection.rtl ? 0 : 1.2,
             fontWeight: FontWeight.w600,
           ),
     );
@@ -271,7 +276,7 @@ class _OrdersByStatusChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          statuses[index].label,
+                          orderStatusLabel(context, statuses[index]),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                           ),
@@ -289,7 +294,7 @@ class _OrdersByStatusChart extends StatelessWidget {
                     final index = group.x;
                     if (index < 0 || index >= statuses.length) return null;
                     return BarTooltipItem(
-                      '${statuses[index].label}: '
+                      '${orderStatusLabel(context, statuses[index])}: '
                       '${byStatus[statuses[index]]}',
                       theme.textTheme.labelMedium!.copyWith(
                         color: scheme.onInverseSurface,
@@ -315,6 +320,7 @@ class _LowStockTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final out = product.isOutOfStock;
     final color = out ? scheme.error : scheme.tertiary;
     final background = out ? scheme.errorContainer : scheme.tertiaryContainer;
@@ -330,13 +336,13 @@ class _LowStockTile extends StatelessWidget {
           size: 20,
         ),
       ),
-      title: Text(product.name, style: theme.textTheme.titleSmall),
+      title: Text(context.productName(product), style: theme.textTheme.titleSmall),
       subtitle: Text(
-        out ? 'Out of stock' : 'Only ${product.stock} left',
+        out ? l10n.outOfStock : l10n.onlyXLeft(product.stock),
         style: theme.textTheme.bodySmall?.copyWith(color: color),
       ),
       trailing: Text(
-        formatCents(product.finalPriceCents),
+        context.formatCents(product.finalPriceCents),
         style: theme.textTheme.bodyMedium?.copyWith(
           color: scheme.onSurfaceVariant,
         ),

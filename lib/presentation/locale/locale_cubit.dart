@@ -9,16 +9,16 @@ import '../../domain/repositories/settings_repository.dart';
 ///
 /// Defaults to English until the persisted code arrives; the MaterialApp
 /// wires it straight into `locale`, which also drives RTL for `'ar'`.
+///
+/// The canonical list of supported locales lives on the generated
+/// [AppLocalizations.supportedLocales] (used by MaterialApp and the Profile
+/// switch) — the cubit deliberately does not duplicate it.
 class LocaleCubit extends Cubit<Locale> {
   LocaleCubit(this._settings) : super(const Locale('en')) {
     _restore();
   }
 
   final SettingsRepository _settings;
-
-  /// The locales the app supports. The MaterialApp lists these in
-  /// `supportedLocales`; the switch UI (Profile) offers the same codes.
-  static const List<Locale> supported = [Locale('en'), Locale('ar')];
 
   /// True once the user has made a choice. The async restore must never
   /// clobber a user switch that landed while the DB read was in flight.

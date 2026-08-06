@@ -28,6 +28,9 @@ enum CatalogSort {
     return _nameOf(a).compareTo(_nameOf(b));
   }
 
+  // The sort key is deliberately the CANONICAL English name, not the
+  // viewer-locale display name: sorting must be locale-independent and
+  // deterministic, and the canonical text is always present.
   static String _nameOf(Product p) => p.name.toLowerCase();
   static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
 }

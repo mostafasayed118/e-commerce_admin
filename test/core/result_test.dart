@@ -13,7 +13,10 @@ void main() {
     });
 
     test('Failure exposes isFailure and the error', () {
-      const error = ValidationError(message: 'nope');
+      const error = ValidationError(
+        code: AppErrorCode.quantityMin,
+        message: 'nope',
+      );
       const Failure<int> result = Failure<int>(error);
       expect(result.isFailure, isTrue);
       expect(result.isSuccess, isFalse);
@@ -45,7 +48,10 @@ void main() {
     });
 
     test('getOrThrow throws the AppError on failure', () {
-      const result = Failure<int>(NotFoundError(message: 'missing'));
+      const result = Failure<int>(NotFoundError(
+        code: AppErrorCode.productNotFound,
+        message: 'missing',
+      ));
       expect(() => result.getOrThrow(), throwsA(isA<NotFoundError>()));
     });
 
@@ -64,7 +70,10 @@ void main() {
     });
 
     test('toString includes the variant and message', () {
-      const error = PinError(message: 'wrong pin');
+      const error = PinError(
+        code: AppErrorCode.pinIncorrect,
+        message: 'wrong pin',
+      );
       expect(error.toString(), contains('PinError'));
       expect(error.toString(), contains('wrong pin'));
     });

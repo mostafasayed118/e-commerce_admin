@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/entities/category.dart';
 import '../../../../core/error/result.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import 'admin_catalog_cubit.dart';
 
@@ -25,41 +26,46 @@ class CategoriesScreen extends StatelessWidget {
 class _CategoriesView extends StatelessWidget {
   const _CategoriesView();
 
+  /// Collects the English (required) and Arabic (optional) names; the dialog
+  /// pops a record and nothing happens if the English name is blank.
   Future<void> _promptForName(
     BuildContext context, {
     required String title,
     String initial = '',
-    String confirmLabel = 'Save',
-    required Future<void> Function(String name) onSubmit,
+    String? initialAr,
+    String? confirmLabel,
+    required Future<void> Function(String name, String? nameAr) onSubmit,
   }) async {
-    final name = await showDialog<String>(
+    final result = await showDialog<({String name, String? nameAr})>(
       context: context,
       builder: (context) => _NameDialog(
         title: title,
         initial: initial,
-        confirmLabel: confirmLabel,
+        initialAr: initialAr,
+        // Null resolves to the localized default inside the dialog (a
+        // default parameter cannot read context).
+        confirmLabel: confirmLabel ?? context.l10n.save,
       ),
     );
-    if (name == null || name.isEmpty || !context.mounted) return;
-    await onSubmit(name);
+    if (result == null || result.name.isEmpty || !context.mounted) return;
+    await onSubmit(result.name, result.nameAr);
   }
 
   Future<void> _confirmDelete(BuildContext context, Category category) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete "${category.name}"?'),
-        content: const Text(
-          'Categories that still have products cannot be deleted.',
-        ),
+        title: Text(l10n.deleteCategoryTitle(context.categoryName(category))),
+        content: Text(l10n.deleteCategoryMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -73,10 +79,10 @@ class _CategoriesView extends StatelessWidget {
     result.fold(
       onSuccess: (_) {},
       // The blocked rule (products still reference it) or other failures land
-      // here as a readable message.
+      // here as a localized message.
       onFailure: (error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(content: Text(context.errorText(error))),
         );
       },
     );
@@ -85,52 +91,54 @@ class _CategoriesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<AdminCatalogCubit>();
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Categories')),
+      appBar: AppBar(title: Text(l10n.categoriesTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _promptForName(
           context,
-          title: 'New category',
-          confirmLabel: 'Create',
-          onSubmit: (name) async {
-            final result = await cubit.createCategory(name);
+          title: l10n.newCategory,
+          confirmLabel: l10n.create,
+          onSubmit: (name, nameAr) async {
+            final result = await cubit.createCategory(name, nameAr: nameAr);
             if (!context.mounted) return;
             result.fold(
               onSuccess: (_) {},
               onFailure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error.message)),
+                SnackBar(content: Text(context.errorText(error))),
               ),
             );
           },
         ),
         icon: const Icon(Icons.add),
-        label: const Text('New category'),
+        label: Text(l10n.newCategory),
       ),
       body: BlocBuilder<AdminCatalogCubit, AdminCatalogState>(
         builder: (context, state) => switch (state) {
           AdminCatalogLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminCatalogError(:final message) => MessageView(
+          AdminCatalogError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
           AdminCatalogLoaded() => _CategoryList(
               state: state,
               onRename: (category) => _promptForName(
                 context,
-                title: 'Rename category',
+                title: l10n.renameCategory,
                 initial: category.name,
-                onSubmit: (name) async {
+                initialAr: category.nameAr,
+                onSubmit: (name, nameAr) async {
                   final result = await cubit.updateCategory(
-                    category.copyWith(name: name),
+                    category.copyWith(name: name, nameAr: nameAr),
                   );
                   if (!context.mounted) return;
                   result.fold(
                     onSuccess: (_) {},
                     onFailure: (error) =>
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error.message)),
+                          SnackBar(content: Text(context.errorText(error))),
                         ),
                   );
                 },
@@ -149,11 +157,13 @@ class _NameDialog extends StatefulWidget {
   const _NameDialog({
     required this.title,
     required this.initial,
+    this.initialAr,
     required this.confirmLabel,
   });
 
   final String title;
   final String initial;
+  final String? initialAr;
   final String confirmLabel;
 
   @override
@@ -163,35 +173,63 @@ class _NameDialog extends StatefulWidget {
 class _NameDialogState extends State<_NameDialog> {
   late final TextEditingController _controller =
       TextEditingController(text: widget.initial);
+  late final TextEditingController _controllerAr =
+      TextEditingController(text: widget.initialAr ?? '');
 
   @override
   void dispose() {
     _controller.dispose();
+    _controllerAr.dispose();
     super.dispose();
   }
+
+  /// The English name is required; the Arabic name is optional (blank is
+  /// stored as null so the UI falls back to English).
+  void _submit() => Navigator.pop(
+        context,
+        (
+          name: _controller.text.trim(),
+          nameAr: emptyToNull(_controllerAr.text),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.title),
-      content: TextField(
-        key: const Key('category-name-field'),
-        controller: _controller,
-        autofocus: true,
-        textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(
-          labelText: 'Category name',
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (value) => Navigator.pop(context, value.trim()),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            key: const Key('category-name-field'),
+            controller: _controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: context.l10n.categoryName,
+              border: const OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('category-name-ar-field'),
+            controller: _controllerAr,
+            decoration: InputDecoration(
+              labelText: context.l10n.arabicNameOptional,
+              border: const OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          onPressed: _submit,
           child: Text(widget.confirmLabel),
         ),
       ],
@@ -212,11 +250,12 @@ class _CategoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (state.categories.isEmpty) {
-      return const MessageView(
+      return MessageView(
         icon: Icons.category_outlined,
-        title: 'No categories yet',
-        message: 'Create a category before adding products.',
+        title: l10n.noCategoriesTitle,
+        message: l10n.noCategoriesMessage,
       );
     }
 
@@ -233,22 +272,22 @@ class _CategoryList extends StatelessWidget {
           leading: CircleAvatar(
             backgroundColor: scheme.primaryContainer,
             foregroundColor: scheme.onPrimaryContainer,
-            child: Text(category.name.isEmpty ? '?' : category.name[0]),
+            child: Text(context.categoryName(category).isEmpty
+                ? '?'
+                : context.categoryName(category)[0]),
           ),
-          title: Text(category.name),
-          subtitle: Text(
-            '$productCount product${productCount == 1 ? '' : 's'}',
-          ),
+          title: Text(context.categoryName(category)),
+          subtitle: Text(l10n.productCount(productCount)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                tooltip: 'Rename ${category.name}',
+                tooltip: l10n.renameTooltip(context.categoryName(category)),
                 icon: const Icon(Icons.edit_outlined),
                 onPressed: () => onRename(category),
               ),
               IconButton(
-                tooltip: 'Delete ${category.name}',
+                tooltip: l10n.deleteCategoryTooltip(context.categoryName(category)),
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () => onDelete(category),
               ),

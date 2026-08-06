@@ -13,6 +13,7 @@ import 'package:shop_admin/presentation/theme/theme_cubit.dart';
 
 import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
+import '../helpers/test_app.dart';
 
 /// End-to-end customer profile: real DI graph + router. The profile is the
 /// same single-row [ShippingInfo] the checkout writes (PlaceOrder), so these
@@ -35,7 +36,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     router = buildAppRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(testApp(router));
     await settleDrift(tester);
     await tester.pumpAndSettle();
   }

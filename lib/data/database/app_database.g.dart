@@ -32,6 +32,15 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+    'name_ar',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -44,7 +53,7 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, createdAt];
+  List<GeneratedColumn> get $columns => [id, name, nameAr, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -67,6 +76,12 @@ class $CategoriesTable extends Categories
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(
+        _nameArMeta,
+        nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -93,6 +108,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      nameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_ar'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -109,10 +128,15 @@ class $CategoriesTable extends Categories
 class CategoryRow extends DataClass implements Insertable<CategoryRow> {
   final int id;
   final String name;
+
+  /// Optional Arabic label. `null` = English-only (the UI falls back to
+  /// [name]). Admin-created categories can carry one; seed data always does.
+  final String? nameAr;
   final int createdAt;
   const CategoryRow({
     required this.id,
     required this.name,
+    this.nameAr,
     required this.createdAt,
   });
   @override
@@ -120,6 +144,9 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
     map['created_at'] = Variable<int>(createdAt);
     return map;
   }
@@ -128,6 +155,9 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     return CategoriesCompanion(
       id: Value(id),
       name: Value(name),
+      nameAr: nameAr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nameAr),
       createdAt: Value(createdAt),
     );
   }
@@ -140,6 +170,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     return CategoryRow(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
   }
@@ -149,19 +180,27 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'nameAr': serializer.toJson<String?>(nameAr),
       'createdAt': serializer.toJson<int>(createdAt),
     };
   }
 
-  CategoryRow copyWith({int? id, String? name, int? createdAt}) => CategoryRow(
+  CategoryRow copyWith({
+    int? id,
+    String? name,
+    Value<String?> nameAr = const Value.absent(),
+    int? createdAt,
+  }) => CategoryRow(
     id: id ?? this.id,
     name: name ?? this.name,
+    nameAr: nameAr.present ? nameAr.value : this.nameAr,
     createdAt: createdAt ?? this.createdAt,
   );
   CategoryRow copyWithCompanion(CategoriesCompanion data) {
     return CategoryRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -171,45 +210,52 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     return (StringBuffer('CategoryRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, createdAt);
+  int get hashCode => Object.hash(id, name, nameAr, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CategoryRow &&
           other.id == this.id &&
           other.name == this.name &&
+          other.nameAr == this.nameAr &&
           other.createdAt == this.createdAt);
 }
 
 class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String?> nameAr;
   final Value<int> createdAt;
   const CategoriesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.nameAr = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   CategoriesCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.nameAr = const Value.absent(),
     required int createdAt,
   }) : name = Value(name),
        createdAt = Value(createdAt);
   static Insertable<CategoryRow> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? nameAr,
     Expression<int>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (nameAr != null) 'name_ar': nameAr,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -217,11 +263,13 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   CategoriesCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String?>? nameAr,
     Value<int>? createdAt,
   }) {
     return CategoriesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -235,6 +283,9 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -246,6 +297,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     return (StringBuffer('CategoriesCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -305,6 +357,26 @@ class $ProductsTable extends Products
     type: DriftSqlType.string,
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+    'name_ar',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionArMeta = const VerificationMeta(
+    'descriptionAr',
+  );
+  @override
+  late final GeneratedColumn<String> descriptionAr = GeneratedColumn<String>(
+    'description_ar',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _priceCentsMeta = const VerificationMeta(
     'priceCents',
@@ -381,6 +453,8 @@ class $ProductsTable extends Products
     categoryId,
     name,
     description,
+    nameAr,
+    descriptionAr,
     priceCents,
     discountPercent,
     stock,
@@ -425,6 +499,21 @@ class $ProductsTable extends Products
         description.isAcceptableOrUnknown(
           data['description']!,
           _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(
+        _nameArMeta,
+        nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta),
+      );
+    }
+    if (data.containsKey('description_ar')) {
+      context.handle(
+        _descriptionArMeta,
+        descriptionAr.isAcceptableOrUnknown(
+          data['description_ar']!,
+          _descriptionArMeta,
         ),
       );
     }
@@ -502,6 +591,14 @@ class $ProductsTable extends Products
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       )!,
+      nameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_ar'],
+      ),
+      descriptionAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description_ar'],
+      ),
       priceCents: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}price_cents'],
@@ -544,6 +641,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   final int categoryId;
   final String name;
   final String description;
+
+  /// Optional Arabic name/description. `null` = English-only (the UI falls
+  /// back to [name]/[description]). Seed data carries them; admin-created
+  /// products can too (the form's optional Arabic fields).
+  final String? nameAr;
+  final String? descriptionAr;
   final int priceCents;
   final int discountPercent;
   final int stock;
@@ -557,6 +660,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     required this.categoryId,
     required this.name,
     required this.description,
+    this.nameAr,
+    this.descriptionAr,
     required this.priceCents,
     required this.discountPercent,
     required this.stock,
@@ -571,6 +676,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     map['category_id'] = Variable<int>(categoryId);
     map['name'] = Variable<String>(name);
     map['description'] = Variable<String>(description);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
+    if (!nullToAbsent || descriptionAr != null) {
+      map['description_ar'] = Variable<String>(descriptionAr);
+    }
     map['price_cents'] = Variable<int>(priceCents);
     map['discount_percent'] = Variable<int>(discountPercent);
     map['stock'] = Variable<int>(stock);
@@ -588,6 +699,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       categoryId: Value(categoryId),
       name: Value(name),
       description: Value(description),
+      nameAr: nameAr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nameAr),
+      descriptionAr: descriptionAr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(descriptionAr),
       priceCents: Value(priceCents),
       discountPercent: Value(discountPercent),
       stock: Value(stock),
@@ -609,6 +726,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       categoryId: serializer.fromJson<int>(json['categoryId']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String>(json['description']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
+      descriptionAr: serializer.fromJson<String?>(json['descriptionAr']),
       priceCents: serializer.fromJson<int>(json['priceCents']),
       discountPercent: serializer.fromJson<int>(json['discountPercent']),
       stock: serializer.fromJson<int>(json['stock']),
@@ -625,6 +744,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       'categoryId': serializer.toJson<int>(categoryId),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String>(description),
+      'nameAr': serializer.toJson<String?>(nameAr),
+      'descriptionAr': serializer.toJson<String?>(descriptionAr),
       'priceCents': serializer.toJson<int>(priceCents),
       'discountPercent': serializer.toJson<int>(discountPercent),
       'stock': serializer.toJson<int>(stock),
@@ -639,6 +760,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     int? categoryId,
     String? name,
     String? description,
+    Value<String?> nameAr = const Value.absent(),
+    Value<String?> descriptionAr = const Value.absent(),
     int? priceCents,
     int? discountPercent,
     int? stock,
@@ -650,6 +773,10 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     categoryId: categoryId ?? this.categoryId,
     name: name ?? this.name,
     description: description ?? this.description,
+    nameAr: nameAr.present ? nameAr.value : this.nameAr,
+    descriptionAr: descriptionAr.present
+        ? descriptionAr.value
+        : this.descriptionAr,
     priceCents: priceCents ?? this.priceCents,
     discountPercent: discountPercent ?? this.discountPercent,
     stock: stock ?? this.stock,
@@ -667,6 +794,10 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      descriptionAr: data.descriptionAr.present
+          ? data.descriptionAr.value
+          : this.descriptionAr,
       priceCents: data.priceCents.present
           ? data.priceCents.value
           : this.priceCents,
@@ -687,6 +818,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('descriptionAr: $descriptionAr, ')
           ..write('priceCents: $priceCents, ')
           ..write('discountPercent: $discountPercent, ')
           ..write('stock: $stock, ')
@@ -703,6 +836,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     categoryId,
     name,
     description,
+    nameAr,
+    descriptionAr,
     priceCents,
     discountPercent,
     stock,
@@ -718,6 +853,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           other.categoryId == this.categoryId &&
           other.name == this.name &&
           other.description == this.description &&
+          other.nameAr == this.nameAr &&
+          other.descriptionAr == this.descriptionAr &&
           other.priceCents == this.priceCents &&
           other.discountPercent == this.discountPercent &&
           other.stock == this.stock &&
@@ -731,6 +868,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<int> categoryId;
   final Value<String> name;
   final Value<String> description;
+  final Value<String?> nameAr;
+  final Value<String?> descriptionAr;
   final Value<int> priceCents;
   final Value<int> discountPercent;
   final Value<int> stock;
@@ -742,6 +881,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.categoryId = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.descriptionAr = const Value.absent(),
     this.priceCents = const Value.absent(),
     this.discountPercent = const Value.absent(),
     this.stock = const Value.absent(),
@@ -754,6 +895,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     required int categoryId,
     required String name,
     this.description = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.descriptionAr = const Value.absent(),
     required int priceCents,
     required int discountPercent,
     required int stock,
@@ -772,6 +915,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Expression<int>? categoryId,
     Expression<String>? name,
     Expression<String>? description,
+    Expression<String>? nameAr,
+    Expression<String>? descriptionAr,
     Expression<int>? priceCents,
     Expression<int>? discountPercent,
     Expression<int>? stock,
@@ -784,6 +929,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       if (categoryId != null) 'category_id': categoryId,
       if (name != null) 'name': name,
       if (description != null) 'description': description,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (descriptionAr != null) 'description_ar': descriptionAr,
       if (priceCents != null) 'price_cents': priceCents,
       if (discountPercent != null) 'discount_percent': discountPercent,
       if (stock != null) 'stock': stock,
@@ -798,6 +945,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Value<int>? categoryId,
     Value<String>? name,
     Value<String>? description,
+    Value<String?>? nameAr,
+    Value<String?>? descriptionAr,
     Value<int>? priceCents,
     Value<int>? discountPercent,
     Value<int>? stock,
@@ -810,6 +959,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       categoryId: categoryId ?? this.categoryId,
       name: name ?? this.name,
       description: description ?? this.description,
+      nameAr: nameAr ?? this.nameAr,
+      descriptionAr: descriptionAr ?? this.descriptionAr,
       priceCents: priceCents ?? this.priceCents,
       discountPercent: discountPercent ?? this.discountPercent,
       stock: stock ?? this.stock,
@@ -833,6 +984,12 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (descriptionAr.present) {
+      map['description_ar'] = Variable<String>(descriptionAr.value);
     }
     if (priceCents.present) {
       map['price_cents'] = Variable<int>(priceCents.value);
@@ -862,6 +1019,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
           ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('descriptionAr: $descriptionAr, ')
           ..write('priceCents: $priceCents, ')
           ..write('discountPercent: $discountPercent, ')
           ..write('stock: $stock, ')
@@ -1874,6 +2033,17 @@ class $OrderItemsTable extends OrderItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _productNameArMeta = const VerificationMeta(
+    'productNameAr',
+  );
+  @override
+  late final GeneratedColumn<String> productNameAr = GeneratedColumn<String>(
+    'product_name_ar',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _unitPriceCentsMeta = const VerificationMeta(
     'unitPriceCents',
   );
@@ -1919,6 +2089,7 @@ class $OrderItemsTable extends OrderItems
     orderId,
     productId,
     productName,
+    productNameAr,
     unitPriceCents,
     discountPercent,
     quantity,
@@ -1962,6 +2133,15 @@ class $OrderItemsTable extends OrderItems
       );
     } else if (isInserting) {
       context.missing(_productNameMeta);
+    }
+    if (data.containsKey('product_name_ar')) {
+      context.handle(
+        _productNameArMeta,
+        productNameAr.isAcceptableOrUnknown(
+          data['product_name_ar']!,
+          _productNameArMeta,
+        ),
+      );
     }
     if (data.containsKey('unit_price_cents')) {
       context.handle(
@@ -2016,6 +2196,10 @@ class $OrderItemsTable extends OrderItems
         DriftSqlType.string,
         data['${effectivePrefix}product_name'],
       )!,
+      productNameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_name_ar'],
+      ),
       unitPriceCents: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}unit_price_cents'],
@@ -2046,6 +2230,13 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
   /// SET NULL — deleting a product keeps the line, the reference goes null.
   final int? productId;
   final String productName;
+
+  /// Snapshot of the product's Arabic label at purchase time (nullable: the
+  /// shopper's locale or the product's data may not have one). The receipt
+  /// renders whichever label matches the *viewer's* locale — the same stored
+  /// order displays English to an English admin and Arabic to an Arabic
+  /// customer.
+  final String? productNameAr;
   final int unitPriceCents;
   final int discountPercent;
   final int quantity;
@@ -2054,6 +2245,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
     required this.orderId,
     this.productId,
     required this.productName,
+    this.productNameAr,
     required this.unitPriceCents,
     required this.discountPercent,
     required this.quantity,
@@ -2067,6 +2259,9 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
       map['product_id'] = Variable<int>(productId);
     }
     map['product_name'] = Variable<String>(productName);
+    if (!nullToAbsent || productNameAr != null) {
+      map['product_name_ar'] = Variable<String>(productNameAr);
+    }
     map['unit_price_cents'] = Variable<int>(unitPriceCents);
     map['discount_percent'] = Variable<int>(discountPercent);
     map['quantity'] = Variable<int>(quantity);
@@ -2081,6 +2276,9 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
           ? const Value.absent()
           : Value(productId),
       productName: Value(productName),
+      productNameAr: productNameAr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productNameAr),
       unitPriceCents: Value(unitPriceCents),
       discountPercent: Value(discountPercent),
       quantity: Value(quantity),
@@ -2097,6 +2295,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
       orderId: serializer.fromJson<int>(json['orderId']),
       productId: serializer.fromJson<int?>(json['productId']),
       productName: serializer.fromJson<String>(json['productName']),
+      productNameAr: serializer.fromJson<String?>(json['productNameAr']),
       unitPriceCents: serializer.fromJson<int>(json['unitPriceCents']),
       discountPercent: serializer.fromJson<int>(json['discountPercent']),
       quantity: serializer.fromJson<int>(json['quantity']),
@@ -2110,6 +2309,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
       'orderId': serializer.toJson<int>(orderId),
       'productId': serializer.toJson<int?>(productId),
       'productName': serializer.toJson<String>(productName),
+      'productNameAr': serializer.toJson<String?>(productNameAr),
       'unitPriceCents': serializer.toJson<int>(unitPriceCents),
       'discountPercent': serializer.toJson<int>(discountPercent),
       'quantity': serializer.toJson<int>(quantity),
@@ -2121,6 +2321,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
     int? orderId,
     Value<int?> productId = const Value.absent(),
     String? productName,
+    Value<String?> productNameAr = const Value.absent(),
     int? unitPriceCents,
     int? discountPercent,
     int? quantity,
@@ -2129,6 +2330,9 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
     orderId: orderId ?? this.orderId,
     productId: productId.present ? productId.value : this.productId,
     productName: productName ?? this.productName,
+    productNameAr: productNameAr.present
+        ? productNameAr.value
+        : this.productNameAr,
     unitPriceCents: unitPriceCents ?? this.unitPriceCents,
     discountPercent: discountPercent ?? this.discountPercent,
     quantity: quantity ?? this.quantity,
@@ -2141,6 +2345,9 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
       productName: data.productName.present
           ? data.productName.value
           : this.productName,
+      productNameAr: data.productNameAr.present
+          ? data.productNameAr.value
+          : this.productNameAr,
       unitPriceCents: data.unitPriceCents.present
           ? data.unitPriceCents.value
           : this.unitPriceCents,
@@ -2158,6 +2365,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
           ..write('orderId: $orderId, ')
           ..write('productId: $productId, ')
           ..write('productName: $productName, ')
+          ..write('productNameAr: $productNameAr, ')
           ..write('unitPriceCents: $unitPriceCents, ')
           ..write('discountPercent: $discountPercent, ')
           ..write('quantity: $quantity')
@@ -2171,6 +2379,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
     orderId,
     productId,
     productName,
+    productNameAr,
     unitPriceCents,
     discountPercent,
     quantity,
@@ -2183,6 +2392,7 @@ class OrderItemRow extends DataClass implements Insertable<OrderItemRow> {
           other.orderId == this.orderId &&
           other.productId == this.productId &&
           other.productName == this.productName &&
+          other.productNameAr == this.productNameAr &&
           other.unitPriceCents == this.unitPriceCents &&
           other.discountPercent == this.discountPercent &&
           other.quantity == this.quantity);
@@ -2193,6 +2403,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
   final Value<int> orderId;
   final Value<int?> productId;
   final Value<String> productName;
+  final Value<String?> productNameAr;
   final Value<int> unitPriceCents;
   final Value<int> discountPercent;
   final Value<int> quantity;
@@ -2201,6 +2412,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
     this.orderId = const Value.absent(),
     this.productId = const Value.absent(),
     this.productName = const Value.absent(),
+    this.productNameAr = const Value.absent(),
     this.unitPriceCents = const Value.absent(),
     this.discountPercent = const Value.absent(),
     this.quantity = const Value.absent(),
@@ -2210,6 +2422,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
     required int orderId,
     this.productId = const Value.absent(),
     required String productName,
+    this.productNameAr = const Value.absent(),
     required int unitPriceCents,
     this.discountPercent = const Value.absent(),
     required int quantity,
@@ -2222,6 +2435,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
     Expression<int>? orderId,
     Expression<int>? productId,
     Expression<String>? productName,
+    Expression<String>? productNameAr,
     Expression<int>? unitPriceCents,
     Expression<int>? discountPercent,
     Expression<int>? quantity,
@@ -2231,6 +2445,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
       if (orderId != null) 'order_id': orderId,
       if (productId != null) 'product_id': productId,
       if (productName != null) 'product_name': productName,
+      if (productNameAr != null) 'product_name_ar': productNameAr,
       if (unitPriceCents != null) 'unit_price_cents': unitPriceCents,
       if (discountPercent != null) 'discount_percent': discountPercent,
       if (quantity != null) 'quantity': quantity,
@@ -2242,6 +2457,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
     Value<int>? orderId,
     Value<int?>? productId,
     Value<String>? productName,
+    Value<String?>? productNameAr,
     Value<int>? unitPriceCents,
     Value<int>? discountPercent,
     Value<int>? quantity,
@@ -2251,6 +2467,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
       orderId: orderId ?? this.orderId,
       productId: productId ?? this.productId,
       productName: productName ?? this.productName,
+      productNameAr: productNameAr ?? this.productNameAr,
       unitPriceCents: unitPriceCents ?? this.unitPriceCents,
       discountPercent: discountPercent ?? this.discountPercent,
       quantity: quantity ?? this.quantity,
@@ -2272,6 +2489,9 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
     if (productName.present) {
       map['product_name'] = Variable<String>(productName.value);
     }
+    if (productNameAr.present) {
+      map['product_name_ar'] = Variable<String>(productNameAr.value);
+    }
     if (unitPriceCents.present) {
       map['unit_price_cents'] = Variable<int>(unitPriceCents.value);
     }
@@ -2291,6 +2511,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemRow> {
           ..write('orderId: $orderId, ')
           ..write('productId: $productId, ')
           ..write('productName: $productName, ')
+          ..write('productNameAr: $productNameAr, ')
           ..write('unitPriceCents: $unitPriceCents, ')
           ..write('discountPercent: $discountPercent, ')
           ..write('quantity: $quantity')
@@ -3784,12 +4005,14 @@ typedef $$CategoriesTableCreateCompanionBuilder =
     CategoriesCompanion Function({
       Value<int> id,
       required String name,
+      Value<String?> nameAr,
       required int createdAt,
     });
 typedef $$CategoriesTableUpdateCompanionBuilder =
     CategoriesCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<String?> nameAr,
       Value<int> createdAt,
     });
 
@@ -3832,6 +4055,11 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3885,6 +4113,11 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3905,6 +4138,9 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3965,17 +4201,24 @@ class $$CategoriesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String?> nameAr = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
-              }) =>
-                  CategoriesCompanion(id: id, name: name, createdAt: createdAt),
+              }) => CategoriesCompanion(
+                id: id,
+                name: name,
+                nameAr: nameAr,
+                createdAt: createdAt,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<String?> nameAr = const Value.absent(),
                 required int createdAt,
               }) => CategoriesCompanion.insert(
                 id: id,
                 name: name,
+                nameAr: nameAr,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -4040,6 +4283,8 @@ typedef $$ProductsTableCreateCompanionBuilder =
       required int categoryId,
       required String name,
       Value<String> description,
+      Value<String?> nameAr,
+      Value<String?> descriptionAr,
       required int priceCents,
       required int discountPercent,
       required int stock,
@@ -4053,6 +4298,8 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<int> categoryId,
       Value<String> name,
       Value<String> description,
+      Value<String?> nameAr,
+      Value<String?> descriptionAr,
       Value<int> priceCents,
       Value<int> discountPercent,
       Value<int> stock,
@@ -4140,6 +4387,16 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get descriptionAr => $composableBuilder(
+    column: $table.descriptionAr,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4271,6 +4528,16 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get descriptionAr => $composableBuilder(
+    column: $table.descriptionAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get priceCents => $composableBuilder(
     column: $table.priceCents,
     builder: (column) => ColumnOrderings(column),
@@ -4342,6 +4609,14 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<String> get descriptionAr => $composableBuilder(
+    column: $table.descriptionAr,
     builder: (column) => column,
   );
 
@@ -4477,6 +4752,8 @@ class $$ProductsTableTableManager
                 Value<int> categoryId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> description = const Value.absent(),
+                Value<String?> nameAr = const Value.absent(),
+                Value<String?> descriptionAr = const Value.absent(),
                 Value<int> priceCents = const Value.absent(),
                 Value<int> discountPercent = const Value.absent(),
                 Value<int> stock = const Value.absent(),
@@ -4488,6 +4765,8 @@ class $$ProductsTableTableManager
                 categoryId: categoryId,
                 name: name,
                 description: description,
+                nameAr: nameAr,
+                descriptionAr: descriptionAr,
                 priceCents: priceCents,
                 discountPercent: discountPercent,
                 stock: stock,
@@ -4501,6 +4780,8 @@ class $$ProductsTableTableManager
                 required int categoryId,
                 required String name,
                 Value<String> description = const Value.absent(),
+                Value<String?> nameAr = const Value.absent(),
+                Value<String?> descriptionAr = const Value.absent(),
                 required int priceCents,
                 required int discountPercent,
                 required int stock,
@@ -4512,6 +4793,8 @@ class $$ProductsTableTableManager
                 categoryId: categoryId,
                 name: name,
                 description: description,
+                nameAr: nameAr,
+                descriptionAr: descriptionAr,
                 priceCents: priceCents,
                 discountPercent: discountPercent,
                 stock: stock,
@@ -5447,6 +5730,7 @@ typedef $$OrderItemsTableCreateCompanionBuilder =
       required int orderId,
       Value<int?> productId,
       required String productName,
+      Value<String?> productNameAr,
       required int unitPriceCents,
       Value<int> discountPercent,
       required int quantity,
@@ -5457,6 +5741,7 @@ typedef $$OrderItemsTableUpdateCompanionBuilder =
       Value<int> orderId,
       Value<int?> productId,
       Value<String> productName,
+      Value<String?> productNameAr,
       Value<int> unitPriceCents,
       Value<int> discountPercent,
       Value<int> quantity,
@@ -5517,6 +5802,11 @@ class $$OrderItemsTableFilterComposer
 
   ColumnFilters<String> get productName => $composableBuilder(
     column: $table.productName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productNameAr => $composableBuilder(
+    column: $table.productNameAr,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5601,6 +5891,11 @@ class $$OrderItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get productNameAr => $composableBuilder(
+    column: $table.productNameAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get unitPriceCents => $composableBuilder(
     column: $table.unitPriceCents,
     builder: (column) => ColumnOrderings(column),
@@ -5677,6 +5972,11 @@ class $$OrderItemsTableAnnotationComposer
 
   GeneratedColumn<String> get productName => $composableBuilder(
     column: $table.productName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get productNameAr => $composableBuilder(
+    column: $table.productNameAr,
     builder: (column) => column,
   );
 
@@ -5772,6 +6072,7 @@ class $$OrderItemsTableTableManager
                 Value<int> orderId = const Value.absent(),
                 Value<int?> productId = const Value.absent(),
                 Value<String> productName = const Value.absent(),
+                Value<String?> productNameAr = const Value.absent(),
                 Value<int> unitPriceCents = const Value.absent(),
                 Value<int> discountPercent = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
@@ -5780,6 +6081,7 @@ class $$OrderItemsTableTableManager
                 orderId: orderId,
                 productId: productId,
                 productName: productName,
+                productNameAr: productNameAr,
                 unitPriceCents: unitPriceCents,
                 discountPercent: discountPercent,
                 quantity: quantity,
@@ -5790,6 +6092,7 @@ class $$OrderItemsTableTableManager
                 required int orderId,
                 Value<int?> productId = const Value.absent(),
                 required String productName,
+                Value<String?> productNameAr = const Value.absent(),
                 required int unitPriceCents,
                 Value<int> discountPercent = const Value.absent(),
                 required int quantity,
@@ -5798,6 +6101,7 @@ class $$OrderItemsTableTableManager
                 orderId: orderId,
                 productId: productId,
                 productName: productName,
+                productNameAr: productNameAr,
                 unitPriceCents: unitPriceCents,
                 discountPercent: discountPercent,
                 quantity: quantity,

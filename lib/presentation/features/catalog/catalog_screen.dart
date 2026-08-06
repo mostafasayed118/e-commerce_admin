@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/entities/category.dart';
+import '../../l10n/l10n_ext.dart';
 import '../../widgets/message_view.dart';
 import 'catalog_cubit.dart';
 import 'catalog_sort.dart';
@@ -30,20 +31,21 @@ class _CatalogView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Shop')),
+      appBar: AppBar(title: Text(l10n.shopTitle)),
       body: BlocBuilder<CatalogCubit, CatalogState>(
         builder: (context, state) => switch (state) {
           CatalogLoading() => const Center(child: CircularProgressIndicator()),
-          CatalogError(:final message) => MessageView(
+          CatalogError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
-          CatalogEmpty() => const MessageView(
+          CatalogEmpty() => MessageView(
               icon: Icons.inventory_2_outlined,
-              title: 'The catalog is empty',
-              message: 'Products will appear here once they exist.',
+              title: l10n.catalogEmptyTitle,
+              message: l10n.catalogEmptyMessage,
             ),
           CatalogLoaded() => _LoadedCatalog(state: state),
         },
@@ -82,6 +84,7 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<CatalogCubit>();
+    final l10n = context.l10n;
     return Column(
       children: [
         Padding(
@@ -91,7 +94,7 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
             onChanged: cubit.setQuery,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: 'Search products',
+              hintText: l10n.searchProducts,
               prefixIcon: const Icon(Icons.search),
               isDense: true,
             ),
@@ -108,7 +111,7 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
           child: Row(
             children: [
               Text(
-                '${state.products.length} product${state.products.length == 1 ? '' : 's'}',
+                l10n.productCount(state.products.length),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -122,7 +125,7 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
                     CheckedPopupMenuItem(
                       value: sort,
                       checked: sort == state.sort,
-                      child: Text(sort.label),
+                      child: Text(_sortLabel(context, sort)),
                     ),
                 ],
                 child: Padding(
@@ -133,7 +136,7 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
                       const Icon(Icons.sort, size: 20),
                       const SizedBox(width: 4),
                       Text(
-                        state.sort.label,
+                        _sortLabel(context, state.sort),
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                     ],
@@ -147,14 +150,14 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
           child: state.products.isEmpty
               ? MessageView(
                   icon: Icons.search_off,
-                  title: 'No matches',
+                  title: l10n.noMatches,
                   message: state.hasActiveFilter
-                      ? 'Nothing matches your current search or filter.'
-                      : 'No products in this category yet.',
+                      ? l10n.noMatchesMessage
+                      : l10n.noProductsInCategory,
                   action: state.hasActiveFilter
                       ? TextButton(
                           onPressed: _clearFilters,
-                          child: const Text('Clear filters'),
+                          child: Text(l10n.clearFilters),
                         )
                       : null,
                 )
@@ -181,6 +184,15 @@ class _LoadedCatalogState extends State<_LoadedCatalog> {
   }
 }
 
+/// Localized label for a [CatalogSort] (Task 23). The enum keeps its English
+/// `label` for tooling; UI text goes through this so it follows the locale.
+String _sortLabel(BuildContext context, CatalogSort sort) => switch (sort) {
+      CatalogSort.newest => context.l10n.sortNewest,
+      CatalogSort.name => context.l10n.sortName,
+      CatalogSort.priceAsc => context.l10n.sortPriceAsc,
+      CatalogSort.priceDesc => context.l10n.sortPriceDesc,
+    };
+
 class _CategoryFilterChips extends StatelessWidget {
   const _CategoryFilterChips({
     required this.categories,
@@ -200,11 +212,16 @@ class _CategoryFilterChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          _chip(context, label: 'All', selected: selectedCategoryId == null, value: null),
+          _chip(
+            context,
+            label: context.l10n.all,
+            selected: selectedCategoryId == null,
+            value: null,
+          ),
           for (final category in categories)
             _chip(
               context,
-              label: category.name,
+              label: context.categoryName(category),
               selected: selectedCategoryId == category.id,
               value: category.id,
             ),
@@ -220,7 +237,8 @@ class _CategoryFilterChips extends StatelessWidget {
     required int? value,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      // Directional so the gap flips to the leading edge in RTL (Task 23).
+      padding: const EdgeInsetsDirectional.only(end: 8),
       child: ChoiceChip(
         label: Text(label),
         selected: selected,

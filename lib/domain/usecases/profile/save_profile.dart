@@ -29,7 +29,13 @@ class SaveProfile {
 
     final errors = validateShipping(normalized);
     if (errors.isNotEmpty) {
-      return Failure(ValidationError(message: errors.values.first));
+      // The first failing field's stable code; the English text stays for
+      // logs (the UI maps the code to the active locale).
+      final code = errors.values.first;
+      return Failure(ValidationError(
+        code: code,
+        message: 'Validation failed: ${code.name}',
+      ));
     }
 
     return _settings.updateProfile(normalized);

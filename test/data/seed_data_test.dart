@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,6 +69,58 @@ void main() {
       expect(timeline.last.status, order.status,
           reason: '${order.orderNumber} history must end at its current status');
     }
+  });
+
+  test('seed content carries Arabic variants for every row', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+
+    // Every product carries an Arabic name + description (display picks by
+    // viewer locale with an English fallback — Task 23 follow-up).
+    for (final product in await db.select(db.products).get()) {
+      expect(product.nameAr, isNotNull,
+          reason: '${product.name} must have an Arabic name');
+      expect(product.descriptionAr, isNotNull,
+          reason: '${product.name} must have an Arabic description');
+    }
+    for (final category in await db.select(db.categories).get()) {
+      expect(category.nameAr, isNotNull,
+          reason: '${category.name} must have an Arabic label');
+    }
+    // Order-item snapshots carry both labels so receipts render in the
+    // viewer's language.
+    for (final item in await db.select(db.orderItems).get()) {
+      expect(item.productNameAr, isNotNull,
+          reason: '${item.productName} must snapshot its Arabic label');
+    }
+  });
+
+  test('a bumped seed version reseeds without duplicating rows', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+    final counts = (
+      categories: (await db.select(db.categories).get()).length,
+      products: (await db.select(db.products).get()).length,
+      orders: (await db.select(db.orders).get()).length,
+    );
+
+    // Simulate an install seeded by an older version: the next launch must
+    // clear + reinsert (the reseed contract), never collide on unique rows.
+    await db.into(db.appMeta).insertOnConflictUpdate(
+          const AppMetaCompanion(id: Value(1), seedVersion: Value(1)),
+        );
+    await SeedData(db).seedIfNeeded();
+
+    expect((await db.select(db.categories).get()).length, counts.categories,
+        reason: 'categories must not duplicate on reseed');
+    expect((await db.select(db.products).get()).length, counts.products,
+        reason: 'products must not duplicate on reseed');
+    expect((await db.select(db.orders).get()).length, counts.orders,
+        reason: 'orders must not duplicate on reseed');
   });
 
   test('seeds once across database opens (idempotent via seedVersion)', () async {

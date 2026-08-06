@@ -11,6 +11,8 @@ class ProductMapper {
         categoryId: row.categoryId,
         name: row.name,
         description: row.description,
+        nameAr: row.nameAr,
+        descriptionAr: row.descriptionAr,
         priceCents: row.priceCents,
         discountPercent: row.discountPercent,
         stock: row.stock,

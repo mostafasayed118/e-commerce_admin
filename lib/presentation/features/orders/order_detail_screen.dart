@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
 import '../../../domain/repositories/order_repository.dart';
+import '../../l10n/l10n_ext.dart';
 import '../../widgets/message_view.dart';
 import 'order_detail_view.dart';
 
@@ -17,15 +18,16 @@ class OrderDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Order')),
+      appBar: AppBar(title: Text(l10n.orderTitle)),
       body: StreamBuilder<Order?>(
         stream: getIt<OrderRepository>().watchOrderById(orderId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const MessageView(
+            return MessageView(
               icon: Icons.error_outline,
-              title: 'Could not load order',
+              title: l10n.couldNotLoadOrder,
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -33,10 +35,10 @@ class OrderDetailScreen extends StatelessWidget {
           }
           final order = snapshot.data;
           if (order == null) {
-            return const MessageView(
+            return MessageView(
               icon: Icons.search_off,
-              title: 'Order not found',
-              message: 'This order may have been removed.',
+              title: l10n.orderNotFound,
+              message: l10n.orderRemoved,
             );
           }
           return OrderDetailView(order: order);

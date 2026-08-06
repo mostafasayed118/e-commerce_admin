@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/di/injection.dart';
+import '../l10n/app_localizations.dart';
 import 'locale/locale_cubit.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
@@ -15,6 +16,12 @@ import 'theme/theme_cubit.dart';
 /// Profile tab hosts the switches. Everything below is pure presentation:
 /// state and data flow through GetIt-injected Cubits/repositories (Clean
 /// Architecture layers).
+///
+/// Localization (Task 23): [AppLocalizations.localizationsDelegates] carries
+/// the app + Material/Widgets/Cupertino delegates, so framework widgets
+/// (tooltips, text-selection menus) localize too; `supportedLocales` comes
+/// from the generated class, not the Cubit, keeping one source of truth. The
+/// active `locale` also drives RTL layout for `'ar'` automatically.
 class ShopAdminApp extends StatelessWidget {
   const ShopAdminApp({super.key});
 
@@ -34,7 +41,8 @@ class ShopAdminApp extends StatelessWidget {
             darkTheme: AppTheme.dark,
             themeMode: themeMode,
             locale: locale,
-            supportedLocales: LocaleCubit.supported,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             routerConfig: buildAppRouter(),
           ),
         ),

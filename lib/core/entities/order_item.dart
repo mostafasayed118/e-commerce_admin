@@ -11,6 +11,7 @@ class OrderItem extends Equatable {
     required this.orderId,
     this.productId,
     required this.productName,
+    this.productNameAr,
     required this.unitPriceCents,
     this.discountPercent = 0,
     required this.quantity,
@@ -24,6 +25,10 @@ class OrderItem extends Equatable {
 
   /// Snapshot of the product name at purchase time.
   final String productName;
+
+  /// Snapshot of the product's Arabic label at purchase time (nullable). The
+  /// receipt renders whichever label matches the viewer's locale.
+  final String? productNameAr;
 
   /// Snapshot of the unit price in cents.
   final int unitPriceCents;
@@ -40,6 +45,14 @@ class OrderItem extends Equatable {
   int get lineTotalCents => unitFinalPriceCents * quantity;
 
   @override
-  List<Object?> get props =>
-      [id, orderId, productId, productName, unitPriceCents, discountPercent, quantity];
+  List<Object?> get props => [
+        id,
+        orderId,
+        productId,
+        productName,
+        productNameAr,
+        unitPriceCents,
+        discountPercent,
+        quantity,
+      ];
 }

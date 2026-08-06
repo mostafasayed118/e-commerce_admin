@@ -126,7 +126,10 @@ void main() {
     });
 
     test('propagates NotFoundError for a missing product', () async {
-      mockProduct(const Failure(NotFoundError(message: 'Product not found')));
+      mockProduct(const Failure(NotFoundError(
+        code: AppErrorCode.productNotFound,
+        message: 'Product not found',
+      )));
       mockSetQuantity(const Success<void>(null));
 
       final result = await addToCart(999);
@@ -212,7 +215,10 @@ void main() {
     });
 
     test('propagates NotFoundError for a missing product', () async {
-      mockProduct(const Failure(NotFoundError(message: 'Product not found')));
+      mockProduct(const Failure(NotFoundError(
+        code: AppErrorCode.productNotFound,
+        message: 'Product not found',
+      )));
 
       final result = await updateQuantity(999, 1);
 

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +11,7 @@ import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
 import '../helpers/test_di.dart';
+import '../helpers/test_app.dart';
 
 void main() {
   late AppDatabase db;
@@ -29,7 +29,7 @@ void main() {
   });
 
   Future<void> pumpRouter(WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(testApp(router));
     // Initial route is the catalog (drift-backed) — settle the streams.
     await settleDrift(tester);
     await tester.pumpAndSettle();

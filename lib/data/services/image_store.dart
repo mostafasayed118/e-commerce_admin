@@ -33,7 +33,11 @@ class ImageStore {
       return Success('images${Platform.pathSeparator}$name');
     } on Exception catch (error) {
       return Failure(
-        ImageError(message: 'Could not save image', cause: error),
+        ImageError(
+          code: AppErrorCode.imageSave,
+          message: 'Could not save image',
+          cause: error,
+        ),
       );
     }
   }
@@ -55,7 +59,11 @@ class ImageStore {
       return const Success<void>(null);
     } on Exception catch (error) {
       return Failure(
-        ImageError(message: 'Could not delete image', cause: error),
+        ImageError(
+          code: AppErrorCode.imageDelete,
+          message: 'Could not delete image',
+          cause: error,
+        ),
       );
     }
   }

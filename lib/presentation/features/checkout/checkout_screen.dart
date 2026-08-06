@@ -5,10 +5,11 @@ import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
 import '../../../core/entities/shipping_info.dart';
 import '../../../core/error/result.dart';
-import '../../../core/utils/money.dart';
 import '../../../domain/repositories/settings_repository.dart';
 import '../../../domain/usecases/checkout/place_order.dart';
 import '../../../domain/usecases/checkout/validate_shipping.dart';
+import '../../l10n/error_messages.dart';
+import '../../l10n/l10n_ext.dart';
 
 /// Checkout: the shipping form → [PlaceOrder] → inline success view.
 ///
@@ -66,14 +67,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   /// Field validators reuse the domain rules (validate_shipping.dart) so the
-  /// form can never disagree with [PlaceOrder]'s own validation.
+  /// form can never disagree with [PlaceOrder]'s own validation. The domain
+  /// returns stable [AppErrorCode]s; the UI renders them in the active
+  /// locale (Task 23 refactor).
   String? _validateField(String field) {
     final errors = validateShipping(ShippingInfo(
       name: _name.text,
       phone: _phone.text,
       address: _address.text,
     ));
-    return errors[field];
+    final code = errors[field];
+    return code == null ? null : errorTextForCode(context, code);
   }
 
   Future<void> _placeOrder() async {
@@ -98,7 +102,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }),
       onFailure: (error) => setState(() {
         _placing = false;
-        _error = error.message;
+        _error = context.errorText(error);
       }),
     );
   }
@@ -112,17 +116,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildForm(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(title: Text(l10n.checkoutTitle)),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Shipping details', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.shippingDetails,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text(
-              'Cash on delivery only — pay when your order arrives.',
+              l10n.codOnlyNote,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -131,9 +139,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             TextFormField(
               key: const Key('checkout-name'),
               controller: _name,
-              decoration: const InputDecoration(
-                labelText: 'Full name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.fullName,
+                border: const OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
               textCapitalization: TextCapitalization.words,
@@ -144,9 +152,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               key: const Key('checkout-phone'),
               controller: _phone,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Phone',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.phone,
+                border: const OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
               validator: (_) => _validateField(kShippingPhoneField),
@@ -155,9 +163,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             TextFormField(
               key: const Key('checkout-address'),
               controller: _address,
-              decoration: const InputDecoration(
-                labelText: 'Delivery address',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.deliveryAddress,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
               textInputAction: TextInputAction.newline,
@@ -167,7 +175,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             SwitchListTile(
               key: const Key('checkout-save-profile'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Save my details for next time'),
+              title: Text(l10n.saveDetailsNextTime),
               value: _saveProfile,
               onChanged: (value) => setState(() => _saveProfile = value),
             ),
@@ -190,7 +198,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Place order — Cash on delivery'),
+                  : Text(l10n.placeOrderCod),
             ),
           ],
         ),
@@ -207,6 +215,7 @@ class _SuccessView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -217,19 +226,22 @@ class _SuccessView extends StatelessWidget {
               Icon(Icons.check_circle_outline, size: 72, color: scheme.primary),
               const SizedBox(height: 16),
               Text(
-                'Order placed!',
+                l10n.orderPlaced,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                'Order ${order.orderNumber} · ${formatCents(order.totalCents)}',
+                l10n.orderPlacedSummary(
+                  order.orderNumber,
+                  context.formatCents(order.totalCents),
+                ),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
-                'We will call ${order.shipping.phone} to confirm delivery details.',
+                l10n.weWillCall(order.shipping.phone),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
@@ -241,7 +253,7 @@ class _SuccessView extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
-                child: const Text('Back to shop'),
+                child: Text(l10n.backToShop),
               ),
             ],
           ),

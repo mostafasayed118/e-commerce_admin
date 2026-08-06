@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/entities/order.dart';
 import '../../../core/entities/order_item.dart';
-import '../../../core/utils/money.dart';
+import '../../l10n/l10n_ext.dart';
 import 'order_date_format.dart';
 import 'status_visuals.dart';
 
@@ -25,6 +25,8 @@ class OrderDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).languageCode;
     final placedAt = order.createdAt;
 
     return ListView(
@@ -46,7 +48,9 @@ class OrderDetailView extends StatelessWidget {
                   if (placedAt != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Placed ${formatOrderDateTime(placedAt)}',
+                      l10n.placedAt(
+                        formatOrderDateTime(placedAt, locale: locale),
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -61,7 +65,7 @@ class OrderDetailView extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- Shipping ------------------------------------------------------
-        const _SectionHeader('Deliver to'),
+        _SectionHeader(l10n.deliverTo),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,28 +94,28 @@ class OrderDetailView extends StatelessWidget {
         const SizedBox(height: 24),
 
         // --- Items + totals ------------------------------------------------
-        const _SectionHeader('Items'),
+        _SectionHeader(l10n.items),
         const SizedBox(height: 8),
         for (final item in order.items) _ItemRow(item: item),
         const SizedBox(height: 8),
         const Divider(),
-        _TotalRow(label: 'Subtotal', cents: order.subtotalCents),
+        _TotalRow(label: l10n.subtotal, cents: order.subtotalCents),
         if (order.discountCents > 0)
           _TotalRow(
-            label: 'Savings',
+            label: l10n.savings,
             cents: order.discountCents,
             negative: true,
             highlight: true,
           ),
-        _TotalRow(label: 'Total', cents: order.totalCents, bold: true),
+        _TotalRow(label: l10n.total, cents: order.totalCents, bold: true),
         const SizedBox(height: 24),
 
         // --- Status timeline ----------------------------------------------
-        const _SectionHeader('Status'),
+        _SectionHeader(l10n.status),
         const SizedBox(height: 8),
         if (order.statusHistory.isEmpty)
           Text(
-            'No status history yet.',
+            l10n.noStatusHistory,
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -139,10 +143,13 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Text(
+      // All-caps for Latin scripts; a no-op for Arabic (no letter case).
+      // The tracking is Latin-only too — spaced-out Arabic glyphs look broken.
       label.toUpperCase(),
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: scheme.onSurfaceVariant,
-            letterSpacing: 1.2,
+            letterSpacing:
+                Directionality.of(context) == TextDirection.rtl ? 0 : 1.2,
             fontWeight: FontWeight.w600,
           ),
     );
@@ -158,6 +165,7 @@ class _ItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -167,11 +175,14 @@ class _ItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.productName, style: theme.textTheme.bodyMedium),
+                Text(
+                  context.orderItemName(item),
+                  style: theme.textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 2),
                 Text(
-                  '${item.quantity} × ${formatCents(item.unitFinalPriceCents)}'
-                  '${item.discountPercent > 0 ? ' (${item.discountPercent}% off)' : ''}',
+                  '${item.quantity} × ${context.formatCents(item.unitFinalPriceCents)}'
+                  '${item.discountPercent > 0 ? ' ${l10n.percentOff(item.discountPercent)}' : ''}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -181,7 +192,7 @@ class _ItemRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            formatCents(item.lineTotalCents),
+            context.formatCents(item.lineTotalCents),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -223,7 +234,10 @@ class _TotalRow extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            '${negative ? '-' : ''}${formatCents(cents)}',
+            // Negative cents: the locale places the sign correctly
+            // ("-$12.34" LTR, "‏-12.34 $" RTL) — a hand-written prefix
+            // would land on the wrong side in RTL.
+            context.formatCents(negative ? -cents : cents),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: bold ? FontWeight.w700 : null,
               color: highlight ? scheme.primary : null,
@@ -314,14 +328,17 @@ class _TimelineEntry extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.status.label,
+                  orderStatusLabel(context, entry.status),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: isLatest ? FontWeight.w700 : FontWeight.w500,
                     color: isLatest ? visuals.color : null,
                   ),
                 ),
                 Text(
-                  formatOrderDateTime(entry.changedAt),
+                  formatOrderDateTime(
+                    entry.changedAt,
+                    locale: Localizations.localeOf(context).languageCode,
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

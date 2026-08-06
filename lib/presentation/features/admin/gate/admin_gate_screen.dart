@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/error/result.dart';
 import '../../../../domain/repositories/settings_repository.dart';
+import '../../../l10n/l10n_ext.dart';
 import '../../../router/admin_session.dart';
 
 /// The admin gate: shows a "set a PIN" form on first run or an "enter PIN"
@@ -65,7 +66,8 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
       onFailure: (error) {
         setState(() {
           _submitting = false;
-          _error = error.message;
+          // Localized from the stable code (no message-string matching).
+          _error = context.errorText(error);
         });
       },
     );
@@ -74,9 +76,10 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin'),
+        title: Text(l10n.adminTitle),
         leading: BackButton(onPressed: () => context.go('/')),
       ),
       body: Center(
@@ -89,7 +92,7 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Text(
-                    'Could not check PIN status. Please restart the app.',
+                    l10n.couldNotCheckPin,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: scheme.error),
                   );
@@ -106,15 +109,13 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
                         size: 56, color: scheme.primary),
                     const SizedBox(height: 16),
                     Text(
-                      isSetting ? 'Set an admin PIN' : 'Enter admin PIN',
+                      isSetting ? l10n.setAdminPin : l10n.enterAdminPin,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      isSetting
-                          ? 'Create a 4-6 digit PIN to lock the dashboard.'
-                          : 'Unlock the dashboard with your PIN.',
+                      isSetting ? l10n.setPinHint : l10n.enterPinHint,
                       textAlign: TextAlign.center,
                       style: Theme.of(context)
                           .textTheme
@@ -129,7 +130,7 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
                       maxLength: 6,
                       enabled: !_submitting,
                       decoration: InputDecoration(
-                        labelText: 'PIN',
+                        labelText: l10n.pinLabel,
                         counterText: '',
                       ),
                       onSubmitted: (_) => _submit(isSetting),
@@ -151,7 +152,7 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(isSetting ? 'Set PIN' : 'Unlock'),
+                          : Text(isSetting ? l10n.setPin : l10n.unlock),
                     ),
                   ],
                 );

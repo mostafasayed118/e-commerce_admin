@@ -2,31 +2,26 @@
 ///
 /// Prices are stored as integer *cents* — never `double` — so all arithmetic
 /// is exact. (Floating point cannot represent $0.10 exactly, which would
-/// corrupt totals and discounts.) Formatting is hand-rolled to avoid an
-/// `intl` dependency; localization is out of scope for this project.
+/// corrupt totals and discounts.) Formatting delegates to `intl`'s
+/// [NumberFormat] so grouping, decimal separators and digit shapes follow the
+/// active locale (Task 23): en `1234 -> "$12.34"`, ar `-> "١٢٫٣٤ $"`.
+///
+/// NOTE: [formatCents] converts to a double only for *display* — cents/100 is
+/// within 1e-14 of the true value, and NumberFormat's 2-decimal rounding
+/// always recovers the exact cents. The "integer math" doctrine governs
+/// arithmetic, not presentation.
 library;
 
-/// Formats an integer cent amount as a currency string: `1234 -> "$12.34"`.
-String formatCents(int cents) {
-  final sign = cents < 0 ? '-' : '';
-  final abs = cents.abs();
-  final dollars = abs ~/ 100;
-  final centsPart = (abs % 100).toString().padLeft(2, '0');
-  return '$sign\$${_groupThousands(dollars)}.$centsPart';
-}
+import 'package:intl/intl.dart';
 
-/// Groups digits with thousands separators: `1234567 -> "1,234,567"`.
-String _groupThousands(int value) {
-  final digits = value.toString();
-  final buffer = StringBuffer();
-  for (var i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) {
-      buffer.write(',');
-    }
-    buffer.write(digits[i]);
-  }
-  return buffer.toString();
-}
+/// Formats an integer cent amount as a currency string for [locale].
+///
+/// The symbol stays `$` — the app has no multi-currency concept (cents are
+/// generic), so localization changes *presentation*, never the stored value.
+/// English output is byte-identical to the previous hand-rolled formatter
+/// (e.g. `123456 -> "$1,234.56"`, `-1234 -> "-$12.34"`).
+String formatCents(int cents, {String locale = 'en'}) =>
+    NumberFormat.currency(locale: locale, symbol: r'$').format(cents / 100);
 
 /// Price after a percentage discount, computed with integer math
 /// (`~/` floors): `priceCents * (100 - discountPercent) ~/ 100`.

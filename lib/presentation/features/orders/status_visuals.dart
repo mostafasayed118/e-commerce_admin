@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/entities/order_status.dart';
+import '../../l10n/l10n_ext.dart';
+
+/// Localized label for an [OrderStatus] (Task 23). The enum keeps its English
+/// `label` for tooling/logs; every UI string goes through this so statuses
+/// render in the active locale. Shared by the customer and admin order
+/// features (admin imports from here).
+String orderStatusLabel(BuildContext context, OrderStatus status) =>
+    switch (status) {
+      OrderStatus.pending => context.l10n.statusPending,
+      OrderStatus.confirmed => context.l10n.statusConfirmed,
+      OrderStatus.shipped => context.l10n.statusShipped,
+      OrderStatus.delivered => context.l10n.statusDelivered,
+      OrderStatus.cancelled => context.l10n.statusCancelled,
+    };
 
 /// Icon + color mapping for an [OrderStatus], from Material 3 scheme tokens
 /// only (no hardcoded colors). Used by the list avatars, the chips, and the
@@ -60,7 +74,7 @@ class StatusChip extends StatelessWidget {
           Icon(visuals.icon, size: 14, color: visuals.color),
           const SizedBox(width: 4),
           Text(
-            status.label,
+            orderStatusLabel(context, status),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: visuals.color,
                   fontWeight: FontWeight.w600,

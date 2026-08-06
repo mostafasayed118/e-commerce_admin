@@ -53,6 +53,19 @@ state machines per feature, and a fully tested flow from UI to SQLite and back.
 - Material 3 **light/dark theme** and constraint-based responsive layout
   (a `LayoutBuilder` picks `NavigationRail` vs `NavigationBar` — no device-type
   checks).
+- **AR/EN localization** — full i18n via `flutter gen-l10n` (ARB files →
+  type-safe `AppLocalizations`), a language switch on the Profile tab, and
+  locale-aware money/date formatting (`intl`). Switching to Arabic flips the
+  whole UI to RTL, including status labels, plurals and the admin dashboard.
+- **Bilingual seed content** — every seeded product, category, and order
+  receipt stores a canonical English name/description *plus* an Arabic
+  variant (schema v3). The UI picks by the viewer's locale with an English
+  fallback, and the admin forms have optional Arabic fields for
+  admin-created content.
+- **Localized errors via stable codes** — every data/domain error carries an
+  `AppErrorCode` (with typed variants for parameterized messages, e.g.
+  out-of-stock with the product name); the UI maps code → ARB text, so the
+  same failure renders in whichever language the app is in.
 
 ---
 
@@ -143,13 +156,16 @@ The suite covers every layer with the same stack the app ships with:
   catalog → cart → checkout → orders → admin gate → dashboard → status
   transitions → profile).
 
-219 tests, all green; `flutter analyze` is clean.
+248 tests, all green; `flutter analyze` is clean.
 
 ---
 
 ## Out of scope (deliberate)
 
-Real payments, real authentication, any API/sync, push notifications,
-localization, and native platform code. The app is local-only by design —
-a standalone demonstration of what Flutter + Clean Architecture can do without
-a server.
+Real payments, real authentication, any API/sync, push notifications, and
+native platform code. Localized UI chrome and **every user-facing error
+message** (via stable error codes → ARB) are in scope, and seed content is
+**bilingual** (canonical English + Arabic with locale-aware display);
+user-created content carries Arabic only when the admin fills the optional
+fields. The app is local-only by design — a standalone demonstration of what
+Flutter + Clean Architecture can do without a server.

@@ -23,7 +23,10 @@ class UpdateCartQuantity {
   Future<Result<void>> call(int productId, int quantity) async {
     if (quantity < 1) {
       return const Failure(
-        ValidationError(message: 'Quantity must be at least 1'),
+        ValidationError(
+          code: AppErrorCode.quantityMin,
+          message: 'Quantity must be at least 1',
+        ),
       );
     }
     return (await _products.getById(productId)).fold(
@@ -41,7 +44,10 @@ class UpdateCartQuantity {
         .fold(0, (sum, item) => sum + item.quantity);
 
     if (quantity > current && quantity > product.stock) {
-      return Failure(ValidationError(
+      return Failure(StockLimitError(
+        productName: product.name,
+        stock: product.stock,
+        currentInCart: current,
         message: 'Only ${product.stock} left in stock for ${product.name}',
       ));
     }

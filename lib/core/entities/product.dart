@@ -10,6 +10,8 @@ class Product extends Equatable {
     required this.categoryId,
     required this.name,
     this.description = '',
+    this.nameAr,
+    this.descriptionAr,
     required this.priceCents,
     this.discountPercent = 0,
     this.stock = 0,
@@ -25,6 +27,11 @@ class Product extends Equatable {
   final int categoryId;
   final String name;
   final String description;
+
+  /// Optional Arabic label; `null` = English-only (the UI falls back to
+  /// [name]). Canonical content stays [name]; this is the localized variant.
+  final String? nameAr;
+  final String? descriptionAr;
 
   /// Original price in cents.
   final int priceCents;
@@ -61,12 +68,22 @@ class Product extends Equatable {
     int? categoryId,
     String? name,
     String? description,
+    Object? nameAr = _unset,
+    Object? descriptionAr = _unset,
     int? priceCents,
     int? discountPercent,
     int? stock,
     Object? imagePath = _unset,
     DateTime? updatedAt,
   }) {
+    assert(
+      identical(nameAr, _unset) || nameAr is String?,
+      'nameAr must be a String? or omitted',
+    );
+    assert(
+      identical(descriptionAr, _unset) || descriptionAr is String?,
+      'descriptionAr must be a String? or omitted',
+    );
     assert(
       identical(imagePath, _unset) || imagePath is String?,
       'imagePath must be a String? or omitted',
@@ -76,6 +93,10 @@ class Product extends Equatable {
       categoryId: categoryId ?? this.categoryId,
       name: name ?? this.name,
       description: description ?? this.description,
+      nameAr: identical(nameAr, _unset) ? this.nameAr : nameAr as String?,
+      descriptionAr: identical(descriptionAr, _unset)
+          ? this.descriptionAr
+          : descriptionAr as String?,
       priceCents: priceCents ?? this.priceCents,
       discountPercent: discountPercent ?? this.discountPercent,
       stock: stock ?? this.stock,
@@ -91,6 +112,8 @@ class Product extends Equatable {
         categoryId,
         name,
         description,
+        nameAr,
+        descriptionAr,
         priceCents,
         discountPercent,
         stock,

@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/entities/shipping_info.dart';
 import '../../../domain/usecases/checkout/validate_shipping.dart';
+import '../../l10n/error_messages.dart';
+import '../../l10n/l10n_ext.dart';
+import '../../locale/locale_cubit.dart';
 import '../../theme/theme_cubit.dart';
 import '../../widgets/message_view.dart';
 import 'profile_cubit.dart';
@@ -16,6 +19,10 @@ import 'profile_cubit.dart';
 /// Reactive seeding: the form is driven by the watch stream, so a profile
 /// saved during checkout appears here automatically. The `_dirty` guard
 /// ensures an external update never clobbers fields the user is mid-typing.
+///
+/// Also hosts the persisted **Appearance** (theme) and **Language** (AR/EN)
+/// switches — the two settings Cubits are DI singletons backed by the
+/// UiPrefs table, so both choices survive restarts.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -33,15 +40,16 @@ class _ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(l10n.profileTitle)),
       body: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) => switch (state) {
           ProfileLoading() => const Center(child: CircularProgressIndicator()),
-          ProfileError(:final message) => MessageView(
+          ProfileError() => MessageView(
               icon: Icons.error_outline,
-              title: 'Something went wrong',
-              message: message,
+              title: l10n.somethingWentWrong,
+              message: l10n.errorLoadFailed,
             ),
           ProfileLoaded() => _ProfileForm(state: state),
         },
@@ -102,14 +110,17 @@ class _ProfileFormState extends State<_ProfileForm> {
   }
 
   /// Field validators reuse the domain rules (validate_shipping.dart) so the
-  /// form can never disagree with [SaveProfile]'s own validation.
+  /// form can never disagree with [SaveProfile]'s own validation. The domain
+  /// returns stable [AppErrorCode]s; the UI renders them in the active
+  /// locale (Task 23 refactor).
   String? _validateField(String field) {
     final errors = validateShipping(ShippingInfo(
       name: _name.text,
       phone: _phone.text,
       address: _address.text,
     ));
-    return errors[field];
+    final code = errors[field];
+    return code == null ? null : errorTextForCode(context, code);
   }
 
   Future<void> _save() async {
@@ -125,6 +136,7 @@ class _ProfileFormState extends State<_ProfileForm> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final state = widget.state;
     final isEmpty = state.profile.isEmpty;
 
@@ -133,11 +145,10 @@ class _ProfileFormState extends State<_ProfileForm> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Your details', style: theme.textTheme.titleMedium),
+          Text(l10n.yourDetails, style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Used to pre-fill the checkout form. '
-            'Orders always carry their own snapshot of these details.',
+            l10n.profileHint,
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -156,8 +167,7 @@ class _ProfileFormState extends State<_ProfileForm> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'No saved details yet — fill them in here, or checkout '
-                      'will save them automatically.',
+                      l10n.noSavedDetails,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSecondaryContainer,
                       ),
@@ -171,9 +181,9 @@ class _ProfileFormState extends State<_ProfileForm> {
           TextFormField(
             key: const Key('profile-name'),
             controller: _name,
-            decoration: const InputDecoration(
-              labelText: 'Full name',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.fullName,
+              border: const OutlineInputBorder(),
             ),
             textInputAction: TextInputAction.next,
             textCapitalization: TextCapitalization.words,
@@ -185,9 +195,9 @@ class _ProfileFormState extends State<_ProfileForm> {
             key: const Key('profile-phone'),
             controller: _phone,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Phone',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.phone,
+              border: const OutlineInputBorder(),
             ),
             textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() => _dirty = true),
@@ -197,9 +207,9 @@ class _ProfileFormState extends State<_ProfileForm> {
           TextFormField(
             key: const Key('profile-address'),
             controller: _address,
-            decoration: const InputDecoration(
-              labelText: 'Delivery address',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.deliveryAddress,
+              border: const OutlineInputBorder(),
             ),
             maxLines: 2,
             textInputAction: TextInputAction.newline,
@@ -207,16 +217,16 @@ class _ProfileFormState extends State<_ProfileForm> {
             validator: (_) => _validateField(kShippingAddressField),
           ),
           const SizedBox(height: 8),
-          if (state.saveError != null) ...[
+          if (state.saveErrorCode != null) ...[
             Text(
-              state.saveError!,
+              errorTextForCode(context, state.saveErrorCode!),
               key: const Key('profile-error'),
               style: TextStyle(color: scheme.error),
             ),
             const SizedBox(height: 8),
           ] else if (state.justSaved) ...[
             Text(
-              'Profile saved.',
+              l10n.profileSaved,
               key: const Key('profile-saved'),
               style: TextStyle(color: scheme.tertiary),
             ),
@@ -234,15 +244,15 @@ class _ProfileFormState extends State<_ProfileForm> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save profile'),
+                : Text(l10n.saveProfile),
           ),
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 16),
-          Text('Preferences', style: theme.textTheme.titleSmall),
+          Text(l10n.preferences, style: theme.textTheme.titleSmall),
           const SizedBox(height: 12),
           Text(
-            'Appearance',
+            l10n.appearance,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -256,26 +266,59 @@ class _ProfileFormState extends State<_ProfileForm> {
             bloc: getIt<ThemeCubit>(),
             builder: (context, mode) => SegmentedButton<ThemeMode>(
               key: const Key('profile-theme-mode'),
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: ThemeMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                  label: Text(l10n.system),
+                  icon: const Icon(Icons.brightness_auto_outlined, size: 18),
                 ),
                 ButtonSegment(
                   value: ThemeMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode_outlined, size: 18),
+                  label: Text(l10n.light),
+                  icon: const Icon(Icons.light_mode_outlined, size: 18),
                 ),
                 ButtonSegment(
                   value: ThemeMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode_outlined, size: 18),
+                  label: Text(l10n.dark),
+                  icon: const Icon(Icons.dark_mode_outlined, size: 18),
                 ),
               ],
               selected: {mode},
               onSelectionChanged: (selection) =>
                   getIt<ThemeCubit>().setThemeMode(selection.first),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Language switch — persisted via the DI LocaleCubit (UiPrefs
+          // table) and applied instantly by MaterialApp (locale + RTL). Each
+          // language is shown in its OWN name ('English'/'العربية') — the
+          // i18n convention: language names are never translated.
+          Text(
+            l10n.language,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          BlocBuilder<LocaleCubit, Locale>(
+            bloc: getIt<LocaleCubit>(),
+            builder: (context, locale) => SegmentedButton<Locale>(
+              key: const Key('profile-locale'),
+              segments: const [
+                ButtonSegment(
+                  value: Locale('en'),
+                  label: Text('English'),
+                  icon: Icon(Icons.language, size: 18),
+                ),
+                ButtonSegment(
+                  value: Locale('ar'),
+                  label: Text('العربية'),
+                  icon: Icon(Icons.translate, size: 18),
+                ),
+              ],
+              selected: {locale},
+              onSelectionChanged: (selection) => getIt<LocaleCubit>()
+                  .setLocaleCode(selection.first.languageCode),
             ),
           ),
           const SizedBox(height: 24),
@@ -294,8 +337,8 @@ class _ProfileFormState extends State<_ProfileForm> {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            title: const Text('Admin dashboard'),
-            subtitle: const Text('PIN-protected shop management'),
+            title: Text(l10n.adminDashboard),
+            subtitle: Text(l10n.adminDashboardSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/admin/gate'),
           ),

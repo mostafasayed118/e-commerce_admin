@@ -139,6 +139,35 @@ void main() {
     expect(noMatch.hasActiveFilter, isTrue);
   });
 
+  test('setQuery also matches the Arabic variant (bilingual search)', () async {
+    emitProducts([
+      Product(
+        id: 1,
+        categoryId: 1,
+        name: 'Classic Tee',
+        nameAr: 'تيشيرت كلاسيك',
+        priceCents: 2000,
+        stock: 10,
+        createdAt: DateTime(2026, 7, 1),
+      ),
+      product(id: 2, name: 'Wireless Earbuds'),
+    ]);
+    emitCategories(categories);
+    await settle();
+
+    // An Arabic query matches the stored Arabic variant.
+    cubit.setQuery('تيشيرت');
+    await settle();
+    expect((cubit.state as CatalogLoaded).products.map((p) => p.name),
+        ['Classic Tee']);
+
+    // The canonical English name still matches too.
+    cubit.setQuery('classic');
+    await settle();
+    expect((cubit.state as CatalogLoaded).products.map((p) => p.name),
+        ['Classic Tee']);
+  });
+
   test('setSort orders by final price', () async {
     emitProducts([
       product(id: 1, name: 'A', priceCents: 3000),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/entities/product.dart';
-import '../../../../core/utils/money.dart';
+import '../../../l10n/l10n_ext.dart';
 import 'product_image.dart';
 
 /// A catalog tile: image, name, price (with strikethrough when discounted)
@@ -39,11 +39,11 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   if (product.isOutOfStock)
-                    const Positioned(
+                    Positioned(
                       top: 8,
                       right: 8,
                       child: _Badge(
-                        label: 'Out of stock',
+                        label: context.l10n.outOfStock,
                         background: Colors.black54,
                         foreground: Colors.white,
                       ),
@@ -57,7 +57,7 @@ class ProductCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.name,
+                    context.productName(product),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleSmall,
@@ -70,7 +70,7 @@ class ProductCard extends StatelessWidget {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        formatCents(product.finalPriceCents),
+                        context.formatCents(product.finalPriceCents),
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: scheme.primary,
                           fontWeight: FontWeight.w600,
@@ -80,7 +80,7 @@ class ProductCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
-                            formatCents(product.priceCents),
+                            context.formatCents(product.priceCents),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -95,7 +95,7 @@ class ProductCard extends StatelessWidget {
                   if (product.isLowStock) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Low stock: ${product.stock} left',
+                      context.l10n.lowStockLeft(product.stock),
                       style: theme.textTheme.labelSmall
                           ?.copyWith(color: scheme.error),
                     ),

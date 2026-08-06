@@ -31,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -39,13 +39,18 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (m, from, to) async {
-          // The first real migration: v2 adds the single-row UiPrefs table
-          // (persisted theme/locale). Existing v1 installs (e.g. the release
-          // APK on a device) get the table added without touching their data;
-          // new installs create everything in onCreate. Seed re-runs stay
-          // decoupled via AppMeta.seedVersion, not migrations.
+          // v2 adds the single-row UiPrefs table (persisted theme/locale).
           if (from < 2) {
             await m.createTable(uiPrefs);
+          }
+          // v3 adds optional Arabic content columns (localized seed data and
+          // bilingual order receipts). All nullable, so existing rows are
+          // untouched and simply fall back to English until reseeded.
+          if (from < 3) {
+            await m.addColumn(products, products.nameAr);
+            await m.addColumn(products, products.descriptionAr);
+            await m.addColumn(categories, categories.nameAr);
+            await m.addColumn(orderItems, orderItems.productNameAr);
           }
         },
         beforeOpen: (details) async {

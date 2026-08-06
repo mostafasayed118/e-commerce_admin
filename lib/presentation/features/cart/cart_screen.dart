@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/error/app_error.dart';
 import '../../../core/error/result.dart';
-import '../../../core/utils/money.dart';
+import '../../l10n/l10n_ext.dart';
 import '../../widgets/message_view.dart';
 import '../catalog/widgets/product_image.dart';
 import 'cart_cubit.dart';
@@ -30,19 +30,20 @@ class _CartView extends StatelessWidget {
   const _CartView();
 
   Future<void> _confirmClear(BuildContext context) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear cart?'),
-        content: const Text('Every item will be removed from your cart.'),
+        title: Text(l10n.clearCartTitle),
+        content: Text(l10n.clearCartMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear'),
+            child: Text(l10n.clear),
           ),
         ],
       ),
@@ -58,7 +59,7 @@ class _CartView extends StatelessWidget {
 
   void _showError(BuildContext context, AppError error) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error.message)),
+      SnackBar(content: Text(context.errorText(error))),
     );
   }
 
@@ -68,14 +69,15 @@ class _CartView extends StatelessWidget {
     // one AppBar, shown only while the cart has lines.
     return BlocBuilder<CartCubit, CartState>(
       builder: (context, state) {
+        final l10n = context.l10n;
         final filled = state is CartLoaded && state.lines.isNotEmpty;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Cart'),
+            title: Text(l10n.cartTitle),
             actions: [
               if (filled)
                 IconButton(
-                  tooltip: 'Clear cart',
+                  tooltip: l10n.clearCart,
                   icon: const Icon(Icons.delete_sweep_outlined),
                   onPressed: () => _confirmClear(context),
                 ),
@@ -83,13 +85,13 @@ class _CartView extends StatelessWidget {
           ),
           body: switch (state) {
             CartLoading() => const Center(child: CircularProgressIndicator()),
-            CartError(:final message) => MessageView(
+            CartError() => MessageView(
                 icon: Icons.error_outline,
-                title: 'Something went wrong',
-                message: message,
+                title: l10n.somethingWentWrong,
+                message: l10n.errorLoadFailed,
               ),
             CartLoaded() => state.lines.isEmpty
-                ? const _EmptyCart()
+                ? _EmptyCart()
                 : _FilledCart(state: state),
           },
         );
@@ -103,14 +105,15 @@ class _EmptyCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return MessageView(
       icon: Icons.shopping_cart_outlined,
-      title: 'Your cart is empty',
-      message: 'Add something you like from the catalog.',
+      title: l10n.cartEmptyTitle,
+      message: l10n.cartEmptyMessage,
       action: FilledButton.tonalIcon(
         onPressed: () => context.go('/'),
         icon: const Icon(Icons.storefront_outlined),
-        label: const Text('Browse products'),
+        label: Text(l10n.browseProducts),
       ),
     );
   }
@@ -181,7 +184,7 @@ class _FilledCart extends StatelessWidget {
 
   void _showCartError(BuildContext context, AppError error) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error.message)),
+      SnackBar(content: Text(context.errorText(error))),
     );
   }
 }
@@ -201,6 +204,7 @@ class _CartLineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final product = line.product;
     final canAdd = !line.exceedsStock;
 
@@ -223,7 +227,7 @@ class _CartLineTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product.name,
+                  context.productName(product),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall,
@@ -234,7 +238,7 @@ class _CartLineTile extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      formatCents(product.finalPriceCents),
+                      context.formatCents(product.finalPriceCents),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -243,7 +247,7 @@ class _CartLineTile extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          formatCents(product.priceCents),
+                          context.formatCents(product.priceCents),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -258,7 +262,7 @@ class _CartLineTile extends StatelessWidget {
                 if (line.exceedsStock) ...[
                   const SizedBox(height: 2),
                   Text(
-                    'Only ${product.stock} left in stock',
+                    l10n.onlyXLeftInStock(product.stock),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.error,
                     ),
@@ -272,7 +276,7 @@ class _CartLineTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                formatCents(line.lineTotalCents),
+                context.formatCents(line.lineTotalCents),
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: scheme.primary,
                   fontWeight: FontWeight.w600,
@@ -283,7 +287,7 @@ class _CartLineTile extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    tooltip: 'Remove one',
+                    tooltip: l10n.removeOne,
                     icon: const Icon(Icons.remove_circle_outline),
                     visualDensity: VisualDensity.compact,
                     onPressed: onRemoveOne,
@@ -297,7 +301,7 @@ class _CartLineTile extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Add one',
+                    tooltip: l10n.addOne,
                     icon: const Icon(Icons.add_circle_outline),
                     visualDensity: VisualDensity.compact,
                     onPressed: canAdd ? onAdd : null,
@@ -329,6 +333,7 @@ class _TotalsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -342,10 +347,10 @@ class _TotalsBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('Subtotal', style: theme.textTheme.bodyMedium),
+                Text(l10n.subtotal, style: theme.textTheme.bodyMedium),
                 const Spacer(),
                 Text(
-                  formatCents(subtotalCents),
+                  context.formatCents(subtotalCents),
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -354,10 +359,13 @@ class _TotalsBar extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Text('Savings', style: theme.textTheme.bodyMedium),
+                  Text(l10n.savings, style: theme.textTheme.bodyMedium),
                   const Spacer(),
                   Text(
-                    '-${formatCents(discountCents)}',
+                    // Negative cents: the locale places the sign correctly
+                    // ("-$12.34" LTR, "‏-12.34 $" RTL) — a hand-written
+                    // prefix would land on the wrong side in RTL.
+                    context.formatCents(-discountCents),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.primary,
                       fontWeight: FontWeight.w600,
@@ -370,14 +378,14 @@ class _TotalsBar extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Total',
+                  l10n.total,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  formatCents(totalCents),
+                  context.formatCents(totalCents),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -390,7 +398,7 @@ class _TotalsBar extends StatelessWidget {
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
-              child: const Text('Checkout'),
+              child: Text(l10n.checkout),
             ),
           ],
         ),
