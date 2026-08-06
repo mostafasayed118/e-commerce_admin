@@ -133,4 +133,73 @@ void main() {
 
     expect(find.text('رمز PIN غير صحيح'), findsOneWidget);
   });
+
+  testWidgets('every AppErrorCode maps to a non-empty localized string',
+      (WidgetTester tester) async {
+    // The switch is exhaustive (a new enum value stops compilation), so the
+    // remaining contract is that every mapped string is actually present and
+    // non-empty in the ARB — guards against a missing or blank value.
+    // Data-carrying codes are excluded: their bare form is a developer bug
+    // (asserts in debug) and is covered by the fallback test below.
+    final dataCarrying = {
+      AppErrorCode.productOutOfStock,
+      AppErrorCode.stockLimit,
+      AppErrorCode.categoryInUse,
+    };
+    final plainCodes =
+        AppErrorCode.values.where((code) => !dataCarrying.contains(code));
+    final rendered = <String, String>{};
+    for (final code in plainCodes) {
+      await tester.pumpWidget(probe(
+        (context) => errorTextForCode(context, code),
+      ));
+      final text = tester.widget<Text>(find.byType(Text)).data;
+      expect(
+        text,
+        isNotNull,
+        reason: 'AppErrorCode.$code mapped to a null string',
+      );
+      expect(
+        text!.trim(),
+        isNotEmpty,
+        reason: 'AppErrorCode.$code mapped to an empty string',
+      );
+      rendered[code.name] = text;
+    }
+    // Sanity: the loop really visited every plain code and produced distinct
+    // messages (a duplicate ARB key would hide silently otherwise).
+    expect(rendered.values.toSet().length, plainCodes.length);
+  });
+
+  testWidgets('a bare data-carrying code trips the debug guard',
+      (WidgetTester tester) async {
+    // Bare data-carrying codes are a developer bug: the typed variants in
+    // localizedErrorMessage are the only correct path, and the fallback's
+    // debug assert is the tripwire that makes the mistake loud instead of a
+    // silent degrade to the generic message. Under asserts (every test run)
+    // the fallback must THROW, not silently return.
+    //
+    // Release behavior is the mirror image: with asserts compiled out, the
+    // fallback returns [AppErrorCode.database]'s generic message (covered by
+    // the every-code test, which pins that string non-empty).
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            try {
+              errorTextForCode(context, AppErrorCode.productOutOfStock);
+              // Reaching here means the guard silently passed — exactly the
+              // silent-degrade bug the assert exists to prevent.
+              fail('bare data-carrying code must trip the debug assert');
+            } on AssertionError {
+              // The intended developer-bug tripwire fired.
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+  });
 }
