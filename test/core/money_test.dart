@@ -27,13 +27,19 @@ void main() {
       expect(formatCents(-1234), r'-$12.34');
     });
 
-    test('follows the active locale (Task 23)', () {
-      // intl's 'ar' renders Western digits with RTL-adjusted placement and
-      // a space before the symbol (Gulf convention); assert the stable
-      // parts, not the leading RTL mark.
+    test('renders Eastern Arabic numerals under ar, like the dates', () {
+      // intl's 'ar' renders with RTL-adjusted placement and a space before
+      // the symbol (Gulf convention); the digits are translated to Arabic-
+      // Indic numerals by formatCents. Assert the stable parts, not the
+      // leading RTL mark.
       final ar = formatCents(1234, locale: 'ar');
-      expect(ar, contains('12.34'));
+      expect(ar, contains('١٢.٣٤'));
+      expect(ar, isNot(contains('12.34')));
       expect(ar, contains(r'$'));
+    });
+
+    test('English output keeps Western digits', () {
+      expect(formatCents(1234), r'$12.34');
     });
   });
 

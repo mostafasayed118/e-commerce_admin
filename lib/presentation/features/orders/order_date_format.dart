@@ -19,6 +19,8 @@ library;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/utils/money.dart';
+
 bool _dateSymbolsInitialized = false;
 
 void _ensureDateSymbols() {
@@ -30,12 +32,18 @@ void _ensureDateSymbols() {
 /// `DateTime(2026, 8, 5) -> "5 Aug 2026"` (en).
 String formatOrderDate(DateTime date, {String locale = 'en'}) {
   _ensureDateSymbols();
-  return DateFormat('d MMM yyyy', locale).format(date);
+  return arabicIndicDigits(
+    DateFormat('d MMM yyyy', locale).format(date),
+    locale,
+  );
 }
 
 /// `DateTime(2026, 8, 5, 9, 5) -> "5 Aug 2026, 09:05"` (en, for timeline
 /// entries).
 String formatOrderDateTime(DateTime date, {String locale = 'en'}) {
   _ensureDateSymbols();
-  return DateFormat('d MMM yyyy, HH:mm', locale).format(date);
+  return arabicIndicDigits(
+    DateFormat('d MMM yyyy, HH:mm', locale).format(date),
+    locale,
+  );
 }
