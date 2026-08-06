@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
@@ -10,8 +9,10 @@ import '../../../domain/usecases/checkout/place_order.dart';
 import '../../../domain/usecases/checkout/validate_shipping.dart';
 import '../../l10n/error_messages.dart';
 import '../../l10n/l10n_ext.dart';
+import 'order_success_view.dart';
 
-/// Checkout: the shipping form → [PlaceOrder] → inline success view.
+/// Checkout: the shipping form → [PlaceOrder] → the success screen
+/// ([OrderSuccessView]).
 ///
 /// One screen, three local steps (form / placing / success) — small enough
 /// that a Cubit would be ceremony (Section C.3). The form pre-fills from the
@@ -110,7 +111,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final placed = _placed;
-    if (placed != null) return _SuccessView(order: placed);
+    if (placed != null) return OrderSuccessView(order: placed);
     return _buildForm(context);
   }
 
@@ -201,62 +202,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   : Text(l10n.placeOrderCod),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SuccessView extends StatelessWidget {
-  const _SuccessView({required this.order});
-
-  final Order order;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle_outline, size: 72, color: scheme.primary),
-              const SizedBox(height: 16),
-              Text(
-                l10n.orderPlaced,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.orderPlacedSummary(
-                  order.orderNumber,
-                  context.formatCents(order.totalCents),
-                ),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.weWillCall(order.shipping.phone),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: () => context.go('/'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                ),
-                child: Text(l10n.backToShop),
-              ),
-            ],
-          ),
         ),
       ),
     );

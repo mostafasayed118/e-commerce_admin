@@ -7,10 +7,13 @@ import '../../../../core/error/result.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
 import 'admin_catalog_cubit.dart';
+import 'widgets/category_list.dart';
+import 'widgets/category_name_dialog.dart';
 
 /// Admin category management: add / rename / delete, with the data layer's
 /// delete-blocked rule surfacing as a SnackBar (a category still referenced
-/// by products cannot be deleted — spec A4).
+/// by products cannot be deleted — spec A4). The name dialog and the list
+/// live in `widgets/`.
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
@@ -38,7 +41,7 @@ class _CategoriesView extends StatelessWidget {
   }) async {
     final result = await showDialog<({String name, String? nameAr})>(
       context: context,
-      builder: (context) => _NameDialog(
+      builder: (context) => CategoryNameDialog(
         title: title,
         initial: initial,
         initialAr: initialAr,
@@ -122,7 +125,7 @@ class _CategoriesView extends StatelessWidget {
               title: l10n.somethingWentWrong,
               message: l10n.errorLoadFailed,
             ),
-          AdminCatalogLoaded() => _CategoryList(
+          AdminCatalogLoaded() => CategoryList(
               state: state,
               onRename: (category) => _promptForName(
                 context,
@@ -147,154 +150,6 @@ class _CategoriesView extends StatelessWidget {
             ),
         },
       ),
-    );
-  }
-}
-
-/// Owns its text controller so it is disposed with the dialog (a controller
-/// created ad-hoc in a method would never be disposed).
-class _NameDialog extends StatefulWidget {
-  const _NameDialog({
-    required this.title,
-    required this.initial,
-    this.initialAr,
-    required this.confirmLabel,
-  });
-
-  final String title;
-  final String initial;
-  final String? initialAr;
-  final String confirmLabel;
-
-  @override
-  State<_NameDialog> createState() => _NameDialogState();
-}
-
-class _NameDialogState extends State<_NameDialog> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.initial);
-  late final TextEditingController _controllerAr =
-      TextEditingController(text: widget.initialAr ?? '');
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _controllerAr.dispose();
-    super.dispose();
-  }
-
-  /// The English name is required; the Arabic name is optional (blank is
-  /// stored as null so the UI falls back to English).
-  void _submit() => Navigator.pop(
-        context,
-        (
-          name: _controller.text.trim(),
-          nameAr: emptyToNull(_controllerAr.text),
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            key: const Key('category-name-field'),
-            controller: _controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: context.l10n.categoryName,
-              border: const OutlineInputBorder(),
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('category-name-ar-field'),
-            controller: _controllerAr,
-            decoration: InputDecoration(
-              labelText: context.l10n.arabicNameOptional,
-              border: const OutlineInputBorder(),
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: _submit,
-          child: Text(widget.confirmLabel),
-        ),
-      ],
-    );
-  }
-}
-
-class _CategoryList extends StatelessWidget {
-  const _CategoryList({
-    required this.state,
-    required this.onRename,
-    required this.onDelete,
-  });
-
-  final AdminCatalogLoaded state;
-  final ValueChanged<Category> onRename;
-  final ValueChanged<Category> onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    if (state.categories.isEmpty) {
-      return MessageView(
-        icon: Icons.category_outlined,
-        title: l10n.noCategoriesTitle,
-        message: l10n.noCategoriesMessage,
-      );
-    }
-
-    final scheme = Theme.of(context).colorScheme;
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: state.categories.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
-      itemBuilder: (context, index) {
-        final category = state.categories[index];
-        final productCount =
-            state.products.where((p) => p.categoryId == category.id).length;
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: scheme.primaryContainer,
-            foregroundColor: scheme.onPrimaryContainer,
-            child: Text(context.categoryName(category).isEmpty
-                ? '?'
-                : context.categoryName(category)[0]),
-          ),
-          title: Text(context.categoryName(category)),
-          subtitle: Text(l10n.productCount(productCount)),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: l10n.renameTooltip(context.categoryName(category)),
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: () => onRename(category),
-              ),
-              IconButton(
-                tooltip: l10n.deleteCategoryTooltip(context.categoryName(category)),
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => onDelete(category),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

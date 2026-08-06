@@ -182,6 +182,9 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    // scrollUntilVisible's trailing ensureVisible jump is not pumped, so the
+    // render tree still holds the pre-scroll layout — settle before tapping.
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-admin-entry')));
     await tester.pump();
     await settleDrift(tester); // gate's isPinSet() query
