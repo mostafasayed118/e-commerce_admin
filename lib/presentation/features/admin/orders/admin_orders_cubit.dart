@@ -1,51 +1,14 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/entities/order.dart';
 import '../../../../core/entities/order_status.dart';
 import '../../../../core/error/result.dart';
 import '../../../../domain/repositories/order_repository.dart';
+import 'admin_orders_state.dart';
 
-/// Sealed admin-orders states.
-sealed class AdminOrdersState extends Equatable {
-  const AdminOrdersState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-final class AdminOrdersLoading extends AdminOrdersState {
-  const AdminOrdersLoading();
-}
-
-final class AdminOrdersError extends AdminOrdersState {
-  const AdminOrdersError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-/// All orders plus the active status filter; [visibleOrders] is derived.
-final class AdminOrdersLoaded extends AdminOrdersState {
-  const AdminOrdersLoaded({
-    required this.allOrders,
-    required this.filter,
-    required this.visibleOrders,
-  });
-
-  final List<Order> allOrders;
-
-  /// `null` = no filter (all statuses).
-  final OrderStatus? filter;
-  final List<Order> visibleOrders;
-
-  @override
-  List<Object?> get props => [allOrders, filter, visibleOrders];
-}
+export 'admin_orders_state.dart';
 
 /// Drives the admin order management screens: watch-driven list with a
 /// client-side status filter, plus [updateStatus] which delegates to the

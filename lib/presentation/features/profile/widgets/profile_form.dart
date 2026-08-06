@@ -5,6 +5,7 @@ import '../../../../core/entities/shipping_info.dart';
 import '../../../../domain/usecases/checkout/validate_shipping.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../widgets/shipping_info_fields.dart';
 import '../profile_cubit.dart';
 import 'profile_settings_section.dart';
 
@@ -135,43 +136,15 @@ class _ProfileFormState extends State<ProfileForm> {
             ),
           ],
           const SizedBox(height: 16),
-          TextFormField(
-            key: const Key('profile-name'),
-            controller: _name,
-            decoration: InputDecoration(
-              labelText: l10n.fullName,
-              border: const OutlineInputBorder(),
-            ),
-            textInputAction: TextInputAction.next,
-            textCapitalization: TextCapitalization.words,
+          ShippingInfoFields(
+            nameController: _name,
+            phoneController: _phone,
+            addressController: _address,
+            validateField: _validateField,
+            nameKey: 'profile-name',
+            phoneKey: 'profile-phone',
+            addressKey: 'profile-address',
             onChanged: (_) => setState(() => _dirty = true),
-            validator: (_) => _validateField(kShippingNameField),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            key: const Key('profile-phone'),
-            controller: _phone,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              labelText: l10n.phone,
-              border: const OutlineInputBorder(),
-            ),
-            textInputAction: TextInputAction.next,
-            onChanged: (_) => setState(() => _dirty = true),
-            validator: (_) => _validateField(kShippingPhoneField),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            key: const Key('profile-address'),
-            controller: _address,
-            decoration: InputDecoration(
-              labelText: l10n.deliveryAddress,
-              border: const OutlineInputBorder(),
-            ),
-            maxLines: 2,
-            textInputAction: TextInputAction.newline,
-            onChanged: (_) => setState(() => _dirty = true),
-            validator: (_) => _validateField(kShippingAddressField),
           ),
           const SizedBox(height: 8),
           if (state.saveErrorCode != null) ...[

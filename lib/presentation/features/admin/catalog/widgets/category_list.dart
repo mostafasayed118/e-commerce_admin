@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/entities/category.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../widgets/message_view.dart';
-import '../admin_catalog_cubit.dart';
+import '../admin_catalog_state.dart';
 
 /// The category list with per-row rename / delete actions. Rename and delete
 /// are delegated to the screen via callbacks (the screen owns the dialogs and

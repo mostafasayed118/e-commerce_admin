@@ -4,7 +4,7 @@ import '../../../../../core/entities/product.dart';
 import '../../../../l10n/l10n_ext.dart';
 import '../../../../widgets/message_view.dart';
 import '../../../catalog/widgets/product_image.dart';
-import '../admin_catalog_cubit.dart';
+import '../admin_catalog_state.dart';
 import 'stock_chip.dart';
 
 /// The admin product list: rows with stock badges, edit on tap, delete via a

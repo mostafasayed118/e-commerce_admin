@@ -9,6 +9,7 @@ import '../../../domain/usecases/checkout/place_order.dart';
 import '../../../domain/usecases/checkout/validate_shipping.dart';
 import '../../l10n/error_messages.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/shipping_info_fields.dart';
 import 'order_success_view.dart';
 
 /// Checkout: the shipping form → [PlaceOrder] → the success screen
@@ -137,40 +138,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('checkout-name'),
-              controller: _name,
-              decoration: InputDecoration(
-                labelText: l10n.fullName,
-                border: const OutlineInputBorder(),
-              ),
-              textInputAction: TextInputAction.next,
-              textCapitalization: TextCapitalization.words,
-              validator: (_) => _validateField(kShippingNameField),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('checkout-phone'),
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: l10n.phone,
-                border: const OutlineInputBorder(),
-              ),
-              textInputAction: TextInputAction.next,
-              validator: (_) => _validateField(kShippingPhoneField),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('checkout-address'),
-              controller: _address,
-              decoration: InputDecoration(
-                labelText: l10n.deliveryAddress,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 2,
-              textInputAction: TextInputAction.newline,
-              validator: (_) => _validateField(kShippingAddressField),
+            ShippingInfoFields(
+              nameController: _name,
+              phoneController: _phone,
+              addressController: _address,
+              validateField: _validateField,
+              nameKey: 'checkout-name',
+              phoneKey: 'checkout-phone',
+              addressKey: 'checkout-address',
             ),
             const SizedBox(height: 8),
             SwitchListTile(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/l10n_ext.dart';
 import '../../catalog/widgets/product_image.dart';
-import '../cart_cubit.dart';
+import '../cart_state.dart';
 
 /// One cart line: product image, name, prices, stock warning, and the
 /// quantity stepper. At quantity 1, stepping down removes the line entirely —
