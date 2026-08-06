@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/data/database/app_database.dart';
+import 'package:shop_admin/data/database/seed_data.dart';
 
 /// A database pinned to schema v1, so reopening the real (current-version)
 /// database on the same file exercises the on-device upgrade path (a release
@@ -100,6 +102,148 @@ void main() {
         ));
     final product = await upgraded.select(upgraded.products).getSingle();
     expect(product.nameAr, 'تيشيرت');
+
+    await upgraded.close();
+  });
+
+  test('a GENUINE v1 database (no UiPrefs, no Arabic columns) migrates to v3 '
+      'and reseeds to v2', () async {
+    final file = File(
+      '${Directory.systemTemp.path}/shop_admin_true_v1_'
+      '${DateTime.now().millisecondsSinceEpoch}.db',
+    );
+    addTearDown(() {
+      if (file.existsSync()) file.deleteSync();
+    });
+
+    // 1. Build the exact schema a shipped v1 release created: raw SQL with
+    //    NO ui_prefs table and NO Arabic columns, plus the v1-era app_meta
+    //    (seedVersion 1) and a legacy profile row.
+    final v1 = sqlite3.open(file.path);
+    v1.execute('''
+CREATE TABLE categories (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL
+);
+CREATE TABLE products (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  category_id INTEGER NOT NULL REFERENCES categories (id),
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
+  discount_percent INTEGER NOT NULL CHECK (discount_percent >= 0 AND discount_percent <= 100),
+  stock INTEGER NOT NULL CHECK (stock >= 0),
+  image_path TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE TABLE cart_items (
+  product_id INTEGER NOT NULL PRIMARY KEY REFERENCES products (id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  added_at INTEGER NOT NULL
+);
+CREATE TABLE orders (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  order_number TEXT NOT NULL UNIQUE,
+  status INTEGER NOT NULL,
+  subtotal_cents INTEGER NOT NULL CHECK (subtotal_cents >= 0),
+  discount_cents INTEGER NOT NULL CHECK (discount_cents >= 0),
+  total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+  shipping_name TEXT NOT NULL,
+  shipping_phone TEXT NOT NULL,
+  shipping_address TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE TABLE order_items (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES products (id) ON DELETE SET NULL,
+  product_name TEXT NOT NULL,
+  unit_price_cents INTEGER NOT NULL CHECK (unit_price_cents >= 0),
+  discount_percent INTEGER NOT NULL DEFAULT 0 CHECK (discount_percent >= 0 AND discount_percent <= 100),
+  quantity INTEGER NOT NULL CHECK (quantity > 0)
+);
+CREATE TABLE order_status_history (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
+  status INTEGER NOT NULL,
+  changed_at INTEGER NOT NULL
+);
+CREATE TABLE profile (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  name TEXT,
+  phone TEXT,
+  address TEXT,
+  updated_at INTEGER
+);
+CREATE TABLE admin_settings (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  pin_hash TEXT NOT NULL,
+  pin_salt TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE TABLE app_meta (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  seed_version INTEGER NOT NULL DEFAULT 0
+);
+''');
+    v1.execute('PRAGMA user_version = 1;');
+    v1.execute(
+        "INSERT INTO profile (id, name, phone, address, updated_at) "
+        "VALUES (1, 'Legacy User', '555-0100', '1 Old St', 1);");
+    v1.execute('INSERT INTO app_meta (id, seed_version) VALUES (1, 1);');
+    v1.close();
+
+    // 2. Reopen with the real (v3) schema: onUpgrade must CREATE the missing
+    //    ui_prefs table and ADD the Arabic columns — the branches the
+    //    previous simulation (current schema minus columns) never hit.
+    final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+    final profile = await upgraded.select(upgraded.profile).getSingle();
+    expect(profile.name, 'Legacy User', reason: 'user data must survive');
+
+    // The newly-created ui_prefs table works.
+    await upgraded.into(upgraded.uiPrefs).insert(UiPrefsCompanion.insert(
+          id: const Value(1),
+          themeMode: const Value('dark'),
+        ));
+    expect(
+      (await upgraded.select(upgraded.uiPrefs).getSingle()).themeMode,
+      'dark',
+    );
+
+    // The newly-added Arabic columns accept and return data.
+    await upgraded.into(upgraded.categories).insert(
+          CategoriesCompanion.insert(
+            name: 'Clothing',
+            nameAr: const Value('ملابس'),
+            createdAt: 1,
+          ),
+        );
+    expect(
+      (await upgraded.select(upgraded.categories).getSingle()).nameAr,
+      'ملابس',
+    );
+
+    // 3. A v1-era install (seedVersion 1) then reseeds to v2: clear +
+    //    reinsert with Arabic, still leaving user data alone.
+    await SeedData(upgraded).seedIfNeeded();
+    final meta = await (upgraded.select(upgraded.appMeta)
+          ..where((t) => t.id.equals(1)))
+        .getSingle();
+    expect(meta.seedVersion, SeedData.version);
+    final products = await upgraded.select(upgraded.products).get();
+    expect(products, isNotEmpty);
+    expect(products.every((p) => p.nameAr != null), isTrue,
+        reason: 'the v2 reseed must carry Arabic content');
+    expect(
+      (await upgraded.select(upgraded.profile).getSingle()).name,
+      'Legacy User',
+      reason: 'reseed must not touch user data',
+    );
+    // The category we inserted before the reseed was wiped and re-seeded.
+    expect(await upgraded.select(upgraded.categories).get(), hasLength(5));
 
     await upgraded.close();
   });

@@ -98,6 +98,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # Raw SQLite access in tests: device-DB inspection (test/tool) and the
+  # genuine-v1-schema migration drill in app_database_test create/read
+  # databases directly. Already pinned transitively by drift — promoted here
+  # so importing it doesn't trip depend_on_referenced_packages.
+  sqlite3: ^3.5.1
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
