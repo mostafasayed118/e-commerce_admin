@@ -4,6 +4,7 @@ import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
 import '../../../domain/repositories/order_repository.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
 import 'order_detail_view.dart';
 
@@ -25,10 +26,7 @@ class OrderDetailScreen extends StatelessWidget {
         stream: getIt<OrderRepository>().watchOrderById(orderId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return MessageView(
-              icon: Icons.error_outline,
-              title: l10n.couldNotLoadOrder,
-            );
+            return ErrorView(title: l10n.couldNotLoadOrder);
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

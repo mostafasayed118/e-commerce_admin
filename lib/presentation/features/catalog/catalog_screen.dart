@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/injection.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
 import 'catalog_cubit.dart';
 import 'widgets/loaded_catalog.dart';
@@ -37,11 +38,7 @@ class _CatalogView extends StatelessWidget {
       body: BlocBuilder<CatalogCubit, CatalogState>(
         builder: (context, state) => switch (state) {
           CatalogLoading() => const Center(child: CircularProgressIndicator()),
-          CatalogError() => MessageView(
-              icon: Icons.error_outline,
-              title: l10n.somethingWentWrong,
-              message: l10n.errorLoadFailed,
-            ),
+          CatalogError() => const ErrorView(),
           CatalogEmpty() => MessageView(
               icon: Icons.inventory_2_outlined,
               title: l10n.catalogEmptyTitle,

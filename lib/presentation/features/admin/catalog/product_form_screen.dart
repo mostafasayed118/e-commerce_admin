@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../widgets/error_view.dart';
 import '../../../widgets/message_view.dart';
 import 'admin_catalog_cubit.dart';
 import 'widgets/product_form.dart';
@@ -29,12 +30,8 @@ class ProductFormScreen extends StatelessWidget {
           AdminCatalogLoading() => const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),
-          AdminCatalogError() => Scaffold(
-              body: MessageView(
-                icon: Icons.error_outline,
-                title: context.l10n.somethingWentWrong,
-                message: context.l10n.errorLoadFailed,
-              ),
+          AdminCatalogError() => const Scaffold(
+              body: ErrorView(),
             ),
           AdminCatalogLoaded() => _buildForm(context, state),
         },

@@ -6,8 +6,13 @@ import '../../../core/error/result.dart';
 import '../../../domain/repositories/product_repository.dart';
 import '../../../domain/usecases/cart/add_to_cart.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
+import '../../widgets/snack_bar.dart';
+import '../wishlist/widgets/wishlist_heart.dart';
 import 'widgets/product_image.dart';
+import 'widgets/product_price_row.dart';
+import 'widgets/stock_status_label.dart';
 
 /// Product detail: reactive product via [ProductRepository.watchProductById]
 /// (so stock changes from the admin side reflect live), plus Add to Cart
@@ -34,14 +39,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final result = await getIt<AddToCart>()(product.id);
     if (!mounted) return;
     setState(() => _adding = false);
-    final messenger = ScaffoldMessenger.of(context);
     result.fold(
-      onSuccess: (_) => messenger.showSnackBar(
-        SnackBar(content: Text(context.l10n.addedToCart(context.productName(product)))),
+      onSuccess: (_) => showSuccessSnackBar(
+        context,
+        context.l10n.addedToCart(context.productName(product)),
       ),
-      onFailure: (error) => messenger.showSnackBar(
-        SnackBar(content: Text(context.errorText(error))),
-      ),
+      onFailure: (error) => showErrorSnackBar(context, error),
     );
   }
 
@@ -54,10 +57,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         stream: getIt<ProductRepository>().watchProductById(widget.productId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return MessageView(
-              icon: Icons.error_outline,
-              title: l10n.couldNotLoadProduct,
-            );
+            return ErrorView(title: l10n.couldNotLoadProduct);
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -111,62 +111,26 @@ class _ProductDetailBody extends StatelessWidget {
         const SizedBox(height: 20),
         Text(context.productName(product), style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              context.formatCents(product.finalPriceCents),
-              style: theme.textTheme.headlineMedium?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (product.hasDiscount) ...[
-              const SizedBox(width: 8),
-              Text(
-                context.formatCents(product.priceCents),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  decoration: TextDecoration.lineThrough,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '-${product.discountPercent}%',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ],
+        // Flexible so the price row can never overflow: the struck price
+        // stays whole and the badge ellipsizes (same contract as the card's
+        // price row — Arabic digits + bidi marks are wider).
+        ProductPriceRow(
+          product: product,
+          baseline: true,
+          gap: 8,
+          showDiscountBadge: true,
+          finalPriceStyle: theme.textTheme.headlineMedium?.copyWith(
+            color: scheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 8),
-        if (outOfStock)
-          Text(
-            l10n.outOfStock,
-            style: theme.textTheme.titleSmall?.copyWith(color: scheme.error),
-          )
-        else if (product.isLowStock)
-          Text(
-            l10n.lowStockLeft(product.stock),
-            style: theme.textTheme.titleSmall?.copyWith(color: scheme.error),
-          )
-        else
-          Text(
-            l10n.inStock,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: scheme.primary,
-            ),
-          ),
+        // The detail screen shows a stock line in every state.
+        StockStatusLabel(
+          product: product,
+          style: theme.textTheme.titleSmall,
+          showInStock: true,
+        ),
         const SizedBox(height: 20),
         Text(
           context.productDescription(product).isEmpty
@@ -177,23 +141,32 @@ class _ProductDetailBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 32),
-        FilledButton.icon(
-          onPressed: (outOfStock || adding) ? null : onAddToCart,
-          icon: adding
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.add_shopping_cart),
-          label: Text(
-            outOfStock
-                ? l10n.outOfStock
-                : (adding ? l10n.adding : l10n.addToCart),
-          ),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: (outOfStock || adding) ? null : onAddToCart,
+                icon: adding
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add_shopping_cart),
+                label: Text(
+                  outOfStock
+                      ? l10n.outOfStock
+                      : (adding ? l10n.adding : l10n.addToCart),
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // The wishlist heart beside the CTA — same tonal style.
+            WishlistHeartButton(product: product),
+          ],
         ),
       ],
     );

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/entities/order.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/browse_catalog_action.dart';
+import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
 import 'order_list_tile.dart';
 import 'orders_cubit.dart';
@@ -35,11 +37,7 @@ class _OrdersView extends StatelessWidget {
       body: BlocBuilder<OrdersCubit, OrdersState>(
         builder: (context, state) => switch (state) {
           OrdersLoading() => const Center(child: CircularProgressIndicator()),
-          OrdersError() => MessageView(
-              icon: Icons.error_outline,
-              title: l10n.somethingWentWrong,
-              message: l10n.errorLoadFailed,
-            ),
+          OrdersError() => const ErrorView(),
           OrdersLoaded(:final orders) => orders.isEmpty
               ? _EmptyOrders()
               : _OrderList(orders: orders),
@@ -59,11 +57,7 @@ class _EmptyOrders extends StatelessWidget {
       icon: Icons.receipt_long_outlined,
       title: l10n.noOrdersTitle,
       message: l10n.noOrdersMessage,
-      action: FilledButton.tonalIcon(
-        onPressed: () => context.go('/'),
-        icon: const Icon(Icons.storefront_outlined),
-        label: Text(l10n.browseProducts),
-      ),
+      action: const BrowseCatalogAction(),
     );
   }
 }
