@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../core/entities/coupon.dart';
 import '../../core/entities/order_status.dart';
 import 'app_database.dart';
 
@@ -25,7 +26,7 @@ class SeedData {
 
   /// Version of the seed dataset. Bump to refresh demo data on existing
   /// installs (assumes a demo/clean database — see class docs).
-  static const int version = 2;
+  static const int version = 3;
 
   /// Seeds if needed. Safe to call on every launch: the version check is a
   /// single SELECT, and the seed itself runs atomically in one transaction —
@@ -43,10 +44,71 @@ class SeedData {
       await _db.delete(_db.orders).go();
       await _db.delete(_db.products).go();
       await _db.delete(_db.categories).go();
+      await _db.delete(_db.coupons).go();
 
       final base = DateTime(2026, 7, 1, 9).millisecondsSinceEpoch;
       final day = const Duration(days: 1).inMilliseconds;
       final hour = const Duration(hours: 1).inMilliseconds;
+
+      // --- Demo coupons -----------------------------------------------------
+      // Expiries are relative to the seed's fixed base date so the demo is
+      // deterministic: SUMMER20 stays valid, EXPIRED10 stays expired.
+      Future<void> insertCoupon({
+        required String code,
+        required CouponDiscountType type,
+        required int value,
+        int minSpendCents = 0,
+        DateTime? expiresAt,
+        int? maxUses,
+        bool isActive = true,
+        int usedCount = 0,
+      }) {
+        return _db.into(_db.coupons).insert(CouponsCompanion.insert(
+              code: code,
+              discountType: type,
+              value: value,
+              minSpendCents: Value(minSpendCents),
+              expiresAt: Value(expiresAt?.millisecondsSinceEpoch),
+              maxUses: Value(maxUses),
+              isActive: Value(isActive),
+              usedCount: Value(usedCount),
+              createdAt: base,
+            ));
+      }
+
+      // The seeded usage counters match the coupon-bearing orders below, so
+      // the dashboard's "recent usage" and the admin list agree on day one.
+      // Usage counters match the coupon-bearing orders below: WELCOME10 on
+      // ORD-000001 + ORD-000002 (2), SAVE5 on ORD-000003 + ORD-000004 +
+      // ORD-000006 (3) — SAVE5 tops the dashboard's ranking demo.
+      await insertCoupon(
+        code: 'WELCOME10',
+        type: CouponDiscountType.percent,
+        value: 10,
+        minSpendCents: 3000,
+        usedCount: 2,
+      );
+      await insertCoupon(
+        code: 'SAVE5',
+        type: CouponDiscountType.fixed,
+        value: 500,
+        // Capped: the dashboard's ranking bar shows 3/5 toward exhaustion,
+        // next to WELCOME10's relative (uncapped) bar — both modes demoed.
+        maxUses: 5,
+        usedCount: 3,
+      );
+      await insertCoupon(
+        code: 'SUMMER20',
+        type: CouponDiscountType.percent,
+        value: 20,
+        expiresAt: DateTime.fromMillisecondsSinceEpoch(base + 60 * day),
+      );
+      await insertCoupon(
+        code: 'EXPIRED10',
+        type: CouponDiscountType.percent,
+        value: 10,
+        expiresAt: DateTime.fromMillisecondsSinceEpoch(base - 30 * day),
+      );
 
       // --- Categories -------------------------------------------------------
       final categoryIds = <String, int>{};
@@ -118,6 +180,9 @@ class SeedData {
           await insertProduct(category: 'Sports', name: 'Resistance Bands', priceCents: 1500, stock: 60, description: 'Five levels of resistance.');
 
       // --- Demo orders ------------------------------------------------------
+      // [couponCode] and [couponDiscountCents] travel as a pair (a code
+      // always snapshots its discount): the receipt hides a zero-discount
+      // line, so a code without a discount would silently vanish.
       Future<void> insertOrder({
         required String number,
         required OrderStatus status,
@@ -128,6 +193,8 @@ class SeedData {
         required String phone,
         required String address,
         required int placedAt,
+        String? couponCode,
+        int couponDiscountCents = 0,
         required List<({int? productId, String productName, int unitPriceCents, int discountPercent, int quantity})> items,
         required List<({OrderStatus status, int changedAt})> history,
       }) async {
@@ -137,6 +204,8 @@ class SeedData {
               subtotalCents: subtotalCents,
               discountCents: discountCents,
               totalCents: totalCents,
+              couponCode: Value(couponCode),
+              couponDiscountCents: Value(couponDiscountCents),
               shippingName: name,
               shippingPhone: phone,
               shippingAddress: address,
@@ -171,8 +240,11 @@ class SeedData {
         number: 'ORD-000001',
         status: OrderStatus.delivered,
         subtotalCents: 6800,
-        discountCents: 1000,
-        totalCents: 5800,
+        // WELCOME10 (10%, min $30): line savings 1000 → eligible 5800 → 580.
+        discountCents: 1580,
+        totalCents: 5220,
+        couponCode: 'WELCOME10',
+        couponDiscountCents: 580,
         name: 'Amira Hassan',
         phone: '0100 000 0001',
         address: '14 Nile St, Cairo',
@@ -193,8 +265,11 @@ class SeedData {
         number: 'ORD-000002',
         status: OrderStatus.shipped,
         subtotalCents: 9900,
-        discountCents: 1485,
-        totalCents: 8415,
+        // WELCOME10: line savings 1485 → eligible 8415 → 10% = 841.
+        discountCents: 2326,
+        totalCents: 7574,
+        couponCode: 'WELCOME10',
+        couponDiscountCents: 841,
         name: 'Karim Adel',
         phone: '0100 000 0002',
         address: '8 Tahrir Sq, Cairo',
@@ -213,8 +288,11 @@ class SeedData {
         number: 'ORD-000003',
         status: OrderStatus.confirmed,
         subtotalCents: 17000,
-        discountCents: 500,
-        totalCents: 16500,
+        // SAVE5 (fixed $5) on top of the 500 line savings.
+        discountCents: 1000,
+        totalCents: 16000,
+        couponCode: 'SAVE5',
+        couponDiscountCents: 500,
         name: 'Lina Fathy',
         phone: '0100 000 0003',
         address: '22 Corniche Rd, Alexandria',
@@ -233,8 +311,12 @@ class SeedData {
         number: 'ORD-000004',
         status: OrderStatus.pending,
         subtotalCents: 5900,
-        discountCents: 0,
-        totalCents: 5900,
+        // SAVE5 (fixed $5): the newest order shows in the dashboard's
+        // "recent coupon usage" first.
+        discountCents: 500,
+        totalCents: 5400,
+        couponCode: 'SAVE5',
+        couponDiscountCents: 500,
         name: 'Omar Khaled',
         phone: '0100 000 0004',
         address: '3 Zamalek St, Cairo',
@@ -271,8 +353,11 @@ class SeedData {
         number: 'ORD-000006',
         status: OrderStatus.delivered,
         subtotalCents: 8000,
-        discountCents: 900,
-        totalCents: 7100,
+        // SAVE5 (fixed $5) on top of the 900 line savings.
+        discountCents: 1400,
+        totalCents: 6600,
+        couponCode: 'SAVE5',
+        couponDiscountCents: 500,
         name: 'Hany Ibrahim',
         phone: '0100 000 0006',
         address: '19 Nasr City, Cairo',

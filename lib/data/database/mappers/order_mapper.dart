@@ -28,6 +28,8 @@ class OrderMapper {
         phone: order.shippingPhone,
         address: order.shippingAddress,
       ),
+      couponCode: order.couponCode,
+      couponDiscountCents: order.couponDiscountCents,
       items: items.map(_itemToEntity).toList(growable: false),
       statusHistory: [
         for (final entry in history)

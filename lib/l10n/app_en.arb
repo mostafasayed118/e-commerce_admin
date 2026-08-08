@@ -8,16 +8,19 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "save": "Save",
+  "backToStore": "Back to store",
   "create": "Create",
   "all": "All",
 
   "tabShop": "Shop",
+  "tabWishlist": "Wishlist",
   "tabCart": "Cart",
   "tabOrders": "Orders",
   "tabProfile": "Profile",
   "tabOverview": "Overview",
   "tabProducts": "Products",
   "tabCategories": "Categories",
+  "tabCoupons": "Coupons",
 
   "statusPending": "Pending",
   "statusConfirmed": "Confirmed",
@@ -67,6 +70,36 @@
       "product": { "type": "String" }
     }
   },
+
+  "wishlistTitle": "Wishlist",
+  "wishlistEmptyTitle": "Your wishlist is empty",
+  "wishlistEmptyMessage": "Tap the heart on any product to save it for later.",
+  "addToWishlist": "Add to wishlist",
+  "removeFromWishlist": "Remove from wishlist",
+  "addedToWishlist": "{product} added to wishlist",
+  "@addedToWishlist": {
+    "placeholders": {
+      "product": { "type": "String" }
+    }
+  },
+  "removedFromWishlist": "{product} removed from wishlist",
+  "@removedFromWishlist": {
+    "placeholders": {
+      "product": { "type": "String" }
+    }
+  },
+  "moveToCart": "Move to cart",
+
+  "checkoutSummary": "Order summary",
+  "couponLabel": "Coupon ({code})",
+  "@couponLabel": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "couponApply": "Apply",
+  "removeCoupon": "Remove coupon",
+  "couponCodeHint": "e.g. SAVE10",
 
   "cartTitle": "Cart",
   "clearCart": "Clear cart",
@@ -150,6 +183,25 @@
   "lowStock": "Low stock",
   "ordersByStatus": "Orders by status",
   "recentOrders": "Recent orders",
+  "overviewActiveCoupons": "Active coupons",
+  "couponUsageTitle": "Coupon usage",
+  "noCouponUsage": "No coupon usage yet.",
+  "topCouponsTitle": "Top coupons",
+  "noTopCoupons": "No coupons used yet.",
+  "couponUsesCount": "{count, plural, one{1 use} other{{count} uses}}",
+  "@couponUsesCount": {
+    "description": "Redemption count on the dashboard's top-coupons ranking.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "couponUsedPercent": "{percent}% used",
+  "@couponUsedPercent": {
+    "description": "Exhaustion percentage of a capped coupon on the dashboard's top-coupons ranking.",
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
   "noOrdersYet": "No orders yet.",
   "allStockedUp": "All stocked up.",
   "onlyXLeft": "Only {stock} left",
@@ -189,6 +241,65 @@
       "percent": { "type": "int" }
     }
   },
+
+  "couponsTitle": "Coupons",
+  "newCoupon": "New coupon",
+  "editCoupon": "Edit coupon",
+  "couponNotFoundView": "Coupon not found",
+  "deleteCouponTitle": "Delete coupon?",
+  "deleteCouponMessage": "{code} will be removed. Past orders keep their snapshot.",
+  "@deleteCouponMessage": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "deleteCouponTooltip": "Delete {code}",
+  "@deleteCouponTooltip": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "noCouponsTitle": "No coupons yet",
+  "noCouponsMessage": "Create a code to start promoting.",
+  "couponCode": "Code",
+  "couponFixedType": "Fixed amount",
+  "couponFixedValue": "Discount amount",
+  "couponPercentOff": "{value}% off",
+  "@couponPercentOff": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "couponFixedOff": "{amount} off",
+  "@couponFixedOff": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "minSpendOptional": "Minimum spend (optional)",
+  "minSpendHint": "0 = no minimum",
+  "couponMinSpendShort": "min {amount}",
+  "@couponMinSpendShort": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "expiryOptional": "Expiry date (optional)",
+  "neverExpires": "Never",
+  "removeExpiry": "Remove expiry",
+  "maxUsesOptional": "Usage limit (optional)",
+  "unlimited": "Unlimited",
+  "couponUsesLeft": "{used}/{max} uses",
+  "@couponUsesLeft": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "couponActive": "Active",
+  "activeStatus": "Active",
+  "inactiveStatus": "Inactive",
+  "expiredStatus": "Expired",
 
   "noFilterOrdersTitle": "No {status} orders",
   "@noFilterOrdersTitle": {
@@ -327,5 +438,38 @@
     }
   },
   "errorImageSave": "Could not save the image.",
-  "errorImageDelete": "Could not delete the image."
+  "errorImageDelete": "Could not delete the image.",
+  "errorCouponNotFound": "{code} is not a valid code.",
+  "@errorCouponNotFound": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "errorCouponInactive": "Code {code} is not active.",
+  "@errorCouponInactive": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "errorCouponExpired": "Code {code} has expired.",
+  "@errorCouponExpired": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "errorCouponMinSpend": "Spend at least {required} to use this code (your subtotal is {current}).",
+  "@errorCouponMinSpend": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "required": { "type": "String" }
+    }
+  },
+  "errorCouponUsageLimit": "Code {code} has reached its {maxUses}-use limit.",
+  "@errorCouponUsageLimit": {
+    "placeholders": {
+      "code": { "type": "String" },
+      "maxUses": { "type": "int" }
+    }
+  },
+  "errorCouponCodeTaken": "That code is already in use."
 }

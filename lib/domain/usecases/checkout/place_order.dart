@@ -1,6 +1,5 @@
 import '../../../core/entities/order.dart';
 import '../../../core/entities/shipping_info.dart';
-import '../../../core/error/app_error.dart';
 import '../../../core/error/result.dart';
 import '../../repositories/order_repository.dart';
 import '../../repositories/settings_repository.dart';
@@ -28,35 +27,27 @@ class PlaceOrder {
   Future<Result<Order>> call(
     ShippingInfo shipping, {
     bool saveProfile = true,
-  }) async {
-    // Normalize once: validation trims for the emptiness check, and both the
-    // order snapshot and the saved profile should carry clean values.
-    final normalized = ShippingInfo(
-      name: shipping.name.trim(),
-      phone: shipping.phone.trim(),
-      address: shipping.address.trim(),
-    );
-
-    final errors = validateShipping(normalized);
-    if (errors.isNotEmpty) {
-      // The first failing field's stable code; the English text stays for
-      // logs (the UI maps the code to the active locale).
-      final code = errors.values.first;
-      return Failure(ValidationError(
-        code: code,
-        message: 'Validation failed: ${code.name}',
-      ));
-    }
-
-    final result = await _orders.placeOrder(normalized);
-    if (result.isSuccess && saveProfile) {
-      try {
-        await _settings.updateProfile(normalized);
-      } on Exception {
-        // Best-effort: a failed convenience save must never undo or break an
-        // already-placed order. The order result is returned as-is either way.
-      }
-    }
-    return result;
-  }
+    String? couponCode,
+  }) =>
+      // Normalize once and validate — shared with the profile-save use case
+      // so the two writers of the single-row profile table can never disagree
+      // on the rules (both the order snapshot and the saved profile get clean
+      // values). flatMapAsync hands a validation failure back unchanged and
+      // feeds the clean value to the placement — same shape as SaveProfile.
+      normalizeAndValidateShipping(shipping).flatMapAsync((normalized) async {
+        final result = await _orders.placeOrder(
+          normalized,
+          couponCode: couponCode,
+        );
+        if (result.isSuccess && saveProfile) {
+          try {
+            await _settings.updateProfile(normalized);
+          } on Exception {
+            // Best-effort: a failed convenience save must never undo or break
+            // an already-placed order. The order result is returned as-is
+            // either way.
+          }
+        }
+        return result;
+      });
 }

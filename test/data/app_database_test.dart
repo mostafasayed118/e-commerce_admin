@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
+import 'package:shop_admin/core/entities/coupon.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/data/database/seed_data.dart';
@@ -34,8 +35,8 @@ void main() {
     await db.close();
   });
 
-  test('migrates an old install: adds UiPrefs + Arabic columns, keeps data',
-      () async {
+  test('migrates an old install: adds UiPrefs + Arabic columns + wishlist, '
+      'keeps data', () async {
     final file = File(
       '${Directory.systemTemp.path}/shop_admin_migration_'
       '${DateTime.now().millisecondsSinceEpoch}.db',
@@ -55,14 +56,19 @@ void main() {
         ));
 
     // The simulated old install is created from the CURRENT table
-    // definitions (tables.dart is shared), so drop the v3 Arabic columns to
-    // match the real v2-era shape — otherwise the upgrade's ALTER TABLE
-    // would collide with columns that already exist.
+    // definitions (tables.dart is shared), so drop the v3 Arabic columns,
+    // the v4 wishlist table AND the v5 coupon additions to match the real
+    // v2-era shape — otherwise the upgrade's ALTER TABLE / CREATE TABLE
+    // would collide with objects that already exist.
     for (final statement in [
       'ALTER TABLE products DROP COLUMN name_ar;',
       'ALTER TABLE products DROP COLUMN description_ar;',
       'ALTER TABLE categories DROP COLUMN name_ar;',
       'ALTER TABLE order_items DROP COLUMN product_name_ar;',
+      'ALTER TABLE orders DROP COLUMN coupon_code;',
+      'ALTER TABLE orders DROP COLUMN coupon_discount_cents;',
+      'DROP TABLE coupons;',
+      'DROP TABLE wishlist_items;',
     ]) {
       await v1.customStatement(statement);
     }
@@ -102,6 +108,47 @@ void main() {
         ));
     final product = await upgraded.select(upgraded.products).getSingle();
     expect(product.nameAr, 'تيشيرت');
+
+    // The v4 wishlist table was created by the onUpgrade branch and works.
+    await upgraded.into(upgraded.wishlistItems).insert(
+          WishlistItemsCompanion.insert(
+            productId: Value(product.id),
+            addedAt: 1,
+          ),
+        );
+    expect(await upgraded.select(upgraded.wishlistItems).get(), hasLength(1));
+
+    // The v5 coupons table was created by the onUpgrade branch and works.
+    await upgraded.into(upgraded.coupons).insert(CouponsCompanion.insert(
+          code: 'SAVE10',
+          discountType: CouponDiscountType.percent,
+          value: 10,
+          createdAt: 1,
+        ));
+    expect(await upgraded.select(upgraded.coupons).get(), hasLength(1));
+
+    // The v5 order coupon columns were added by the onUpgrade branch and
+    // accept data.
+    await upgraded.into(upgraded.orders).insert(OrdersCompanion.insert(
+          orderNumber: 'ORD-000100',
+          status: OrderStatus.pending,
+          subtotalCents: 1000,
+          discountCents: 100,
+          totalCents: 900,
+          shippingName: 'Ada',
+          shippingPhone: '1',
+          shippingAddress: 'X',
+          couponCode: const Value('SAVE10'),
+          couponDiscountCents: const Value(100),
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    final withCoupon =
+        await (upgraded.select(upgraded.orders)
+              ..where((t) => t.orderNumber.equals('ORD-000100')))
+            .getSingle();
+    expect(withCoupon.couponCode, 'SAVE10');
+    expect(withCoupon.couponDiscountCents, 100);
 
     await upgraded.close();
   });
@@ -237,6 +284,16 @@ CREATE TABLE app_meta (
     expect(products, isNotEmpty);
     expect(products.every((p) => p.nameAr != null), isTrue,
         reason: 'the v2 reseed must carry Arabic content');
+
+    // The v4 wishlist table was created by the migration branch too (a raw
+    // v1 file has no wishlist_items) and accepts real product references.
+    await upgraded.into(upgraded.wishlistItems).insert(
+          WishlistItemsCompanion.insert(
+            productId: Value(products.first.id),
+            addedAt: 1,
+          ),
+        );
+    expect(await upgraded.select(upgraded.wishlistItems).get(), hasLength(1));
     expect(
       (await upgraded.select(upgraded.profile).getSingle()).name,
       'Legacy User',
@@ -245,12 +302,45 @@ CREATE TABLE app_meta (
     // The category we inserted before the reseed was wiped and re-seeded.
     expect(await upgraded.select(upgraded.categories).get(), hasLength(5));
 
+    // The v5 coupons table was created for this raw v1 install too (a real
+    // shipped v1 has no coupons table), and the seed populated it.
+    final coupons = await upgraded.select(upgraded.coupons).get();
+    expect(coupons, hasLength(4), reason: 'seed v3 carries four demo coupons');
+    final welcome = coupons.singleWhere((c) => c.code == 'WELCOME10');
+    expect(welcome.discountType, CouponDiscountType.percent);
+    expect(welcome.minSpendCents, 3000);
+
+    // The v5 order coupon columns were ALTER-added onto the raw v1 orders
+    // table and accept data.
+    await upgraded.into(upgraded.orders).insert(OrdersCompanion.insert(
+          orderNumber: 'ORD-000100',
+          status: OrderStatus.pending,
+          subtotalCents: 1000,
+          discountCents: 100,
+          totalCents: 900,
+          shippingName: 'Ada',
+          shippingPhone: '1',
+          shippingAddress: 'X',
+          couponCode: const Value('SAVE5'),
+          couponDiscountCents: const Value(100),
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    final withCoupon =
+        await (upgraded.select(upgraded.orders)
+              ..where((t) => t.orderNumber.equals('ORD-000100')))
+            .getSingle();
+    expect(withCoupon.couponCode, 'SAVE5');
+    expect(withCoupon.couponDiscountCents, 100);
+
     await upgraded.close();
   });
 
-  test('opens with all ten tables empty', () async {
+  test('opens with all twelve tables empty', () async {
     expect(await db.select(db.categories).get(), isEmpty);
     expect(await db.select(db.products).get(), isEmpty);
+    expect(await db.select(db.wishlistItems).get(), isEmpty);
+    expect(await db.select(db.coupons).get(), isEmpty);
     expect(await db.select(db.cartItems).get(), isEmpty);
     expect(await db.select(db.orders).get(), isEmpty);
     expect(await db.select(db.orderItems).get(), isEmpty);
@@ -390,6 +480,83 @@ CREATE TABLE app_meta (
       (db.delete(db.categories)..where((t) => t.id.equals(categoryId))).go(),
       throwsA(isA<SqliteException>()),
     );
+  });
+
+  test('coupon rows round-trip with defaults and the type enum', () async {
+    await db.into(db.coupons).insert(CouponsCompanion.insert(
+          code: 'SAVE10',
+          discountType: CouponDiscountType.percent,
+          value: 10,
+          createdAt: 1,
+        ));
+
+    final row = await db.select(db.coupons).getSingle();
+    expect(row.code, 'SAVE10');
+    expect(row.discountType, CouponDiscountType.percent);
+    expect(row.value, 10);
+    expect(row.minSpendCents, 0);
+    expect(row.expiresAt, isNull);
+    expect(row.maxUses, isNull);
+    expect(row.usedCount, 0);
+    expect(row.isActive, isTrue);
+  });
+
+  test('coupon constraints: value must be positive and code unique', () async {
+    await expectLater(
+      db.into(db.coupons).insert(CouponsCompanion.insert(
+            code: 'ZERO',
+            discountType: CouponDiscountType.percent,
+            value: 0,
+            createdAt: 1,
+          )),
+      throwsA(isA<SqliteException>()),
+      reason: 'CHECK (value > 0) rejects a zero-value coupon',
+    );
+    await db.into(db.coupons).insert(CouponsCompanion.insert(
+          code: 'DUPE',
+          discountType: CouponDiscountType.fixed,
+          value: 500,
+          createdAt: 1,
+        ));
+    // SQLite UNIQUE is case-sensitive, so a same-case re-insert is the only
+    // way to hit the constraint (the repo's case-insensitive pre-check is
+    // what stops 'dupe' vs 'DUPE' in the app; this pin is the backstop).
+    await expectLater(
+      db.into(db.coupons).insert(CouponsCompanion.insert(
+            code: 'DUPE',
+            discountType: CouponDiscountType.fixed,
+            value: 500,
+            createdAt: 1,
+          )),
+      throwsA(isA<SqliteException>()),
+      reason: 'the UNIQUE constraint is the backstop for the repo pre-check',
+    );
+  });
+
+  test('deleting a product cascades its wishlist rows away', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    final productId = await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'P',
+          priceCents: 100,
+          discountPercent: 0,
+          stock: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    await db.into(db.wishlistItems).insert(
+          WishlistItemsCompanion.insert(
+            productId: Value(productId),
+            addedAt: 1,
+          ),
+        );
+    expect(await db.select(db.wishlistItems).get(), hasLength(1));
+
+    await (db.delete(db.products)..where((t) => t.id.equals(productId))).go();
+
+    expect(await db.select(db.wishlistItems).get(), isEmpty);
   });
 
   test('deleting a product cascades its cart rows away', () async {

@@ -4,12 +4,14 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:shop_admin/core/entities/coupon.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/data/database/seed_data.dart';
 
 void main() {
-  test('seeds categories, products, orders, items and history on a fresh DB', () async {
+  test('seeds categories, products, coupons, orders, items and history',
+      () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
@@ -17,6 +19,7 @@ void main() {
 
     expect(await db.select(db.categories).get(), isNotEmpty);
     expect(await db.select(db.products).get(), isNotEmpty);
+    expect(await db.select(db.coupons).get(), isNotEmpty);
     expect(await db.select(db.orders).get(), isNotEmpty);
     expect(await db.select(db.orderItems).get(), isNotEmpty);
     expect(await db.select(db.orderStatusHistory).get(), isNotEmpty);
@@ -24,6 +27,65 @@ void main() {
     final meta = await (db.select(db.appMeta)..where((t) => t.id.equals(1)))
         .getSingle();
     expect(meta.seedVersion, SeedData.version);
+  });
+
+  test('seed coupons cover the demo scenarios (types + validity states)',
+      () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+
+    final coupons = await db.select(db.coupons).get();
+    expect(coupons, hasLength(4));
+    expect(
+      coupons.map((c) => c.code).toSet(),
+      containsAll(['WELCOME10', 'SAVE5', 'SUMMER20', 'EXPIRED10']),
+    );
+
+    // The usage counters agree with the coupon-bearing seed orders (the
+    // invariant that keeps the dashboard ranking honest).
+    final couponOrders = (await db.select(db.orders).get())
+        .where((o) => o.couponCode != null)
+        .toList();
+    final welcomeOrders =
+        couponOrders.where((o) => o.couponCode == 'WELCOME10').length;
+    final save5Orders = couponOrders.where((o) => o.couponCode == 'SAVE5').length;
+    expect(welcomeOrders, 2);
+    expect(save5Orders, 3);
+
+    final welcome = coupons.singleWhere((c) => c.code == 'WELCOME10');
+    expect(welcome.discountType, CouponDiscountType.percent);
+    expect(welcome.value, 10);
+    expect(welcome.minSpendCents, 3000,
+        reason: 'a minimum-spend coupon for the checkout demo');
+    expect(welcome.usedCount, welcomeOrders,
+        reason: 'the usage counter agrees with the coupon-bearing seed orders');
+
+    final save5 = coupons.singleWhere((c) => c.code == 'SAVE5');
+    expect(save5.discountType, CouponDiscountType.fixed);
+    expect(save5.value, 500);
+    expect(save5.usedCount, save5Orders);
+    expect(save5.maxUses, 5,
+        reason: 'a usage cap so the dashboard ranking demos both bar modes '
+            '(capped used/max label vs the uncapped relative bar)');
+    expect(save5.usedCount <= save5.maxUses!, isTrue,
+        reason: 'a demo cap must never be exhausted by the seed itself');
+
+    final summer = coupons.singleWhere((c) => c.code == 'SUMMER20');
+    expect(summer.discountType, CouponDiscountType.percent);
+    expect(summer.value, 20);
+    expect(summer.expiresAt, isNotNull,
+        reason: 'a time-limited coupon for the expiry demo');
+    expect(summer.isActive, isTrue);
+
+    final expired = coupons.singleWhere((c) => c.code == 'EXPIRED10');
+    expect(expired.expiresAt, isNotNull);
+    expect(
+      expired.expiresAt! < DateTime.now().millisecondsSinceEpoch,
+      isTrue,
+      reason: 'an already-expired code for the error demo',
+    );
   });
 
   test('seed covers the required demo scenarios', () async {
@@ -105,6 +167,7 @@ void main() {
     final counts = (
       categories: (await db.select(db.categories).get()).length,
       products: (await db.select(db.products).get()).length,
+      coupons: (await db.select(db.coupons).get()).length,
       orders: (await db.select(db.orders).get()).length,
     );
 
@@ -119,6 +182,8 @@ void main() {
         reason: 'categories must not duplicate on reseed');
     expect((await db.select(db.products).get()).length, counts.products,
         reason: 'products must not duplicate on reseed');
+    expect((await db.select(db.coupons).get()).length, counts.coupons,
+        reason: 'coupons must not duplicate on reseed');
     expect((await db.select(db.orders).get()).length, counts.orders,
         reason: 'orders must not duplicate on reseed');
   });

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:shop_admin/core/entities/coupon.dart';
 import 'package:shop_admin/core/entities/order.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/core/entities/shipping_info.dart';
@@ -9,8 +10,10 @@ import 'package:shop_admin/core/error/app_error.dart';
 import 'package:shop_admin/core/error/result.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/data/database/daos/cart_dao.dart';
+import 'package:shop_admin/data/database/daos/coupon_dao.dart';
 import 'package:shop_admin/data/database/daos/order_dao.dart';
 import 'package:shop_admin/data/database/daos/product_dao.dart';
+import 'package:shop_admin/data/database/mappers/coupon_mapper.dart';
 import 'package:shop_admin/data/database/mappers/order_mapper.dart';
 import 'package:shop_admin/data/database/mappers/product_mapper.dart';
 import 'package:shop_admin/data/repositories/cart_repository_impl.dart';
@@ -45,8 +48,10 @@ void main() {
       OrderDao(db),
       ProductDao(db),
       CartDao(db),
+      CouponDao(db),
       ProductMapper(),
       OrderMapper(),
+      CouponMapper(),
       db,
     );
   });
@@ -85,10 +90,41 @@ void main() {
 
   Future<int> placeOrder({
     ShippingInfo withShipping = shipping,
+    String? couponCode,
   }) async {
-    final result = await repo.placeOrder(withShipping);
+    final result = await repo.placeOrder(withShipping, couponCode: couponCode);
     expect(result, isA<Success<Order>>());
     return result.getOrThrow().id;
+  }
+
+  /// Inserts a coupon row directly (the repository under test is
+  /// OrderRepositoryImpl — the coupon's own CRUD is covered elsewhere).
+  Future<int> insertCoupon({
+    String code = 'SAVE10',
+    CouponDiscountType type = CouponDiscountType.percent,
+    int value = 10,
+    int minSpendCents = 0,
+    DateTime? expiresAt,
+    int? maxUses,
+    int usedCount = 0,
+    bool isActive = true,
+  }) {
+    return db.into(db.coupons).insert(CouponsCompanion.insert(
+          code: code,
+          discountType: type,
+          value: value,
+          minSpendCents: Value(minSpendCents),
+          expiresAt: Value(expiresAt?.millisecondsSinceEpoch),
+          maxUses: Value(maxUses),
+          usedCount: Value(usedCount),
+          isActive: Value(isActive),
+          createdAt: 1,
+        ));
+  }
+
+  Future<CouponRow> couponRow(String code) async {
+    return (db.select(db.coupons)..where((t) => t.code.equals(code)))
+        .getSingle();
   }
 
   group('placeOrder', () {
@@ -194,8 +230,10 @@ void main() {
         OrderDao(db),
         _ExplodingProductDao(db),
         CartDao(db),
+        CouponDao(db),
         ProductMapper(),
         OrderMapper(),
+        CouponMapper(),
         db,
       );
 
@@ -213,6 +251,154 @@ void main() {
           await (db.select(db.products)..where((t) => t.id.equals(productId)))
               .getSingle();
       expect(product.stock, 5, reason: 'stock decrement must be rolled back');
+    });
+
+    // --- Coupons -----------------------------------------------------------
+
+    test('applies a valid coupon: snapshot fields, totals, and usedCount',
+        () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug',
+          priceCents: 1000, stock: 10);
+      await addToCart(productId, 4); // subtotal 4000
+      await insertCoupon(code: 'SAVE10', value: 10);
+
+      // Lowercase input: the placement normalizes before looking up.
+      final order =
+          (await repo.placeOrder(shipping, couponCode: 'save10')).getOrThrow();
+
+      expect(order.subtotalCents, 4000);
+      expect(order.couponCode, 'SAVE10', reason: 'normalized snapshot');
+      expect(order.couponDiscountCents, 400);
+      expect(order.discountCents, 400, reason: 'the coupon is the only source');
+      expect(order.totalCents, 3600);
+      // The usage counter increments atomically with the order.
+      expect((await couponRow('SAVE10')).usedCount, 1);
+    });
+
+    test('the coupon discount stacks on top of the line savings', () async {
+      final categoryId = await insertCategory('Clothing');
+      // 10% line discount: 2000 x 2 subtotal = 4000, savings = 400.
+      final productId = await insertProduct(categoryId, 'Mug',
+          priceCents: 2000, discountPercent: 10, stock: 10);
+      await addToCart(productId, 2);
+      await insertCoupon(code: 'SAVE10', value: 10);
+
+      final order =
+          (await repo.placeOrder(shipping, couponCode: 'SAVE10')).getOrThrow();
+
+      // Eligible spend is line-discounted: 4000 - 400 = 3600 -> 10% = 360.
+      expect(order.couponDiscountCents, 360);
+      expect(order.discountCents, 400 + 360);
+      expect(order.totalCents, 4000 - 400 - 360);
+    });
+
+    test('a fixed coupon larger than the subtotal is capped at it', () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug',
+          priceCents: 1000, stock: 10);
+      await addToCart(productId, 1);
+      await insertCoupon(code: 'BIG', type: CouponDiscountType.fixed, value: 5000);
+
+      final order =
+          (await repo.placeOrder(shipping, couponCode: 'BIG')).getOrThrow();
+
+      expect(order.couponDiscountCents, 1000, reason: 'capped at the subtotal');
+      expect(order.totalCents, 0, reason: 'the total never goes negative');
+    });
+
+    test('an unknown coupon code rejects the order and writes nothing',
+        () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug', stock: 10);
+      await addToCart(productId, 1);
+
+      final result = await repo.placeOrder(shipping, couponCode: 'NOPE');
+
+      expect(result, isA<Failure<Order>>());
+      expect((result as Failure<Order>).error, isA<CouponNotFoundError>());
+      expect(await (db.select(db.orders)).get(), isEmpty,
+          reason: 'no order may exist after a rejected placement');
+      expect((await db.select(db.cartItems).get()).single.quantity, 1,
+          reason: 'the cart must survive');
+    });
+
+    test('an expired coupon rejects the order', () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug', stock: 10);
+      await addToCart(productId, 1);
+      await insertCoupon(
+        code: 'OLD',
+        expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+      );
+
+      final result = await repo.placeOrder(shipping, couponCode: 'OLD');
+
+      expect(result, isA<Failure<Order>>());
+      expect((result as Failure<Order>).error, isA<CouponExpiredError>());
+    });
+
+    test('an unmet minimum spend rejects the order', () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug',
+          priceCents: 1000, stock: 10);
+      await addToCart(productId, 4); // subtotal 4000 < min 5000
+      await insertCoupon(code: 'BIG', minSpendCents: 5000);
+
+      final result = await repo.placeOrder(shipping, couponCode: 'BIG');
+
+      expect(result, isA<Failure<Order>>());
+      expect((result as Failure<Order>).error, isA<CouponMinSpendError>());
+    });
+
+    test('an exhausted usage cap rejects the order', () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug', stock: 10);
+      await addToCart(productId, 1);
+      await insertCoupon(code: 'FULL', maxUses: 2, usedCount: 2);
+
+      final result = await repo.placeOrder(shipping, couponCode: 'FULL');
+
+      expect(result, isA<Failure<Order>>());
+      expect((result as Failure<Order>).error, isA<CouponUsageLimitError>());
+    });
+
+    test('an inactive coupon rejects the order', () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'Mug', stock: 10);
+      await addToCart(productId, 1);
+      await insertCoupon(code: 'OFF', isActive: false);
+
+      final result = await repo.placeOrder(shipping, couponCode: 'OFF');
+
+      expect(result, isA<Failure<Order>>());
+      expect((result as Failure<Order>).error, isA<CouponInactiveError>());
+    });
+
+    test('a used coupon rolls back with a failed placement', () async {
+      final categoryId = await insertCategory('Clothing');
+      final productId = await insertProduct(categoryId, 'T-Shirt', stock: 5);
+      await addToCart(productId, 2);
+      await insertCoupon(code: 'SAVE10', value: 10);
+
+      final explodingRepo = OrderRepositoryImpl(
+        OrderDao(db),
+        _ExplodingProductDao(db),
+        CartDao(db),
+        CouponDao(db),
+        ProductMapper(),
+        OrderMapper(),
+        CouponMapper(),
+        db,
+      );
+      final result =
+          await explodingRepo.placeOrder(shipping, couponCode: 'SAVE10');
+
+      expect(result, isA<Failure<Order>>());
+      expect((result as Failure<Order>).error, isA<DatabaseError>());
+      expect((await couponRow('SAVE10')).usedCount, 0,
+          reason: 'the usage increment must roll back with the order');
+      expect(await (db.select(db.orders)).get(), isEmpty);
     });
   });
 

@@ -1032,6 +1032,212 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   }
 }
 
+class $WishlistItemsTable extends WishlistItems
+    with TableInfo<$WishlistItemsTable, WishlistItemRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WishlistItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<int> addedAt = GeneratedColumn<int>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [productId, addedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wishlist_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WishlistItemRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {productId};
+  @override
+  WishlistItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WishlistItemRow(
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WishlistItemsTable createAlias(String alias) {
+    return $WishlistItemsTable(attachedDatabase, alias);
+  }
+}
+
+class WishlistItemRow extends DataClass implements Insertable<WishlistItemRow> {
+  final int productId;
+  final int addedAt;
+  const WishlistItemRow({required this.productId, required this.addedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['product_id'] = Variable<int>(productId);
+    map['added_at'] = Variable<int>(addedAt);
+    return map;
+  }
+
+  WishlistItemsCompanion toCompanion(bool nullToAbsent) {
+    return WishlistItemsCompanion(
+      productId: Value(productId),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory WishlistItemRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WishlistItemRow(
+      productId: serializer.fromJson<int>(json['productId']),
+      addedAt: serializer.fromJson<int>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'productId': serializer.toJson<int>(productId),
+      'addedAt': serializer.toJson<int>(addedAt),
+    };
+  }
+
+  WishlistItemRow copyWith({int? productId, int? addedAt}) => WishlistItemRow(
+    productId: productId ?? this.productId,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  WishlistItemRow copyWithCompanion(WishlistItemsCompanion data) {
+    return WishlistItemRow(
+      productId: data.productId.present ? data.productId.value : this.productId,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WishlistItemRow(')
+          ..write('productId: $productId, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(productId, addedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WishlistItemRow &&
+          other.productId == this.productId &&
+          other.addedAt == this.addedAt);
+}
+
+class WishlistItemsCompanion extends UpdateCompanion<WishlistItemRow> {
+  final Value<int> productId;
+  final Value<int> addedAt;
+  const WishlistItemsCompanion({
+    this.productId = const Value.absent(),
+    this.addedAt = const Value.absent(),
+  });
+  WishlistItemsCompanion.insert({
+    this.productId = const Value.absent(),
+    required int addedAt,
+  }) : addedAt = Value(addedAt);
+  static Insertable<WishlistItemRow> custom({
+    Expression<int>? productId,
+    Expression<int>? addedAt,
+  }) {
+    return RawValuesInsertable({
+      if (productId != null) 'product_id': productId,
+      if (addedAt != null) 'added_at': addedAt,
+    });
+  }
+
+  WishlistItemsCompanion copyWith({
+    Value<int>? productId,
+    Value<int>? addedAt,
+  }) {
+    return WishlistItemsCompanion(
+      productId: productId ?? this.productId,
+      addedAt: addedAt ?? this.addedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<int>(addedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WishlistItemsCompanion(')
+          ..write('productId: $productId, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CartItemsTable extends CartItems
     with TableInfo<$CartItemsTable, CartItemRow> {
   @override
@@ -1289,6 +1495,624 @@ class CartItemsCompanion extends UpdateCompanion<CartItemRow> {
   }
 }
 
+class $CouponsTable extends Coupons with TableInfo<$CouponsTable, CouponRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CouponsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<CouponDiscountType, int>
+  discountType = GeneratedColumn<int>(
+    'discount_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  ).withConverter<CouponDiscountType>($CouponsTable.$converterdiscountType);
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<int> value = GeneratedColumn<int>(
+    'value',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(value).isBiggerThanValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _minSpendCentsMeta = const VerificationMeta(
+    'minSpendCents',
+  );
+  @override
+  late final GeneratedColumn<int> minSpendCents = GeneratedColumn<int>(
+    'min_spend_cents',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(minSpendCents).isBiggerOrEqualValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<int> expiresAt = GeneratedColumn<int>(
+    'expires_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _maxUsesMeta = const VerificationMeta(
+    'maxUses',
+  );
+  @override
+  late final GeneratedColumn<int> maxUses = GeneratedColumn<int>(
+    'max_uses',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _usedCountMeta = const VerificationMeta(
+    'usedCount',
+  );
+  @override
+  late final GeneratedColumn<int> usedCount = GeneratedColumn<int>(
+    'used_count',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(usedCount).isBiggerOrEqualValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    code,
+    discountType,
+    value,
+    minSpendCents,
+    expiresAt,
+    maxUses,
+    usedCount,
+    isActive,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'coupons';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CouponRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('min_spend_cents')) {
+      context.handle(
+        _minSpendCentsMeta,
+        minSpendCents.isAcceptableOrUnknown(
+          data['min_spend_cents']!,
+          _minSpendCentsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    }
+    if (data.containsKey('max_uses')) {
+      context.handle(
+        _maxUsesMeta,
+        maxUses.isAcceptableOrUnknown(data['max_uses']!, _maxUsesMeta),
+      );
+    }
+    if (data.containsKey('used_count')) {
+      context.handle(
+        _usedCountMeta,
+        usedCount.isAcceptableOrUnknown(data['used_count']!, _usedCountMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CouponRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CouponRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      discountType: $CouponsTable.$converterdiscountType.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}discount_type'],
+        )!,
+      ),
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}value'],
+      )!,
+      minSpendCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}min_spend_cents'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expires_at'],
+      ),
+      maxUses: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_uses'],
+      ),
+      usedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}used_count'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CouponsTable createAlias(String alias) {
+    return $CouponsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<CouponDiscountType, int, int>
+  $converterdiscountType = const EnumIndexConverter<CouponDiscountType>(
+    CouponDiscountType.values,
+  );
+}
+
+class CouponRow extends DataClass implements Insertable<CouponRow> {
+  final int id;
+
+  /// Normalized uppercase code, unique.
+  final String code;
+  final CouponDiscountType discountType;
+
+  /// Percent (1-100) or fixed cents (> 0), depending on [discountType].
+  final int value;
+  final int minSpendCents;
+
+  /// Epoch ms; null = never expires.
+  final int? expiresAt;
+
+  /// Usage cap; null = unlimited.
+  final int? maxUses;
+  final int usedCount;
+  final bool isActive;
+  final int createdAt;
+  const CouponRow({
+    required this.id,
+    required this.code,
+    required this.discountType,
+    required this.value,
+    required this.minSpendCents,
+    this.expiresAt,
+    this.maxUses,
+    required this.usedCount,
+    required this.isActive,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['code'] = Variable<String>(code);
+    {
+      map['discount_type'] = Variable<int>(
+        $CouponsTable.$converterdiscountType.toSql(discountType),
+      );
+    }
+    map['value'] = Variable<int>(value);
+    map['min_spend_cents'] = Variable<int>(minSpendCents);
+    if (!nullToAbsent || expiresAt != null) {
+      map['expires_at'] = Variable<int>(expiresAt);
+    }
+    if (!nullToAbsent || maxUses != null) {
+      map['max_uses'] = Variable<int>(maxUses);
+    }
+    map['used_count'] = Variable<int>(usedCount);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  CouponsCompanion toCompanion(bool nullToAbsent) {
+    return CouponsCompanion(
+      id: Value(id),
+      code: Value(code),
+      discountType: Value(discountType),
+      value: Value(value),
+      minSpendCents: Value(minSpendCents),
+      expiresAt: expiresAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expiresAt),
+      maxUses: maxUses == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxUses),
+      usedCount: Value(usedCount),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CouponRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CouponRow(
+      id: serializer.fromJson<int>(json['id']),
+      code: serializer.fromJson<String>(json['code']),
+      discountType: $CouponsTable.$converterdiscountType.fromJson(
+        serializer.fromJson<int>(json['discountType']),
+      ),
+      value: serializer.fromJson<int>(json['value']),
+      minSpendCents: serializer.fromJson<int>(json['minSpendCents']),
+      expiresAt: serializer.fromJson<int?>(json['expiresAt']),
+      maxUses: serializer.fromJson<int?>(json['maxUses']),
+      usedCount: serializer.fromJson<int>(json['usedCount']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'code': serializer.toJson<String>(code),
+      'discountType': serializer.toJson<int>(
+        $CouponsTable.$converterdiscountType.toJson(discountType),
+      ),
+      'value': serializer.toJson<int>(value),
+      'minSpendCents': serializer.toJson<int>(minSpendCents),
+      'expiresAt': serializer.toJson<int?>(expiresAt),
+      'maxUses': serializer.toJson<int?>(maxUses),
+      'usedCount': serializer.toJson<int>(usedCount),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  CouponRow copyWith({
+    int? id,
+    String? code,
+    CouponDiscountType? discountType,
+    int? value,
+    int? minSpendCents,
+    Value<int?> expiresAt = const Value.absent(),
+    Value<int?> maxUses = const Value.absent(),
+    int? usedCount,
+    bool? isActive,
+    int? createdAt,
+  }) => CouponRow(
+    id: id ?? this.id,
+    code: code ?? this.code,
+    discountType: discountType ?? this.discountType,
+    value: value ?? this.value,
+    minSpendCents: minSpendCents ?? this.minSpendCents,
+    expiresAt: expiresAt.present ? expiresAt.value : this.expiresAt,
+    maxUses: maxUses.present ? maxUses.value : this.maxUses,
+    usedCount: usedCount ?? this.usedCount,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CouponRow copyWithCompanion(CouponsCompanion data) {
+    return CouponRow(
+      id: data.id.present ? data.id.value : this.id,
+      code: data.code.present ? data.code.value : this.code,
+      discountType: data.discountType.present
+          ? data.discountType.value
+          : this.discountType,
+      value: data.value.present ? data.value.value : this.value,
+      minSpendCents: data.minSpendCents.present
+          ? data.minSpendCents.value
+          : this.minSpendCents,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      maxUses: data.maxUses.present ? data.maxUses.value : this.maxUses,
+      usedCount: data.usedCount.present ? data.usedCount.value : this.usedCount,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CouponRow(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('discountType: $discountType, ')
+          ..write('value: $value, ')
+          ..write('minSpendCents: $minSpendCents, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('maxUses: $maxUses, ')
+          ..write('usedCount: $usedCount, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    code,
+    discountType,
+    value,
+    minSpendCents,
+    expiresAt,
+    maxUses,
+    usedCount,
+    isActive,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CouponRow &&
+          other.id == this.id &&
+          other.code == this.code &&
+          other.discountType == this.discountType &&
+          other.value == this.value &&
+          other.minSpendCents == this.minSpendCents &&
+          other.expiresAt == this.expiresAt &&
+          other.maxUses == this.maxUses &&
+          other.usedCount == this.usedCount &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt);
+}
+
+class CouponsCompanion extends UpdateCompanion<CouponRow> {
+  final Value<int> id;
+  final Value<String> code;
+  final Value<CouponDiscountType> discountType;
+  final Value<int> value;
+  final Value<int> minSpendCents;
+  final Value<int?> expiresAt;
+  final Value<int?> maxUses;
+  final Value<int> usedCount;
+  final Value<bool> isActive;
+  final Value<int> createdAt;
+  const CouponsCompanion({
+    this.id = const Value.absent(),
+    this.code = const Value.absent(),
+    this.discountType = const Value.absent(),
+    this.value = const Value.absent(),
+    this.minSpendCents = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.maxUses = const Value.absent(),
+    this.usedCount = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  CouponsCompanion.insert({
+    this.id = const Value.absent(),
+    required String code,
+    required CouponDiscountType discountType,
+    required int value,
+    this.minSpendCents = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.maxUses = const Value.absent(),
+    this.usedCount = const Value.absent(),
+    this.isActive = const Value.absent(),
+    required int createdAt,
+  }) : code = Value(code),
+       discountType = Value(discountType),
+       value = Value(value),
+       createdAt = Value(createdAt);
+  static Insertable<CouponRow> custom({
+    Expression<int>? id,
+    Expression<String>? code,
+    Expression<int>? discountType,
+    Expression<int>? value,
+    Expression<int>? minSpendCents,
+    Expression<int>? expiresAt,
+    Expression<int>? maxUses,
+    Expression<int>? usedCount,
+    Expression<bool>? isActive,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (code != null) 'code': code,
+      if (discountType != null) 'discount_type': discountType,
+      if (value != null) 'value': value,
+      if (minSpendCents != null) 'min_spend_cents': minSpendCents,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (maxUses != null) 'max_uses': maxUses,
+      if (usedCount != null) 'used_count': usedCount,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  CouponsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? code,
+    Value<CouponDiscountType>? discountType,
+    Value<int>? value,
+    Value<int>? minSpendCents,
+    Value<int?>? expiresAt,
+    Value<int?>? maxUses,
+    Value<int>? usedCount,
+    Value<bool>? isActive,
+    Value<int>? createdAt,
+  }) {
+    return CouponsCompanion(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      discountType: discountType ?? this.discountType,
+      value: value ?? this.value,
+      minSpendCents: minSpendCents ?? this.minSpendCents,
+      expiresAt: expiresAt ?? this.expiresAt,
+      maxUses: maxUses ?? this.maxUses,
+      usedCount: usedCount ?? this.usedCount,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (discountType.present) {
+      map['discount_type'] = Variable<int>(
+        $CouponsTable.$converterdiscountType.toSql(discountType.value),
+      );
+    }
+    if (value.present) {
+      map['value'] = Variable<int>(value.value);
+    }
+    if (minSpendCents.present) {
+      map['min_spend_cents'] = Variable<int>(minSpendCents.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<int>(expiresAt.value);
+    }
+    if (maxUses.present) {
+      map['max_uses'] = Variable<int>(maxUses.value);
+    }
+    if (usedCount.present) {
+      map['used_count'] = Variable<int>(usedCount.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CouponsCompanion(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('discountType: $discountType, ')
+          ..write('value: $value, ')
+          ..write('minSpendCents: $minSpendCents, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('maxUses: $maxUses, ')
+          ..write('usedCount: $usedCount, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1397,6 +2221,29 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _couponCodeMeta = const VerificationMeta(
+    'couponCode',
+  );
+  @override
+  late final GeneratedColumn<String> couponCode = GeneratedColumn<String>(
+    'coupon_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _couponDiscountCentsMeta =
+      const VerificationMeta('couponDiscountCents');
+  @override
+  late final GeneratedColumn<int> couponDiscountCents = GeneratedColumn<int>(
+    'coupon_discount_cents',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(couponDiscountCents).isBiggerOrEqualValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1430,6 +2277,8 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
     shippingName,
     shippingPhone,
     shippingAddress,
+    couponCode,
+    couponDiscountCents,
     createdAt,
     updatedAt,
   ];
@@ -1522,6 +2371,21 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
     } else if (isInserting) {
       context.missing(_shippingAddressMeta);
     }
+    if (data.containsKey('coupon_code')) {
+      context.handle(
+        _couponCodeMeta,
+        couponCode.isAcceptableOrUnknown(data['coupon_code']!, _couponCodeMeta),
+      );
+    }
+    if (data.containsKey('coupon_discount_cents')) {
+      context.handle(
+        _couponDiscountCentsMeta,
+        couponDiscountCents.isAcceptableOrUnknown(
+          data['coupon_discount_cents']!,
+          _couponDiscountCentsMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1585,6 +2449,14 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
         DriftSqlType.string,
         data['${effectivePrefix}shipping_address'],
       )!,
+      couponCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}coupon_code'],
+      ),
+      couponDiscountCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coupon_discount_cents'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -1615,6 +2487,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
   final String shippingName;
   final String shippingPhone;
   final String shippingAddress;
+
+  /// Snapshot of the applied promo code, if any (Decision E — the receipt
+  /// survives later coupon edits/deletes).
+  final String? couponCode;
+
+  /// The coupon's contribution to [discountCents]; 0 when no coupon was
+  /// applied. Kept separate so the receipt can show "Savings" vs "Coupon".
+  final int couponDiscountCents;
   final int createdAt;
   final int updatedAt;
   const OrderRow({
@@ -1627,6 +2507,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     required this.shippingName,
     required this.shippingPhone,
     required this.shippingAddress,
+    this.couponCode,
+    required this.couponDiscountCents,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1646,6 +2528,10 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     map['shipping_name'] = Variable<String>(shippingName);
     map['shipping_phone'] = Variable<String>(shippingPhone);
     map['shipping_address'] = Variable<String>(shippingAddress);
+    if (!nullToAbsent || couponCode != null) {
+      map['coupon_code'] = Variable<String>(couponCode);
+    }
+    map['coupon_discount_cents'] = Variable<int>(couponDiscountCents);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
@@ -1662,6 +2548,10 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       shippingName: Value(shippingName),
       shippingPhone: Value(shippingPhone),
       shippingAddress: Value(shippingAddress),
+      couponCode: couponCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(couponCode),
+      couponDiscountCents: Value(couponDiscountCents),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1684,6 +2574,10 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       shippingName: serializer.fromJson<String>(json['shippingName']),
       shippingPhone: serializer.fromJson<String>(json['shippingPhone']),
       shippingAddress: serializer.fromJson<String>(json['shippingAddress']),
+      couponCode: serializer.fromJson<String?>(json['couponCode']),
+      couponDiscountCents: serializer.fromJson<int>(
+        json['couponDiscountCents'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
@@ -1703,6 +2597,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       'shippingName': serializer.toJson<String>(shippingName),
       'shippingPhone': serializer.toJson<String>(shippingPhone),
       'shippingAddress': serializer.toJson<String>(shippingAddress),
+      'couponCode': serializer.toJson<String?>(couponCode),
+      'couponDiscountCents': serializer.toJson<int>(couponDiscountCents),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
@@ -1718,6 +2614,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     String? shippingName,
     String? shippingPhone,
     String? shippingAddress,
+    Value<String?> couponCode = const Value.absent(),
+    int? couponDiscountCents,
     int? createdAt,
     int? updatedAt,
   }) => OrderRow(
@@ -1730,6 +2628,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     shippingName: shippingName ?? this.shippingName,
     shippingPhone: shippingPhone ?? this.shippingPhone,
     shippingAddress: shippingAddress ?? this.shippingAddress,
+    couponCode: couponCode.present ? couponCode.value : this.couponCode,
+    couponDiscountCents: couponDiscountCents ?? this.couponDiscountCents,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1758,6 +2658,12 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       shippingAddress: data.shippingAddress.present
           ? data.shippingAddress.value
           : this.shippingAddress,
+      couponCode: data.couponCode.present
+          ? data.couponCode.value
+          : this.couponCode,
+      couponDiscountCents: data.couponDiscountCents.present
+          ? data.couponDiscountCents.value
+          : this.couponDiscountCents,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1775,6 +2681,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
           ..write('shippingName: $shippingName, ')
           ..write('shippingPhone: $shippingPhone, ')
           ..write('shippingAddress: $shippingAddress, ')
+          ..write('couponCode: $couponCode, ')
+          ..write('couponDiscountCents: $couponDiscountCents, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1792,6 +2700,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     shippingName,
     shippingPhone,
     shippingAddress,
+    couponCode,
+    couponDiscountCents,
     createdAt,
     updatedAt,
   );
@@ -1808,6 +2718,8 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
           other.shippingName == this.shippingName &&
           other.shippingPhone == this.shippingPhone &&
           other.shippingAddress == this.shippingAddress &&
+          other.couponCode == this.couponCode &&
+          other.couponDiscountCents == this.couponDiscountCents &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1822,6 +2734,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
   final Value<String> shippingName;
   final Value<String> shippingPhone;
   final Value<String> shippingAddress;
+  final Value<String?> couponCode;
+  final Value<int> couponDiscountCents;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   const OrdersCompanion({
@@ -1834,6 +2748,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     this.shippingName = const Value.absent(),
     this.shippingPhone = const Value.absent(),
     this.shippingAddress = const Value.absent(),
+    this.couponCode = const Value.absent(),
+    this.couponDiscountCents = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -1847,6 +2763,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     required String shippingName,
     required String shippingPhone,
     required String shippingAddress,
+    this.couponCode = const Value.absent(),
+    this.couponDiscountCents = const Value.absent(),
     required int createdAt,
     required int updatedAt,
   }) : orderNumber = Value(orderNumber),
@@ -1869,6 +2787,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     Expression<String>? shippingName,
     Expression<String>? shippingPhone,
     Expression<String>? shippingAddress,
+    Expression<String>? couponCode,
+    Expression<int>? couponDiscountCents,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
   }) {
@@ -1882,6 +2802,9 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
       if (shippingName != null) 'shipping_name': shippingName,
       if (shippingPhone != null) 'shipping_phone': shippingPhone,
       if (shippingAddress != null) 'shipping_address': shippingAddress,
+      if (couponCode != null) 'coupon_code': couponCode,
+      if (couponDiscountCents != null)
+        'coupon_discount_cents': couponDiscountCents,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -1897,6 +2820,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     Value<String>? shippingName,
     Value<String>? shippingPhone,
     Value<String>? shippingAddress,
+    Value<String?>? couponCode,
+    Value<int>? couponDiscountCents,
     Value<int>? createdAt,
     Value<int>? updatedAt,
   }) {
@@ -1910,6 +2835,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
       shippingName: shippingName ?? this.shippingName,
       shippingPhone: shippingPhone ?? this.shippingPhone,
       shippingAddress: shippingAddress ?? this.shippingAddress,
+      couponCode: couponCode ?? this.couponCode,
+      couponDiscountCents: couponDiscountCents ?? this.couponDiscountCents,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -1947,6 +2874,12 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     if (shippingAddress.present) {
       map['shipping_address'] = Variable<String>(shippingAddress.value);
     }
+    if (couponCode.present) {
+      map['coupon_code'] = Variable<String>(couponCode.value);
+    }
+    if (couponDiscountCents.present) {
+      map['coupon_discount_cents'] = Variable<int>(couponDiscountCents.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -1968,6 +2901,8 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
           ..write('shippingName: $shippingName, ')
           ..write('shippingPhone: $shippingPhone, ')
           ..write('shippingAddress: $shippingAddress, ')
+          ..write('couponCode: $couponCode, ')
+          ..write('couponDiscountCents: $couponDiscountCents, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3923,7 +4858,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ProductsTable products = $ProductsTable(this);
+  late final $WishlistItemsTable wishlistItems = $WishlistItemsTable(this);
   late final $CartItemsTable cartItems = $CartItemsTable(this);
+  late final $CouponsTable coupons = $CouponsTable(this);
   late final $OrdersTable orders = $OrdersTable(this);
   late final $OrderItemsTable orderItems = $OrderItemsTable(this);
   late final $OrderStatusHistoryTable orderStatusHistory =
@@ -3955,7 +4892,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     categories,
     products,
+    wishlistItems,
     cartItems,
+    coupons,
     orders,
     orderItems,
     orderStatusHistory,
@@ -3970,6 +4909,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'products',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('wishlist_items', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'products',
@@ -4329,6 +5275,24 @@ final class $$ProductsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$WishlistItemsTable, List<WishlistItemRow>>
+  _wishlistItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.wishlistItems,
+    aliasName: 'products__id__wishlist_items__product_id',
+  );
+
+  $$WishlistItemsTableProcessedTableManager get wishlistItemsRefs {
+    final manager = $$WishlistItemsTableTableManager(
+      $_db,
+      $_db.wishlistItems,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_wishlistItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$CartItemsTable, List<CartItemRow>>
   _cartItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.cartItems,
@@ -4451,6 +5415,31 @@ class $$ProductsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> wishlistItemsRefs(
+    Expression<bool> Function($$WishlistItemsTableFilterComposer f) f,
+  ) {
+    final $$WishlistItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.wishlistItems,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WishlistItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.wishlistItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> cartItemsRefs(
@@ -4665,6 +5654,31 @@ class $$ProductsTableAnnotationComposer
     return composer;
   }
 
+  Expression<T> wishlistItemsRefs<T extends Object>(
+    Expression<T> Function($$WishlistItemsTableAnnotationComposer a) f,
+  ) {
+    final $$WishlistItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.wishlistItems,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WishlistItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.wishlistItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> cartItemsRefs<T extends Object>(
     Expression<T> Function($$CartItemsTableAnnotationComposer a) f,
   ) {
@@ -4731,6 +5745,7 @@ class $$ProductsTableTableManager
           ProductRow,
           PrefetchHooks Function({
             bool categoryId,
+            bool wishlistItemsRefs,
             bool cartItemsRefs,
             bool orderItemsRefs,
           })
@@ -4813,12 +5828,14 @@ class $$ProductsTableTableManager
           prefetchHooksCallback:
               ({
                 categoryId = false,
+                wishlistItemsRefs = false,
                 cartItemsRefs = false,
                 orderItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (wishlistItemsRefs) db.wishlistItems,
                     if (cartItemsRefs) db.cartItems,
                     if (orderItemsRefs) db.orderItems,
                   ],
@@ -4856,6 +5873,27 @@ class $$ProductsTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (wishlistItemsRefs)
+                        await $_getPrefetchedData<
+                          ProductRow,
+                          $ProductsTable,
+                          WishlistItemRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._wishlistItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).wishlistItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.productId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (cartItemsRefs)
                         await $_getPrefetchedData<
                           ProductRow,
@@ -4920,9 +5958,266 @@ typedef $$ProductsTableProcessedTableManager =
       ProductRow,
       PrefetchHooks Function({
         bool categoryId,
+        bool wishlistItemsRefs,
         bool cartItemsRefs,
         bool orderItemsRefs,
       })
+    >;
+typedef $$WishlistItemsTableCreateCompanionBuilder =
+    WishlistItemsCompanion Function({
+      Value<int> productId,
+      required int addedAt,
+    });
+typedef $$WishlistItemsTableUpdateCompanionBuilder =
+    WishlistItemsCompanion Function({Value<int> productId, Value<int> addedAt});
+
+final class $$WishlistItemsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $WishlistItemsTable, WishlistItemRow> {
+  $$WishlistItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias('wishlist_items__product_id__products__id');
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<int>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WishlistItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WishlistItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WishlistItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WishlistItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WishlistItemsTable,
+          WishlistItemRow,
+          $$WishlistItemsTableFilterComposer,
+          $$WishlistItemsTableOrderingComposer,
+          $$WishlistItemsTableAnnotationComposer,
+          $$WishlistItemsTableCreateCompanionBuilder,
+          $$WishlistItemsTableUpdateCompanionBuilder,
+          (WishlistItemRow, $$WishlistItemsTableReferences),
+          WishlistItemRow,
+          PrefetchHooks Function({bool productId})
+        > {
+  $$WishlistItemsTableTableManager(_$AppDatabase db, $WishlistItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WishlistItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WishlistItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WishlistItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> productId = const Value.absent(),
+                Value<int> addedAt = const Value.absent(),
+              }) => WishlistItemsCompanion(
+                productId: productId,
+                addedAt: addedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> productId = const Value.absent(),
+                required int addedAt,
+              }) => WishlistItemsCompanion.insert(
+                productId: productId,
+                addedAt: addedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$WishlistItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({productId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (productId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.productId,
+                                referencedTable: $$WishlistItemsTableReferences
+                                    ._productIdTable(db),
+                                referencedColumn: $$WishlistItemsTableReferences
+                                    ._productIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$WishlistItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WishlistItemsTable,
+      WishlistItemRow,
+      $$WishlistItemsTableFilterComposer,
+      $$WishlistItemsTableOrderingComposer,
+      $$WishlistItemsTableAnnotationComposer,
+      $$WishlistItemsTableCreateCompanionBuilder,
+      $$WishlistItemsTableUpdateCompanionBuilder,
+      (WishlistItemRow, $$WishlistItemsTableReferences),
+      WishlistItemRow,
+      PrefetchHooks Function({bool productId})
     >;
 typedef $$CartItemsTableCreateCompanionBuilder =
     CartItemsCompanion Function({
@@ -5197,6 +6492,295 @@ typedef $$CartItemsTableProcessedTableManager =
       CartItemRow,
       PrefetchHooks Function({bool productId})
     >;
+typedef $$CouponsTableCreateCompanionBuilder =
+    CouponsCompanion Function({
+      Value<int> id,
+      required String code,
+      required CouponDiscountType discountType,
+      required int value,
+      Value<int> minSpendCents,
+      Value<int?> expiresAt,
+      Value<int?> maxUses,
+      Value<int> usedCount,
+      Value<bool> isActive,
+      required int createdAt,
+    });
+typedef $$CouponsTableUpdateCompanionBuilder =
+    CouponsCompanion Function({
+      Value<int> id,
+      Value<String> code,
+      Value<CouponDiscountType> discountType,
+      Value<int> value,
+      Value<int> minSpendCents,
+      Value<int?> expiresAt,
+      Value<int?> maxUses,
+      Value<int> usedCount,
+      Value<bool> isActive,
+      Value<int> createdAt,
+    });
+
+class $$CouponsTableFilterComposer
+    extends Composer<_$AppDatabase, $CouponsTable> {
+  $$CouponsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<CouponDiscountType, CouponDiscountType, int>
+  get discountType => $composableBuilder(
+    column: $table.discountType,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get minSpendCents => $composableBuilder(
+    column: $table.minSpendCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get maxUses => $composableBuilder(
+    column: $table.maxUses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usedCount => $composableBuilder(
+    column: $table.usedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CouponsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CouponsTable> {
+  $$CouponsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get discountType => $composableBuilder(
+    column: $table.discountType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get minSpendCents => $composableBuilder(
+    column: $table.minSpendCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get maxUses => $composableBuilder(
+    column: $table.maxUses,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usedCount => $composableBuilder(
+    column: $table.usedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CouponsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CouponsTable> {
+  $$CouponsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<CouponDiscountType, int> get discountType =>
+      $composableBuilder(
+        column: $table.discountType,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<int> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<int> get minSpendCents => $composableBuilder(
+    column: $table.minSpendCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<int> get maxUses =>
+      $composableBuilder(column: $table.maxUses, builder: (column) => column);
+
+  GeneratedColumn<int> get usedCount =>
+      $composableBuilder(column: $table.usedCount, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CouponsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CouponsTable,
+          CouponRow,
+          $$CouponsTableFilterComposer,
+          $$CouponsTableOrderingComposer,
+          $$CouponsTableAnnotationComposer,
+          $$CouponsTableCreateCompanionBuilder,
+          $$CouponsTableUpdateCompanionBuilder,
+          (CouponRow, BaseReferences<_$AppDatabase, $CouponsTable, CouponRow>),
+          CouponRow,
+          PrefetchHooks Function()
+        > {
+  $$CouponsTableTableManager(_$AppDatabase db, $CouponsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CouponsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CouponsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CouponsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<CouponDiscountType> discountType = const Value.absent(),
+                Value<int> value = const Value.absent(),
+                Value<int> minSpendCents = const Value.absent(),
+                Value<int?> expiresAt = const Value.absent(),
+                Value<int?> maxUses = const Value.absent(),
+                Value<int> usedCount = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+              }) => CouponsCompanion(
+                id: id,
+                code: code,
+                discountType: discountType,
+                value: value,
+                minSpendCents: minSpendCents,
+                expiresAt: expiresAt,
+                maxUses: maxUses,
+                usedCount: usedCount,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String code,
+                required CouponDiscountType discountType,
+                required int value,
+                Value<int> minSpendCents = const Value.absent(),
+                Value<int?> expiresAt = const Value.absent(),
+                Value<int?> maxUses = const Value.absent(),
+                Value<int> usedCount = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                required int createdAt,
+              }) => CouponsCompanion.insert(
+                id: id,
+                code: code,
+                discountType: discountType,
+                value: value,
+                minSpendCents: minSpendCents,
+                expiresAt: expiresAt,
+                maxUses: maxUses,
+                usedCount: usedCount,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CouponsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CouponsTable,
+      CouponRow,
+      $$CouponsTableFilterComposer,
+      $$CouponsTableOrderingComposer,
+      $$CouponsTableAnnotationComposer,
+      $$CouponsTableCreateCompanionBuilder,
+      $$CouponsTableUpdateCompanionBuilder,
+      (CouponRow, BaseReferences<_$AppDatabase, $CouponsTable, CouponRow>),
+      CouponRow,
+      PrefetchHooks Function()
+    >;
 typedef $$OrdersTableCreateCompanionBuilder =
     OrdersCompanion Function({
       Value<int> id,
@@ -5208,6 +6792,8 @@ typedef $$OrdersTableCreateCompanionBuilder =
       required String shippingName,
       required String shippingPhone,
       required String shippingAddress,
+      Value<String?> couponCode,
+      Value<int> couponDiscountCents,
       required int createdAt,
       required int updatedAt,
     });
@@ -5222,6 +6808,8 @@ typedef $$OrdersTableUpdateCompanionBuilder =
       Value<String> shippingName,
       Value<String> shippingPhone,
       Value<String> shippingAddress,
+      Value<String?> couponCode,
+      Value<int> couponDiscountCents,
       Value<int> createdAt,
       Value<int> updatedAt,
     });
@@ -5325,6 +6913,16 @@ class $$OrdersTableFilterComposer
 
   ColumnFilters<String> get shippingAddress => $composableBuilder(
     column: $table.shippingAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get couponCode => $composableBuilder(
+    column: $table.couponCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get couponDiscountCents => $composableBuilder(
+    column: $table.couponDiscountCents,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5443,6 +7041,16 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get couponCode => $composableBuilder(
+    column: $table.couponCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get couponDiscountCents => $composableBuilder(
+    column: $table.couponDiscountCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5501,6 +7109,16 @@ class $$OrdersTableAnnotationComposer
 
   GeneratedColumn<String> get shippingAddress => $composableBuilder(
     column: $table.shippingAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get couponCode => $composableBuilder(
+    column: $table.couponCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get couponDiscountCents => $composableBuilder(
+    column: $table.couponDiscountCents,
     builder: (column) => column,
   );
 
@@ -5602,6 +7220,8 @@ class $$OrdersTableTableManager
                 Value<String> shippingName = const Value.absent(),
                 Value<String> shippingPhone = const Value.absent(),
                 Value<String> shippingAddress = const Value.absent(),
+                Value<String?> couponCode = const Value.absent(),
+                Value<int> couponDiscountCents = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
               }) => OrdersCompanion(
@@ -5614,6 +7234,8 @@ class $$OrdersTableTableManager
                 shippingName: shippingName,
                 shippingPhone: shippingPhone,
                 shippingAddress: shippingAddress,
+                couponCode: couponCode,
+                couponDiscountCents: couponDiscountCents,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -5628,6 +7250,8 @@ class $$OrdersTableTableManager
                 required String shippingName,
                 required String shippingPhone,
                 required String shippingAddress,
+                Value<String?> couponCode = const Value.absent(),
+                Value<int> couponDiscountCents = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
               }) => OrdersCompanion.insert(
@@ -5640,6 +7264,8 @@ class $$OrdersTableTableManager
                 shippingName: shippingName,
                 shippingPhone: shippingPhone,
                 shippingAddress: shippingAddress,
+                couponCode: couponCode,
+                couponDiscountCents: couponDiscountCents,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -7152,8 +8778,12 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db, _db.products);
+  $$WishlistItemsTableTableManager get wishlistItems =>
+      $$WishlistItemsTableTableManager(_db, _db.wishlistItems);
   $$CartItemsTableTableManager get cartItems =>
       $$CartItemsTableTableManager(_db, _db.cartItems);
+  $$CouponsTableTableManager get coupons =>
+      $$CouponsTableTableManager(_db, _db.coupons);
   $$OrdersTableTableManager get orders =>
       $$OrdersTableTableManager(_db, _db.orders);
   $$OrderItemsTableTableManager get orderItems =>
