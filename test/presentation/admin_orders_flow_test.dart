@@ -65,6 +65,16 @@ void main() {
     // The pushed admin detail carries its own storefront exit.
     expectStorefrontAction(reason: 'admin order detail');
 
+    // The receipt-export action is present too (enabled — the order is
+    // loaded), alongside the storefront exit. It is not tapped: the native
+    // save dialog is a platform boundary outside widget tests; the
+    // serialization is unit-tested in order_receipt_pdf_test.
+    expect(find.byTooltip('Download receipt'), findsOneWidget);
+    final downloadButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.download_outlined),
+    );
+    expect(downloadButton.onPressed, isNotNull);
+
     // A pending order offers exactly: confirm (forward) + cancel.
     expect(find.text('Mark confirmed'), findsOneWidget);
     expect(find.text('Cancel order'), findsOneWidget);

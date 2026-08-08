@@ -1,10 +1,13 @@
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../core/entities/order.dart';
+import '../../../core/error/app_error.dart';
 import '../../../core/utils/order_receipt_pdf.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/snack_bar.dart';
 import 'order_date_format.dart';
 import 'status_visuals.dart';
 
@@ -72,4 +75,45 @@ Future<pw.Font> loadReceiptFont(String locale) async {
   }
   final data = await rootBundle.load(receiptArabicFontAsset);
   return pw.Font.ttf(data);
+}
+
+/// The shared Save-As export flow used by the **customer and admin** order
+/// detail screens: native save dialog → the pure, unit-tested
+/// [buildOrderReceiptPdf] → write → success/error SnackBar. Only the dialog
+/// + write touch the platform (the same split as the admin CSV export), and
+/// every context-dependent value is resolved up front so no `BuildContext`
+/// use spans an async gap.
+Future<void> exportOrderReceipt(BuildContext context, Order order) async {
+  final l10n = context.l10n;
+  final data = buildOrderReceiptData(context, order);
+  final locale = Localizations.localeOf(context).languageCode;
+  final font = await loadReceiptFont(locale);
+  final rtl = locale == 'ar';
+  try {
+    final location = await getSaveLocation(
+      suggestedName: 'receipt_${order.orderNumber.toLowerCase()}.pdf',
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'PDF', extensions: ['pdf']),
+      ],
+    );
+    if (location == null) return; // user cancelled the dialog
+    if (!context.mounted) return;
+    final bytes = await buildOrderReceiptPdf(data, font: font, rtl: rtl);
+    await XFile.fromData(
+      bytes,
+      mimeType: 'application/pdf',
+    ).saveTo(location.path);
+    if (context.mounted) {
+      // The file name is an identifier — kept canonical like order numbers.
+      final fileName = location.path.split(RegExp(r'[\\/]')).last;
+      showSuccessSnackBar(context, l10n.receiptSaved(fileName));
+    }
+  } catch (error) {
+    if (context.mounted) {
+      showErrorSnackBar(
+        context,
+        ReceiptExportError(message: 'Could not export receipt', cause: error),
+      );
+    }
+  }
 }

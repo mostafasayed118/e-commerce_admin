@@ -10,6 +10,7 @@ import '../../../widgets/error_view.dart';
 import '../../../widgets/message_view.dart';
 import '../../../widgets/snack_bar.dart';
 import '../../orders/order_detail_view.dart';
+import '../../orders/receipt_export_action.dart';
 import '../../orders/status_visuals.dart';
 import '../widgets/admin_storefront_action.dart';
 import 'admin_orders_cubit.dart';
@@ -57,38 +58,41 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.orderTitle),
-        actions: const [AdminStorefrontAction()],
-      ),
-      body: StreamBuilder<Order?>(
-        stream: getIt<OrderRepository>().watchOrderById(widget.orderId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return ErrorView(title: l10n.couldNotLoadOrder);
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final order = snapshot.data;
-          if (order == null) {
-            return MessageView(
-              icon: Icons.search_off,
-              title: l10n.orderNotFound,
-              message: l10n.orderRemoved,
-            );
-          }
-          return OrderDetailView(
-            order: order,
-            actions: _StatusActions(
-              order: order,
-              updating: _updating,
-              onUpdate: (next) => _updateStatus(order, next),
-            ),
-          );
-        },
-      ),
+    return StreamBuilder<Order?>(
+      stream: getIt<OrderRepository>().watchOrderById(widget.orderId),
+      builder: (context, snapshot) {
+        final order = snapshot.data;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.orderTitle),
+            actions: [
+              const AdminStorefrontAction(),
+              // Receipt export (the same shared action the customer screen
+              // uses), gated on the live stream so it is inert while
+              // loading/erroring or when the order is gone.
+              if (order != null) ReceiptExportAction(order: order),
+            ],
+          ),
+          body: snapshot.hasError
+              ? ErrorView(title: l10n.couldNotLoadOrder)
+              : snapshot.connectionState == ConnectionState.waiting
+                  ? const Center(child: CircularProgressIndicator())
+                  : order == null
+                      ? MessageView(
+                          icon: Icons.search_off,
+                          title: l10n.orderNotFound,
+                          message: l10n.orderRemoved,
+                        )
+                      : OrderDetailView(
+                          order: order,
+                          actions: _StatusActions(
+                            order: order,
+                            updating: _updating,
+                            onUpdate: (next) => _updateStatus(order, next),
+                          ),
+                        ),
+        );
+      },
     );
   }
 }
