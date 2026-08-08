@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Analyze + audit + full suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get
+
+      # Fast pre-gate: the two contracts that regress silently (uncovered
+      # lib/ sources, duplicated helpers) fail here in seconds instead of
+      # after the ~1-minute full suite.
+      - name: Fast gate — analyzer + coverage/consolidation audit
+        run: ./tool/check.sh
+
+      # The full gate: every test. The audit also runs inside this suite, so
+      # a failure here catches anything the fast gate's narrower scope missed.
+      - name: Full test suite
+        run: flutter test
