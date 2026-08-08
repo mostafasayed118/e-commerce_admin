@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:shop_admin/core/entities/category.dart';
 import 'package:shop_admin/core/entities/product.dart';
+import 'package:shop_admin/core/utils/search_text.dart';
 import 'package:shop_admin/domain/repositories/category_repository.dart';
 import 'package:shop_admin/domain/repositories/product_repository.dart';
 import 'package:shop_admin/presentation/features/catalog/catalog_cubit.dart';

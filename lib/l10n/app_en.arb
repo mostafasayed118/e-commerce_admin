@@ -301,15 +301,7 @@
   "inactiveStatus": "Inactive",
   "expiredStatus": "Expired",
 
-  "noFilterOrdersTitle": "No {status} orders",
-  "@noFilterOrdersTitle": {
-    "placeholders": {
-      "status": { "type": "String" }
-    }
-  },
   "ordersWillAppear": "Orders will appear here once customers check out.",
-  "tryDifferentFilter": "Try a different status filter.",
-  "showAllOrders": "Show all orders",
   "markedAs": "{order} marked as {status}",
   "@markedAs": {
     "placeholders": {
@@ -471,5 +463,11 @@
       "maxUses": { "type": "int" }
     }
   },
-  "errorCouponCodeTaken": "That code is already in use."
+  "errorCouponCodeTaken": "That code is already in use.",
+  "searchOrders": "Search orders",
+  "fromDate": "From",
+  "toDate": "To",
+  "clearDates": "Clear dates",
+  "noOrdersMatchTitle": "No matching orders",
+  "noOrdersMatchMessage": "Try different filters."
 }

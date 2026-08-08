@@ -202,10 +202,7 @@
   "inactiveStatus": "معطّلة",
   "expiredStatus": "منتهية",
 
-  "noFilterOrdersTitle": "لا توجد طلبات {status}",
   "ordersWillAppear": "ستظهر الطلبات هنا بعد أن يقوم العملاء بإتمام الشراء.",
-  "tryDifferentFilter": "جرّب فلتر حالة مختلفًا.",
-  "showAllOrders": "عرض جميع الطلبات",
   "markedAs": "تم تحديث {order} إلى الحالة: {status}",
   "orderTerminalNote": "هذا الطلب {status} — لا مزيد من الإجراءات.",
   "noFurtherActions": "لا توجد إجراءات إضافية متاحة.",
@@ -273,5 +270,11 @@
   "errorCouponExpired": "انتهت صلاحية الرمز {code}.",
   "errorCouponMinSpend": "أنفق {required} على الأقل لاستخدام هذا الرمز (مجموعك الحالي {current}).",
   "errorCouponUsageLimit": "بلغ الرمز {code} الحد الأقصى لاستخداماته ({maxUses}).",
-  "errorCouponCodeTaken": "هذا الرمز مستخدم بالفعل."
+  "errorCouponCodeTaken": "هذا الرمز مستخدم بالفعل.",
+  "searchOrders": "ابحث في الطلبات",
+  "fromDate": "من",
+  "toDate": "إلى",
+  "clearDates": "مسح التواريخ",
+  "noOrdersMatchTitle": "لا توجد طلبات مطابقة",
+  "noOrdersMatchMessage": "جرّب فلاتر مختلفة."
 }

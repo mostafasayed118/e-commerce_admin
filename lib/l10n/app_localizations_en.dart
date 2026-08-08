@@ -590,19 +590,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiredStatus => 'Expired';
 
   @override
-  String noFilterOrdersTitle(String status) {
-    return 'No $status orders';
-  }
-
-  @override
   String get ordersWillAppear =>
       'Orders will appear here once customers check out.';
-
-  @override
-  String get tryDifferentFilter => 'Try a different status filter.';
-
-  @override
-  String get showAllOrders => 'Show all orders';
 
   @override
   String markedAs(String order, String status) {
@@ -843,4 +832,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorCouponCodeTaken => 'That code is already in use.';
+
+  @override
+  String get searchOrders => 'Search orders';
+
+  @override
+  String get fromDate => 'From';
+
+  @override
+  String get toDate => 'To';
+
+  @override
+  String get clearDates => 'Clear dates';
+
+  @override
+  String get noOrdersMatchTitle => 'No matching orders';
+
+  @override
+  String get noOrdersMatchMessage => 'Try different filters.';
 }

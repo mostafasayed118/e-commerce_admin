@@ -1124,29 +1124,11 @@ abstract class AppLocalizations {
   /// **'Expired'**
   String get expiredStatus;
 
-  /// No description provided for @noFilterOrdersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No {status} orders'**
-  String noFilterOrdersTitle(String status);
-
   /// No description provided for @ordersWillAppear.
   ///
   /// In en, this message translates to:
   /// **'Orders will appear here once customers check out.'**
   String get ordersWillAppear;
-
-  /// No description provided for @tryDifferentFilter.
-  ///
-  /// In en, this message translates to:
-  /// **'Try a different status filter.'**
-  String get tryDifferentFilter;
-
-  /// No description provided for @showAllOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Show all orders'**
-  String get showAllOrders;
 
   /// No description provided for @markedAs.
   ///
@@ -1531,6 +1513,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That code is already in use.'**
   String get errorCouponCodeTaken;
+
+  /// No description provided for @searchOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Search orders'**
+  String get searchOrders;
+
+  /// No description provided for @fromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get fromDate;
+
+  /// No description provided for @toDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get toDate;
+
+  /// No description provided for @clearDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear dates'**
+  String get clearDates;
+
+  /// No description provided for @noOrdersMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching orders'**
+  String get noOrdersMatchTitle;
+
+  /// No description provided for @noOrdersMatchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try different filters.'**
+  String get noOrdersMatchMessage;
 }
 
 class _AppLocalizationsDelegate

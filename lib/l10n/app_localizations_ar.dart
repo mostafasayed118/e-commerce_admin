@@ -598,19 +598,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expiredStatus => 'منتهية';
 
   @override
-  String noFilterOrdersTitle(String status) {
-    return 'لا توجد طلبات $status';
-  }
-
-  @override
   String get ordersWillAppear =>
       'ستظهر الطلبات هنا بعد أن يقوم العملاء بإتمام الشراء.';
-
-  @override
-  String get tryDifferentFilter => 'جرّب فلتر حالة مختلفًا.';
-
-  @override
-  String get showAllOrders => 'عرض جميع الطلبات';
 
   @override
   String markedAs(String order, String status) {
@@ -851,4 +840,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorCouponCodeTaken => 'هذا الرمز مستخدم بالفعل.';
+
+  @override
+  String get searchOrders => 'ابحث في الطلبات';
+
+  @override
+  String get fromDate => 'من';
+
+  @override
+  String get toDate => 'إلى';
+
+  @override
+  String get clearDates => 'مسح التواريخ';
+
+  @override
+  String get noOrdersMatchTitle => 'لا توجد طلبات مطابقة';
+
+  @override
+  String get noOrdersMatchMessage => 'جرّب فلاتر مختلفة.';
 }
