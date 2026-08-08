@@ -7,6 +7,7 @@ import '../../../core/error/result.dart';
 import '../../l10n/l10n_ext.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/error_view.dart';
+import '../../widgets/responsive/content_max_width.dart';
 import '../../widgets/snack_bar.dart';
 import 'cart_cubit.dart';
 import 'widgets/cart_empty_view.dart';
@@ -74,7 +75,9 @@ class _CartView extends StatelessWidget {
             CartError() => const ErrorView(),
             CartLoaded() => state.lines.isEmpty
                 ? const CartEmptyView()
-                : _FilledCart(state: state),
+                : ContentMaxWidth(
+                    child: _FilledCart(state: state),
+                  ),
           },
         );
       },

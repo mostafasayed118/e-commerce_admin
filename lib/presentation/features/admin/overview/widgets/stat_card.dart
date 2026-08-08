@@ -7,18 +7,23 @@ class StatCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.width = 170,
   });
 
   final IconData icon;
   final String label;
   final String value;
 
+  /// Card width; the dashboard passes a computed flexible width so the cards
+  /// fill the row on wide surfaces (2-up on phones, 4-up on desktop).
+  final double width;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
-      width: 170,
+      width: width,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,

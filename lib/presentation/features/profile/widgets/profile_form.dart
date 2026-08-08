@@ -5,6 +5,8 @@ import '../../../../core/entities/shipping_info.dart';
 import '../../../../domain/usecases/checkout/validate_shipping.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../widgets/responsive/content_max_width.dart';
+import '../../../widgets/responsive/responsive_breakpoints.dart';
 import '../../../widgets/shipping_info_fields.dart';
 import '../profile_cubit.dart';
 import 'profile_settings_section.dart';
@@ -100,7 +102,9 @@ class _ProfileFormState extends State<ProfileForm> {
 
     return Form(
       key: _formKey,
-      child: ListView(
+      child: ContentMaxWidth(
+        maxWidth: ResponsiveBreakpoints.formMaxWidth,
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(l10n.yourDetails, style: theme.textTheme.titleMedium),
@@ -181,6 +185,7 @@ class _ProfileFormState extends State<ProfileForm> {
           const SizedBox(height: 16),
           const ProfileSettingsSection(),
         ],
+      ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/error_view.dart';
+import '../../../widgets/responsive/content_max_width.dart';
 import '../../../widgets/section_header.dart';
 import '../../orders/order_list_tile.dart';
 import 'admin_overview_cubit.dart';
@@ -63,35 +64,56 @@ class _Dashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
-    return ListView(
+    return ContentMaxWidth(
+      child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // --- Stat cards ----------------------------------------------------
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            StatCard(
-              icon: Icons.attach_money,
-              label: l10n.revenue,
-              value: context.formatCents(state.revenueCents),
-            ),
-            StatCard(
-              icon: Icons.receipt_long_outlined,
-              label: l10n.orders,
-              value: context.localizeDigits('${state.totalOrders}'),
-            ),
-            StatCard(
-              icon: Icons.warning_amber_outlined,
-              label: l10n.lowStock,
-              value: context.localizeDigits('${state.lowStockProducts.length}'),
-            ),
-            StatCard(
-              icon: Icons.confirmation_number_outlined,
-              label: l10n.overviewActiveCoupons,
-              value: context.localizeDigits('${state.activeCouponCount}'),
-            ),
-          ],
+        // The card width flexes with the available space: 2-up on phones, 4-up
+        // on wide surfaces (a Wrap with fixed 170-wide cards would leave a
+        // ragged right edge on desktop).
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const spacing = 12.0;
+            // 1-up on very narrow windows so cards never get cramped, 2-up
+            // on phones, 4-up on wide surfaces.
+            final perRow = constraints.maxWidth >= 700
+                ? 4
+                : (constraints.maxWidth >= 380 ? 2 : 1);
+            final cardWidth =
+                (constraints.maxWidth - spacing * (perRow - 1)) / perRow;
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                StatCard(
+                  width: cardWidth,
+                  icon: Icons.attach_money,
+                  label: l10n.revenue,
+                  value: context.formatCents(state.revenueCents),
+                ),
+                StatCard(
+                  width: cardWidth,
+                  icon: Icons.receipt_long_outlined,
+                  label: l10n.orders,
+                  value: context.localizeDigits('${state.totalOrders}'),
+                ),
+                StatCard(
+                  width: cardWidth,
+                  icon: Icons.warning_amber_outlined,
+                  label: l10n.lowStock,
+                  value:
+                      context.localizeDigits('${state.lowStockProducts.length}'),
+                ),
+                StatCard(
+                  width: cardWidth,
+                  icon: Icons.confirmation_number_outlined,
+                  label: l10n.overviewActiveCoupons,
+                  value: context.localizeDigits('${state.activeCouponCount}'),
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 24),
 
@@ -227,6 +249,7 @@ class _Dashboard extends StatelessWidget {
           for (final product in state.lowStockProducts)
             LowStockTile(product: product),
       ],
+      ),
     );
   }
 }

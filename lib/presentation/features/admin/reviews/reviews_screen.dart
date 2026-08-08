@@ -7,6 +7,7 @@ import '../../../../core/error/result.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/confirm_dialog.dart';
 import '../../../widgets/error_view.dart';
+import '../../../widgets/responsive/content_max_width.dart';
 import '../../../widgets/snack_bar.dart';
 import 'admin_reviews_cubit.dart';
 import 'widgets/review_list.dart';
@@ -61,12 +62,14 @@ class ReviewsScreen extends StatelessWidget {
             AdminReviewsLoading() =>
               const Center(child: CircularProgressIndicator()),
             AdminReviewsError() => const ErrorView(),
-            AdminReviewsLoaded() => ReviewList(
+            AdminReviewsLoaded() => ContentMaxWidth(
+              child: ReviewList(
                 state: state,
                 onSetApproved: (review, approved) =>
                     _setApproved(context, review, approved),
                 onDelete: (review) => _confirmDelete(context, review),
               ),
+            ),
           },
         ),
       ),

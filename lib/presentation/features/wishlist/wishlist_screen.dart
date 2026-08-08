@@ -7,6 +7,7 @@ import '../../../core/error/result.dart';
 import '../../../domain/usecases/wishlist/move_wishlist_item_to_cart.dart';
 import '../../l10n/l10n_ext.dart';
 import '../../widgets/error_view.dart';
+import '../../widgets/responsive/content_max_width.dart';
 import '../../widgets/snack_bar.dart';
 import 'wishlist_cubit.dart';
 import 'widgets/wishlist_empty_view.dart';
@@ -42,7 +43,9 @@ class _WishlistView extends StatelessWidget {
           WishlistError() => const ErrorView(),
           WishlistLoaded() => state.lines.isEmpty
               ? const WishlistEmptyView()
-              : _FilledWishlist(state: state),
+              : ContentMaxWidth(
+                  child: _FilledWishlist(state: state),
+                ),
         },
       ),
     );

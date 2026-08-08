@@ -12,6 +12,7 @@ import '../../../../core/entities/order_status.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/error_view.dart';
 import '../../../widgets/message_view.dart';
+import '../../../widgets/responsive/content_max_width.dart';
 import '../../orders/order_date_format.dart';
 import '../../orders/order_list_tile.dart';
 import '../../orders/status_visuals.dart';
@@ -176,7 +177,8 @@ class _LoadedOrdersState extends State<_LoadedOrders> {
     final cubit = context.read<AdminOrdersCubit>();
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).languageCode;
-    return Column(
+    return ContentMaxWidth(
+      child: Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -238,6 +240,7 @@ class _LoadedOrdersState extends State<_LoadedOrders> {
               : _OrderList(orders: state.visibleOrders),
         ),
       ],
+      ),
     );
   }
 }

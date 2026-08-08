@@ -10,6 +10,8 @@ import '../../../../../core/entities/product.dart';
 import '../../../../../core/error/result.dart';
 import '../../../../../data/services/image_store.dart';
 import '../../../../l10n/l10n_ext.dart';
+import '../../../../widgets/responsive/content_max_width.dart';
+import '../../../../widgets/responsive/responsive_breakpoints.dart';
 import '../../widgets/admin_storefront_action.dart';
 import '../admin_catalog_cubit.dart';
 import 'product_basic_fields.dart';
@@ -249,7 +251,9 @@ class _ProductFormState extends State<ProductForm> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
+        child: ContentMaxWidth(
+          maxWidth: ResponsiveBreakpoints.formMaxWidth,
+          child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             ProductImageField(
@@ -320,6 +324,7 @@ class _ProductFormState extends State<ProductForm> {
                   : Text(l10n.saveProduct),
             ),
           ],
+          ),
         ),
       ),
     );

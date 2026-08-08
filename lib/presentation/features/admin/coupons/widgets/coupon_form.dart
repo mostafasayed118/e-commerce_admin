@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/entities/coupon.dart';
 import '../../../../../core/error/result.dart';
 import '../../../../l10n/l10n_ext.dart';
+import '../../../../widgets/responsive/content_max_width.dart';
+import '../../../../widgets/responsive/responsive_breakpoints.dart';
 import '../../../orders/order_date_format.dart';
 import '../../widgets/admin_storefront_action.dart';
 import '../admin_coupons_cubit.dart';
@@ -195,7 +197,9 @@ class _CouponFormState extends State<CouponForm> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
+        child: ContentMaxWidth(
+          maxWidth: ResponsiveBreakpoints.formMaxWidth,
+          child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             TextFormField(
@@ -330,6 +334,7 @@ class _CouponFormState extends State<CouponForm> {
                   : Text(l10n.save),
             ),
           ],
+          ),
         ),
       ),
     );

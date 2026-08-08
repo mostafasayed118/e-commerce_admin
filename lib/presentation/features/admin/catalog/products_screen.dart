@@ -8,6 +8,7 @@ import '../../../../core/error/result.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/confirm_dialog.dart';
 import '../../../widgets/error_view.dart';
+import '../../../widgets/responsive/content_max_width.dart';
 import '../../../widgets/snack_bar.dart';
 import '../widgets/admin_fab.dart';
 import 'admin_catalog_cubit.dart';
@@ -71,12 +72,15 @@ class _ProductsView extends StatelessWidget {
           AdminCatalogLoading() =>
             const Center(child: CircularProgressIndicator()),
           AdminCatalogError() => const ErrorView(),
-          AdminCatalogLoaded() => ProductList(
+          AdminCatalogLoaded() => ContentMaxWidth(
+            child: ProductList(
               state: state,
-              onEdit: (product) => context.push('/admin/products/${product.id}/edit'),
+              onEdit: (product) =>
+                  context.push('/admin/products/${product.id}/edit'),
               onDelete: (product) => _confirmDelete(context, product),
               onCreate: () => _openNewProduct(context),
             ),
+          ),
         },
       ),
     );

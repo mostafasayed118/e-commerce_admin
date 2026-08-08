@@ -8,6 +8,8 @@ import '../../../domain/usecases/cart/add_to_cart.dart';
 import '../../l10n/l10n_ext.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
+import '../../widgets/responsive/content_max_width.dart';
+import '../../widgets/responsive/responsive_two_pane.dart';
 import '../../widgets/snack_bar.dart';
 import '../wishlist/widgets/wishlist_heart.dart';
 import 'widgets/product_image.dart';
@@ -99,17 +101,19 @@ class _ProductDetailBody extends StatelessWidget {
     final l10n = context.l10n;
     final outOfStock = product.isOutOfStock;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    // The image and the info read as two columns on wide surfaces (image |
+    // info, product-detail convention) and stack naturally on phones — the
+    // ResponsiveTwoPane handles both. The reviews stay full-width below.
+    final image = ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: AspectRatio(
+        aspectRatio: 1.4,
+        child: ProductImage(iconSize: 64),
+      ),
+    );
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: AspectRatio(
-            aspectRatio: 1.4,
-            child: ProductImage(iconSize: 64),
-          ),
-        ),
-        const SizedBox(height: 20),
         Text(context.productName(product), style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         // Flexible so the price row can never overflow: the struck price
@@ -169,13 +173,22 @@ class _ProductDetailBody extends StatelessWidget {
             WishlistHeartButton(product: product),
           ],
         ),
-        const SizedBox(height: 32),
-        const Divider(height: 1),
-        const SizedBox(height: 16),
-        // Approved customer reviews (moderated: hidden reviews never reach
-        // the storefront read stream) + the write-review dialog.
-        ReviewsSection(productId: product.id),
       ],
+    );
+
+    return ContentMaxWidth(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          ResponsiveTwoPane(left: image, right: info),
+          const SizedBox(height: 32),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          // Approved customer reviews (moderated: hidden reviews never reach
+          // the storefront read stream) + the write-review dialog.
+          ReviewsSection(productId: product.id),
+        ],
+      ),
     );
   }
 }

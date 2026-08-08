@@ -5,6 +5,7 @@ import '../../../core/di/injection.dart';
 import '../../l10n/l10n_ext.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
+import '../../widgets/responsive/content_max_width.dart';
 import 'catalog_cubit.dart';
 import 'widgets/loaded_catalog.dart';
 
@@ -44,7 +45,9 @@ class _CatalogView extends StatelessWidget {
               title: l10n.catalogEmptyTitle,
               message: l10n.catalogEmptyMessage,
             ),
-          CatalogLoaded() => LoadedCatalog(state: state),
+          CatalogLoaded() => ContentMaxWidth(
+            child: LoadedCatalog(state: state),
+          ),
         },
       ),
     );

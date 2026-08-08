@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/entities/order.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/responsive/content_max_width.dart';
+import '../../widgets/responsive/responsive_breakpoints.dart';
 
 /// The post-checkout **success screen**: snapshot totals, order number, and a
 /// "back to shop" action. The cart is already cleared by `placeOrder` (Task 8)
@@ -18,7 +20,9 @@ class OrderSuccessView extends StatelessWidget {
     final l10n = context.l10n;
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: ContentMaxWidth(
+          maxWidth: ResponsiveBreakpoints.formMaxWidth,
+          child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -60,6 +64,7 @@ class OrderSuccessView extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

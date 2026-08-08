@@ -8,6 +8,7 @@ import '../../../../core/error/result.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/confirm_dialog.dart';
 import '../../../widgets/error_view.dart';
+import '../../../widgets/responsive/content_max_width.dart';
 import '../../../widgets/snack_bar.dart';
 import '../widgets/admin_fab.dart';
 import 'admin_coupons_cubit.dart';
@@ -66,13 +67,15 @@ class _CouponsView extends StatelessWidget {
           AdminCouponsLoading() =>
             const Center(child: CircularProgressIndicator()),
           AdminCouponsError() => const ErrorView(),
-          AdminCouponsLoaded() => CouponList(
+          AdminCouponsLoaded() => ContentMaxWidth(
+            child: CouponList(
               state: state,
               onEdit: (coupon) =>
                   context.push('/admin/coupons/${coupon.id}/edit'),
               onDelete: (coupon) => _confirmDelete(context, coupon),
               onCreate: () => context.push('/admin/coupons/new'),
             ),
+          ),
         },
       ),
     );

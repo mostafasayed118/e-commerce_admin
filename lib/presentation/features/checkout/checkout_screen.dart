@@ -10,6 +10,8 @@ import '../../../domain/usecases/checkout/validate_shipping.dart';
 import '../../../domain/usecases/coupons/apply_coupon.dart';
 import '../../l10n/error_messages.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/responsive/content_max_width.dart';
+import '../../widgets/responsive/responsive_breakpoints.dart';
 import '../../widgets/shipping_info_fields.dart';
 import '../cart/cart_cubit.dart';
 import 'order_success_view.dart';
@@ -166,83 +168,126 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildForm(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+
+    // The form and the summary read as two columns on wide surfaces (form |
+    // summary — the checkout convention) and stack on phones, so the panes
+    // are built once and composed by ResponsiveTwoPane.
+    final formPane = <Widget>[
+      Text(
+        l10n.shippingDetails,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 4),
+      Text(
+        l10n.codOnlyNote,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+      ),
+      const SizedBox(height: 16),
+      ShippingInfoFields(
+        nameController: _name,
+        phoneController: _phone,
+        addressController: _address,
+        validateField: _validateField,
+        nameKey: 'checkout-name',
+        phoneKey: 'checkout-phone',
+        addressKey: 'checkout-address',
+      ),
+      const SizedBox(height: 8),
+      SwitchListTile(
+        key: const Key('checkout-save-profile'),
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.saveDetailsNextTime),
+        value: _saveProfile,
+        onChanged: (value) => setState(() => _saveProfile = value),
+      ),
+      if (_error != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          _error!,
+          style: TextStyle(color: scheme.error),
+        ),
+      ],
+    ];
+    final summaryPane = <Widget>[
+      Text(
+        l10n.checkoutSummary,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 8),
+      CheckoutSummaryCard(
+        couponCode: _appliedCouponCode,
+        couponDiscountCents: _appliedCouponDiscountCents,
+      ),
+      const SizedBox(height: 16),
+      CouponField(
+        controller: _couponController,
+        appliedCode: _appliedCouponCode,
+        appliedDiscountCents: _appliedCouponDiscountCents,
+        errorText: _couponError,
+        onApply: _placing ? () {} : _applyCoupon,
+        onRemove: _removeCoupon,
+      ),
+      const SizedBox(height: 24),
+      FilledButton(
+        onPressed: _placing ? null : _placeOrder,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+        ),
+        child: _placing
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(l10n.placeOrderCod),
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.checkoutTitle)),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text(
-              l10n.shippingDetails,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.codOnlyNote,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+        // On wide surfaces the summary is a pinned right column (its own
+        // scrollable) so the place-order button stays reachable while the
+        // form scrolls; on phones the panes stack in one list.
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide =
+                constraints.maxWidth >= ResponsiveBreakpoints.twoPane;
+            if (!wide) {
+              return ContentMaxWidth(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [...formPane, ...summaryPane],
+                ),
+              );
+            }
+            return ContentMaxWidth(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: formPane,
+                    ),
                   ),
-            ),
-            const SizedBox(height: 16),
-            ShippingInfoFields(
-              nameController: _name,
-              phoneController: _phone,
-              addressController: _address,
-              validateField: _validateField,
-              nameKey: 'checkout-name',
-              phoneKey: 'checkout-phone',
-              addressKey: 'checkout-address',
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              key: const Key('checkout-save-profile'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.saveDetailsNextTime),
-              value: _saveProfile,
-              onChanged: (value) => setState(() => _saveProfile = value),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                style: TextStyle(color: scheme.error),
+                  const VerticalDivider(width: 24),
+                  // A fixed-width summary column that never scrolls off the
+                  // form's leading edge (the desktop checkout convention).
+                  SizedBox(
+                    width: 380,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+                      children: summaryPane,
+                    ),
+                  ),
+                ],
               ),
-            ],
-            const SizedBox(height: 24),
-            Text(
-              l10n.checkoutSummary,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            CheckoutSummaryCard(
-              couponCode: _appliedCouponCode,
-              couponDiscountCents: _appliedCouponDiscountCents,
-            ),
-            const SizedBox(height: 16),
-            CouponField(
-              controller: _couponController,
-              appliedCode: _appliedCouponCode,
-              appliedDiscountCents: _appliedCouponDiscountCents,
-              errorText: _couponError,
-              onApply: _placing ? () {} : _applyCoupon,
-              onRemove: _removeCoupon,
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _placing ? null : _placeOrder,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-              child: _placing
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.placeOrderCod),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

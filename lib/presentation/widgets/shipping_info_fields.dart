@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/usecases/checkout/validate_shipping.dart';
 import '../l10n/l10n_ext.dart';
+import 'responsive/responsive_form_row.dart';
 
 /// The three shipping-address fields (name / phone / address) shared by the
 /// checkout form and the profile form — one copy so the two forms can never
@@ -44,33 +45,38 @@ class ShippingInfoFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // Name + phone sit side by side on wide surfaces (they're short fields)
+    // and stack on phones; the address always takes the full width.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          key: Key(nameKey),
-          controller: nameController,
-          decoration: InputDecoration(
-            labelText: l10n.fullName,
-            border: const OutlineInputBorder(),
-          ),
-          textInputAction: TextInputAction.next,
-          textCapitalization: TextCapitalization.words,
-          onChanged: onChanged,
-          validator: (_) => validateField(kShippingNameField),
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          key: Key(phoneKey),
-          controller: phoneController,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: l10n.phone,
-            border: const OutlineInputBorder(),
-          ),
-          textInputAction: TextInputAction.next,
-          onChanged: onChanged,
-          validator: (_) => validateField(kShippingPhoneField),
+        ResponsiveFormRow(
+          children: [
+            TextFormField(
+              key: Key(nameKey),
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: l10n.fullName,
+                border: const OutlineInputBorder(),
+              ),
+              textInputAction: TextInputAction.next,
+              textCapitalization: TextCapitalization.words,
+              onChanged: onChanged,
+              validator: (_) => validateField(kShippingNameField),
+            ),
+            TextFormField(
+              key: Key(phoneKey),
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: l10n.phone,
+                border: const OutlineInputBorder(),
+              ),
+              textInputAction: TextInputAction.next,
+              onChanged: onChanged,
+              validator: (_) => validateField(kShippingPhoneField),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         TextFormField(

@@ -8,6 +8,7 @@ import '../../l10n/l10n_ext.dart';
 import '../../widgets/browse_catalog_action.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/message_view.dart';
+import '../../widgets/responsive/content_max_width.dart';
 import 'order_list_tile.dart';
 import 'orders_cubit.dart';
 
@@ -40,7 +41,9 @@ class _OrdersView extends StatelessWidget {
           OrdersError() => const ErrorView(),
           OrdersLoaded(:final orders) => orders.isEmpty
               ? _EmptyOrders()
-              : _OrderList(orders: orders),
+              : ContentMaxWidth(
+                  child: _OrderList(orders: orders),
+                ),
         },
       ),
     );

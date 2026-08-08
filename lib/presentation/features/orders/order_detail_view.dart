@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/entities/order.dart';
 import '../../l10n/l10n_ext.dart';
+import '../../widgets/responsive/content_max_width.dart';
 import '../../widgets/section_header.dart';
 import 'order_date_format.dart';
 import 'status_visuals.dart';
@@ -32,7 +33,8 @@ class OrderDetailView extends StatelessWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final placedAt = order.createdAt;
 
-    return ListView(
+    return ContentMaxWidth(
+      child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // --- Header --------------------------------------------------------
@@ -142,6 +144,7 @@ class OrderDetailView extends StatelessWidget {
           actions!,
         ],
       ],
+      ),
     );
   }
 }

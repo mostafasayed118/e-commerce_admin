@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/l10n_ext.dart';
+import '../../../../widgets/responsive/responsive_form_row.dart';
 
 /// The product form's pricing section: price + discount on one row, then
 /// stock. Controllers and validators are owned by the form's state and
@@ -26,45 +27,35 @@ class ProductPricingFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // All three fields share one row on wide surfaces (they're short numeric
+    // inputs) and stack on phones.
+    return ResponsiveFormRow(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: TextFormField(
-                key: const Key('product-price'),
-                controller: priceController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: l10n.price,
-                  prefixText: r'$ ',
-                  border: const OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
-                validator: priceValidator,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                key: const Key('product-discount'),
-                controller: discountController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.discountPercent,
-                  border: const OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
-                validator: percentValidator,
-              ),
-            ),
-          ],
+        TextFormField(
+          key: const Key('product-price'),
+          controller: priceController,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+          ),
+          decoration: InputDecoration(
+            labelText: l10n.price,
+            prefixText: r'$ ',
+            border: const OutlineInputBorder(),
+          ),
+          textInputAction: TextInputAction.next,
+          validator: priceValidator,
         ),
-        const SizedBox(height: 16),
+        TextFormField(
+          key: const Key('product-discount'),
+          controller: discountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l10n.discountPercent,
+            border: const OutlineInputBorder(),
+          ),
+          textInputAction: TextInputAction.next,
+          validator: percentValidator,
+        ),
         TextFormField(
           key: const Key('product-stock'),
           controller: stockController,
