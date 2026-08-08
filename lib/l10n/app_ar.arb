@@ -155,6 +155,18 @@
     }
   },
   "recentOrders": "أحدث الطلبات",
+  "revenueTrendTitle": "اتجاه الإيرادات",
+  "orderVolumeTitle": "حجم الطلبات",
+  "topProductsTitle": "المنتجات الأكثر مبيعًا",
+  "last7Days": "آخر 7 أيام",
+  "unitsSold": "{count, plural, zero{لا وحدات} one{وحدة واحدة} two{وحدتان} few{{count} وحدات} many{{count} وحدة} other{{count} وحدة}}",
+  "@unitsSold": {
+    "description": "Units-sold label on the dashboard's top-products ranking.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "noTopProducts": "لا توجد منتجات مباعة بعد.",
   "noOrdersYet": "لا توجد طلبات بعد.",
   "allStockedUp": "المخزون مكتمل.",
   "onlyXLeft": "متبقي {stock} فقط",
@@ -202,10 +214,7 @@
   "inactiveStatus": "معطّلة",
   "expiredStatus": "منتهية",
 
-  "noFilterOrdersTitle": "لا توجد طلبات {status}",
   "ordersWillAppear": "ستظهر الطلبات هنا بعد أن يقوم العملاء بإتمام الشراء.",
-  "tryDifferentFilter": "جرّب فلتر حالة مختلفًا.",
-  "showAllOrders": "عرض جميع الطلبات",
   "markedAs": "تم تحديث {order} إلى الحالة: {status}",
   "orderTerminalNote": "هذا الطلب {status} — لا مزيد من الإجراءات.",
   "noFurtherActions": "لا توجد إجراءات إضافية متاحة.",
@@ -273,5 +282,48 @@
   "errorCouponExpired": "انتهت صلاحية الرمز {code}.",
   "errorCouponMinSpend": "أنفق {required} على الأقل لاستخدام هذا الرمز (مجموعك الحالي {current}).",
   "errorCouponUsageLimit": "بلغ الرمز {code} الحد الأقصى لاستخداماته ({maxUses}).",
-  "errorCouponCodeTaken": "هذا الرمز مستخدم بالفعل."
+  "errorCouponCodeTaken": "هذا الرمز مستخدم بالفعل.",
+  "errorReviewNotFound": "المراجعة غير موجودة.",
+  "errorReviewRatingInvalid": "اختر تقييمًا من 1 إلى 5.",
+
+  "tabReviews": "المراجعات",
+  "reviewsTitle": "المراجعات",
+  "noReviewsTitle": "لا توجد مراجعات بعد",
+  "noReviewsMessage": "كن أول من يكتب مراجعة.",
+  "writeReview": "اكتب مراجعة",
+  "reviewRatingLabel": "التقييم",
+  "reviewNameLabel": "اسمك",
+  "reviewCommentLabel": "مراجعتك",
+  "submitReview": "إرسال المراجعة",
+  "reviewSubmitted": "شكرًا لك! ستظهر مراجعتك بعد الموافقة عليها.",
+  "reviewCount": "{count, plural, zero{لا مراجعات} one{مراجعة واحدة} two{مراجعتان} few{{count} مراجعات} many{{count} مراجعةً} other{{count} مراجعة}}",
+  "@reviewCount": {
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "averageRating": "{average} من 5",
+  "@averageRating": {
+    "placeholders": {
+      "average": { "type": "String" }
+    }
+  },
+  "reviewPending": "قيد الانتظار",
+  "reviewApproved": "معتمدة",
+  "approveReview": "اعتماد",
+  "hideReview": "إخفاء",
+  "noReviewsPendingTitle": "لا توجد مراجعات للمراجعة",
+  "noReviewsPendingMessage": "ستظهر مراجعات العملاء هنا.",
+  "deleteReviewTitle": "حذف المراجعة؟",
+  "deleteReviewMessage": "ستُحذف هذه المراجعة نهائيًا.",
+  "deleteReviewTooltip": "حذف المراجعة",
+
+  "searchOrders": "ابحث في الطلبات",
+  "fromDate": "من",
+  "toDate": "إلى",
+  "clearDates": "مسح التواريخ",
+  "noOrdersMatchTitle": "لا توجد طلبات مطابقة",
+  "noOrdersMatchMessage": "جرّب فلاتر مختلفة.",
+  "exportOrders": "تصدير الطلبات",
+  "exportDone": "تم تصدير {count} طلبًا إلى CSV."
 }

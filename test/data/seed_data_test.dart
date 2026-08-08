@@ -23,6 +23,7 @@ void main() {
     expect(await db.select(db.orders).get(), isNotEmpty);
     expect(await db.select(db.orderItems).get(), isNotEmpty);
     expect(await db.select(db.orderStatusHistory).get(), isNotEmpty);
+    expect(await db.select(db.productReviews).get(), isNotEmpty);
 
     final meta = await (db.select(db.appMeta)..where((t) => t.id.equals(1)))
         .getSingle();
@@ -86,6 +87,26 @@ void main() {
       isTrue,
       reason: 'an already-expired code for the error demo',
     );
+  });
+
+  test('seed reviews demo both halves of the moderation contract', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await SeedData(db).seedIfNeeded();
+
+    final reviews = await db.select(db.productReviews).get();
+    expect(reviews, isNotEmpty);
+    // The storefront demo: at least one product carries multiple approved
+    // reviews (Classic Tee has four — a non-trivial average to display).
+    expect(reviews.where((r) => r.isApproved).length, greaterThanOrEqualTo(5));
+    // The moderation demo: exactly one hidden review awaits approval.
+    final pending = reviews.where((r) => !r.isApproved).toList();
+    expect(pending, hasLength(1));
+    expect(pending.single.reviewerName, 'Sara Nabil');
+    expect(pending.single.rating, 2);
+    // Ratings obey the CHECK constraint by construction.
+    expect(reviews.every((r) => r.rating >= 1 && r.rating <= 5), isTrue);
   });
 
   test('seed covers the required demo scenarios', () async {
@@ -169,6 +190,7 @@ void main() {
       products: (await db.select(db.products).get()).length,
       coupons: (await db.select(db.coupons).get()).length,
       orders: (await db.select(db.orders).get()).length,
+      reviews: (await db.select(db.productReviews).get()).length,
     );
 
     // Simulate an install seeded by an older version: the next launch must
@@ -186,6 +208,8 @@ void main() {
         reason: 'coupons must not duplicate on reseed');
     expect((await db.select(db.orders).get()).length, counts.orders,
         reason: 'orders must not duplicate on reseed');
+    expect((await db.select(db.productReviews).get()).length, counts.reviews,
+        reason: 'reviews must not duplicate on reseed');
   });
 
   test('seeds once across database opens (idempotent via seedVersion)', () async {

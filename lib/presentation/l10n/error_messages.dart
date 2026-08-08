@@ -19,6 +19,7 @@ String errorTextForCode(BuildContext context, AppErrorCode code) =>
       AppErrorCode.orderNotFound => context.l10n.errorOrderNotFound,
       AppErrorCode.cartProductUnavailable =>
         context.l10n.errorCartProductUnavailable,
+      AppErrorCode.reviewNotFound => context.l10n.errorReviewNotFound,
       // The minimum (1) is guidance prose — convert like every other number.
       AppErrorCode.quantityMin =>
         context.localizeDigits(context.l10n.errorQuantityMin),
@@ -34,6 +35,9 @@ String errorTextForCode(BuildContext context, AppErrorCode code) =>
       AppErrorCode.pinNotSet => context.l10n.pinNotSet,
       AppErrorCode.pinIncorrect => context.l10n.pinIncorrect,
       AppErrorCode.couponCodeTaken => context.l10n.errorCouponCodeTaken,
+      // The 1-5 range is guidance prose — convert like every other number.
+      AppErrorCode.reviewRatingInvalid =>
+        context.localizeDigits(context.l10n.errorReviewRatingInvalid),
       // Data-carrying codes are only reachable through their typed variants
       // (handled in [localizedErrorMessage]); a bare code has no data to
       // format, so fall back to the generic message rather than crash.

@@ -401,6 +401,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recentOrders => 'أحدث الطلبات';
 
   @override
+  String get revenueTrendTitle => 'اتجاه الإيرادات';
+
+  @override
+  String get orderVolumeTitle => 'حجم الطلبات';
+
+  @override
+  String get topProductsTitle => 'المنتجات الأكثر مبيعًا';
+
+  @override
+  String get last7Days => 'آخر 7 أيام';
+
+  @override
+  String unitsSold(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count وحدة',
+      many: '$count وحدة',
+      few: '$count وحدات',
+      two: 'وحدتان',
+      one: 'وحدة واحدة',
+      zero: 'لا وحدات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noTopProducts => 'لا توجد منتجات مباعة بعد.';
+
+  @override
   String get overviewActiveCoupons => 'قسائم نشطة';
 
   @override
@@ -598,19 +628,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expiredStatus => 'منتهية';
 
   @override
-  String noFilterOrdersTitle(String status) {
-    return 'لا توجد طلبات $status';
-  }
-
-  @override
   String get ordersWillAppear =>
       'ستظهر الطلبات هنا بعد أن يقوم العملاء بإتمام الشراء.';
-
-  @override
-  String get tryDifferentFilter => 'جرّب فلتر حالة مختلفًا.';
-
-  @override
-  String get showAllOrders => 'عرض جميع الطلبات';
 
   @override
   String markedAs(String order, String status) {
@@ -851,4 +870,113 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorCouponCodeTaken => 'هذا الرمز مستخدم بالفعل.';
+
+  @override
+  String get errorReviewNotFound => 'المراجعة غير موجودة.';
+
+  @override
+  String get errorReviewRatingInvalid => 'اختر تقييمًا من 1 إلى 5.';
+
+  @override
+  String get tabReviews => 'المراجعات';
+
+  @override
+  String get reviewsTitle => 'المراجعات';
+
+  @override
+  String get noReviewsTitle => 'لا توجد مراجعات بعد';
+
+  @override
+  String get noReviewsMessage => 'كن أول من يكتب مراجعة.';
+
+  @override
+  String get writeReview => 'اكتب مراجعة';
+
+  @override
+  String get reviewRatingLabel => 'التقييم';
+
+  @override
+  String get reviewNameLabel => 'اسمك';
+
+  @override
+  String get reviewCommentLabel => 'مراجعتك';
+
+  @override
+  String get submitReview => 'إرسال المراجعة';
+
+  @override
+  String get reviewSubmitted => 'شكرًا لك! ستظهر مراجعتك بعد الموافقة عليها.';
+
+  @override
+  String reviewCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مراجعة',
+      many: '$count مراجعةً',
+      few: '$count مراجعات',
+      two: 'مراجعتان',
+      one: 'مراجعة واحدة',
+      zero: 'لا مراجعات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String averageRating(String average) {
+    return '$average من 5';
+  }
+
+  @override
+  String get reviewPending => 'قيد الانتظار';
+
+  @override
+  String get reviewApproved => 'معتمدة';
+
+  @override
+  String get approveReview => 'اعتماد';
+
+  @override
+  String get hideReview => 'إخفاء';
+
+  @override
+  String get noReviewsPendingTitle => 'لا توجد مراجعات للمراجعة';
+
+  @override
+  String get noReviewsPendingMessage => 'ستظهر مراجعات العملاء هنا.';
+
+  @override
+  String get deleteReviewTitle => 'حذف المراجعة؟';
+
+  @override
+  String get deleteReviewMessage => 'ستُحذف هذه المراجعة نهائيًا.';
+
+  @override
+  String get deleteReviewTooltip => 'حذف المراجعة';
+
+  @override
+  String get searchOrders => 'ابحث في الطلبات';
+
+  @override
+  String get fromDate => 'من';
+
+  @override
+  String get toDate => 'إلى';
+
+  @override
+  String get clearDates => 'مسح التواريخ';
+
+  @override
+  String get noOrdersMatchTitle => 'لا توجد طلبات مطابقة';
+
+  @override
+  String get noOrdersMatchMessage => 'جرّب فلاتر مختلفة.';
+
+  @override
+  String get exportOrders => 'تصدير الطلبات';
+
+  @override
+  String exportDone(int count) {
+    return 'تم تصدير $count طلبًا إلى CSV.';
+  }
 }

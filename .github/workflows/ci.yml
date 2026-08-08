@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -27,9 +27,12 @@ jobs:
 
       # Fast pre-gate: the two contracts that regress silently (uncovered
       # lib/ sources, duplicated helpers) fail here in seconds instead of
-      # after the ~1-minute full suite.
+      # after the ~1-minute full suite. Invoked via `bash` so the runner
+      # never depends on the script's git file-mode bit (a Windows-authored
+      # repo may not carry the +x bit, which would make the direct `./`
+      # form fail with exit 126).
       - name: Fast gate — analyzer + coverage/consolidation audit
-        run: ./tool/check.sh
+        run: bash ./tool/check.sh
 
       # The full gate: every test. The audit also runs inside this suite, so
       # a failure here catches anything the fast gate's narrower scope missed.

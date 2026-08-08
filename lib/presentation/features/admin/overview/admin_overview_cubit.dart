@@ -172,6 +172,87 @@ class AdminOverviewCubit extends Cubit<AdminOverviewState> {
       ));
     }
 
+    // --- Daily trend: a data-anchored trailing window --------------------
+    // The window ends at the most recent NON-cancelled order's calendar day
+    // (falling back to the injected clock when there are no sales at all),
+    // so the chart is deterministic under tests — it never depends on the
+    // wall clock. A cancelled order neither anchors the window nor counts:
+    // anchoring on it would push the last day's bar to a "non-sale" zero
+    // (the status chart already shows cancellations separately). Days
+    // without sales are zero-filled so the axis is stable.
+    final revenueByDay = <DateTime, int>{};
+    final countByDay = <DateTime, int>{};
+    DateTime? latestDay;
+    for (final order in orders) {
+      final at = order.createdAt;
+      if (at == null) continue;
+      if (order.status == OrderStatus.cancelled) continue;
+      final day = DateTime(at.year, at.month, at.day);
+      if (latestDay == null || day.isAfter(latestDay)) latestDay = day;
+      revenueByDay[day] = (revenueByDay[day] ?? 0) + order.totalCents;
+      countByDay[day] = (countByDay[day] ?? 0) + 1;
+    }
+    final windowEnd = latestDay ?? _dateOnly(_now());
+    // Calendar arithmetic (not Duration addition) so the window stays on
+    // midnight even across a DST boundary.
+    final dailyTrend = <DailyTrend>[];
+    for (
+      var i = AdminOverviewLoaded.trendDays - 1;
+      i >= 0;
+      i--
+    ) {
+      final day = DateTime(
+        windowEnd.year,
+        windowEnd.month,
+        windowEnd.day - i,
+      );
+      dailyTrend.add(DailyTrend(
+        day: day,
+        revenueCents: revenueByDay[day] ?? 0,
+        orderCount: countByDay[day] ?? 0,
+      ));
+    }
+
+    // --- Top products: aggregated from non-cancelled line snapshots ------
+    // Units and revenue come from the order-line snapshots (Decision E:
+    // names and prices survive product edits/deletes), so the ranking keeps
+    // showing what actually sold. Ranked by revenue desc, then units desc,
+    // then name asc — a fully deterministic order.
+    final productStats = <String, ({int units, int revenueCents, String? nameAr})>{};
+    for (final order in orders) {
+      if (order.status == OrderStatus.cancelled) continue;
+      for (final item in order.items) {
+        final stats = productStats[item.productName] ??
+            (units: 0, revenueCents: 0, nameAr: null);
+        productStats[item.productName] = (
+          units: stats.units + item.quantity,
+          revenueCents: stats.revenueCents + item.lineTotalCents,
+          // First non-null Arabic label wins (all snapshots of one product
+          // carry the same label, so any is fine — the first keeps it
+          // simple).
+          nameAr: stats.nameAr ?? item.productNameAr,
+        );
+      }
+    }
+    final productEntries = productStats.entries.toList()
+      ..sort((a, b) {
+        final byRevenue = b.value.revenueCents.compareTo(a.value.revenueCents);
+        if (byRevenue != 0) return byRevenue;
+        final byUnits = b.value.units.compareTo(a.value.units);
+        if (byUnits != 0) return byUnits;
+        return a.key.compareTo(b.key);
+      });
+    final topProducts = [
+      for (final entry
+          in productEntries.take(AdminOverviewLoaded.topProductsLimit))
+        TopProductRanking(
+          name: entry.key,
+          nameAr: entry.value.nameAr,
+          unitsSold: entry.value.units,
+          revenueCents: entry.value.revenueCents,
+        ),
+    ];
+
     emit(AdminOverviewLoaded(
       revenueCents: revenue,
       totalOrders: orders.length,
@@ -181,8 +262,15 @@ class AdminOverviewCubit extends Cubit<AdminOverviewState> {
       activeCouponCount: activeCouponCount,
       recentCouponUses: recentCouponUses,
       topCoupons: topCoupons,
+      dailyTrend: dailyTrend,
+      topProducts: topProducts,
     ));
   }
+
+  /// Truncates [time] to its calendar day (local midnight) — the trend
+  /// buckets' key granularity.
+  static DateTime _dateOnly(DateTime time) =>
+      DateTime(time.year, time.month, time.day);
 
   @override
   Future<void> close() {

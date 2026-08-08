@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/entities/category.dart';
 import '../../../core/entities/product.dart';
+import '../../../core/utils/search_text.dart';
 import '../../../domain/repositories/category_repository.dart';
 import '../../../domain/repositories/product_repository.dart';
 import 'catalog_sort.dart';
@@ -91,17 +92,20 @@ class CatalogCubit extends Cubit<CatalogState> {
       return;
     }
 
-    final query = _query.trim().toLowerCase();
+    final query = normalizeSearchText(_query.trim());
     final filtered = all.where((product) {
       final inCategory =
           _selectedCategoryId == null || product.categoryId == _selectedCategoryId;
-      // Matches against BOTH languages so an Arabic shopper can search in
-      // Arabic while the canonical text stays searchable in English.
+      // Matches against BOTH languages (each normalized the same way as the
+      // query) so an Arabic shopper can search in Arabic while the canonical
+      // text stays searchable in English.
       final matchesQuery = query.isEmpty ||
-          product.name.toLowerCase().contains(query) ||
-          product.description.toLowerCase().contains(query) ||
-          (product.nameAr?.toLowerCase().contains(query) ?? false) ||
-          (product.descriptionAr?.toLowerCase().contains(query) ?? false);
+          normalizeSearchText(product.name).contains(query) ||
+          normalizeSearchText(product.description).contains(query) ||
+          (product.nameAr != null &&
+              normalizeSearchText(product.nameAr!).contains(query)) ||
+          (product.descriptionAr != null &&
+              normalizeSearchText(product.descriptionAr!).contains(query));
       return inCategory && matchesQuery;
     }).toList()
       ..sort(_sort.compare);

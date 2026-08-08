@@ -1,5 +1,7 @@
 # Shop Admin — Local-Only E-Commerce App + Admin Dashboard
 
+[![CI](https://github.com/mostafasayed118/e-commerce_admin/actions/workflows/ci.yml/badge.svg)](https://github.com/mostafasayed118/e-commerce_admin/actions/workflows/ci.yml)
+
 A single Flutter application containing **both** a customer shop and an admin
 dashboard, 100% offline. All data lives in a local SQLite database — there is
 no backend, no Firebase, no Supabase. The customer and admin share the domain

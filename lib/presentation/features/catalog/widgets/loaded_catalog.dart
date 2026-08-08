@@ -30,8 +30,26 @@ class LoadedCatalog extends StatefulWidget {
 class _LoadedCatalogState extends State<LoadedCatalog> {
   final TextEditingController _searchController = TextEditingController();
 
+  /// Whether the field currently holds text — drives the one-tap clear (✕)
+  /// affordance so it appears exactly while there is something to clear.
+  bool _hasSearchText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final hasText = _searchController.text.isNotEmpty;
+    if (hasText != _hasSearchText) {
+      setState(() => _hasSearchText = hasText);
+    }
+  }
+
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -41,6 +59,13 @@ class _LoadedCatalogState extends State<LoadedCatalog> {
   void _clearFilters() {
     _searchController.clear();
     context.read<CatalogCubit>()..selectCategory(null)..setQuery('');
+  }
+
+  /// Field-only clear: empties the query without touching the category
+  /// filter. [_clearFilters] (the no-matches action) resets both.
+  void _clearSearch() {
+    _searchController.clear();
+    context.read<CatalogCubit>().setQuery('');
   }
 
   @override
@@ -59,6 +84,16 @@ class _LoadedCatalogState extends State<LoadedCatalog> {
               hintText: l10n.searchProducts,
               prefixIcon: const Icon(Icons.search),
               isDense: true,
+              suffixIcon: _hasSearchText
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      tooltip: l10n.clearFilters,
+                      // Compact so the 48dp default tap target does not
+                      // inflate the dense field's height.
+                      visualDensity: VisualDensity.compact,
+                      onPressed: _clearSearch,
+                    )
+                  : null,
             ),
           ),
         ),

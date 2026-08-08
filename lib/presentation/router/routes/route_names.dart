@@ -21,6 +21,7 @@ abstract final class RouteNames {
   static const String adminCoupons = 'admin-coupons';
   static const String adminCouponNew = 'admin-coupon-new';
   static const String adminCouponEdit = 'admin-coupon-edit';
+  static const String adminReviews = 'admin-reviews';
   static const String adminOrders = 'admin-orders';
   static const String adminOrderDetail = 'admin-order-detail';
 }

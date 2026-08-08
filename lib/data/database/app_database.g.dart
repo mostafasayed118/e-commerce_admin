@@ -1032,6 +1032,473 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   }
 }
 
+class $ProductReviewsTable extends ProductReviews
+    with TableInfo<$ProductReviewsTable, ProductReviewRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductReviewsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
+  @override
+  late final GeneratedColumn<int> rating = GeneratedColumn<int>(
+    'rating',
+    aliasedName,
+    false,
+    check: () =>
+        ComparableExpr(rating).isBiggerOrEqualValue(1) &
+        ComparableExpr(rating).isSmallerOrEqualValue(5),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewerNameMeta = const VerificationMeta(
+    'reviewerName',
+  );
+  @override
+  late final GeneratedColumn<String> reviewerName = GeneratedColumn<String>(
+    'reviewer_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _commentMeta = const VerificationMeta(
+    'comment',
+  );
+  @override
+  late final GeneratedColumn<String> comment = GeneratedColumn<String>(
+    'comment',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _isApprovedMeta = const VerificationMeta(
+    'isApproved',
+  );
+  @override
+  late final GeneratedColumn<bool> isApproved = GeneratedColumn<bool>(
+    'is_approved',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_approved" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    productId,
+    rating,
+    reviewerName,
+    comment,
+    isApproved,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'product_reviews';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProductReviewRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('rating')) {
+      context.handle(
+        _ratingMeta,
+        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ratingMeta);
+    }
+    if (data.containsKey('reviewer_name')) {
+      context.handle(
+        _reviewerNameMeta,
+        reviewerName.isAcceptableOrUnknown(
+          data['reviewer_name']!,
+          _reviewerNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewerNameMeta);
+    }
+    if (data.containsKey('comment')) {
+      context.handle(
+        _commentMeta,
+        comment.isAcceptableOrUnknown(data['comment']!, _commentMeta),
+      );
+    }
+    if (data.containsKey('is_approved')) {
+      context.handle(
+        _isApprovedMeta,
+        isApproved.isAcceptableOrUnknown(data['is_approved']!, _isApprovedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProductReviewRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductReviewRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      rating: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rating'],
+      )!,
+      reviewerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reviewer_name'],
+      )!,
+      comment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}comment'],
+      )!,
+      isApproved: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_approved'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ProductReviewsTable createAlias(String alias) {
+    return $ProductReviewsTable(attachedDatabase, alias);
+  }
+}
+
+class ProductReviewRow extends DataClass
+    implements Insertable<ProductReviewRow> {
+  final int id;
+
+  /// CASCADE — deleting a product removes its reviews automatically.
+  final int productId;
+  final int rating;
+  final String reviewerName;
+  final String comment;
+  final bool isApproved;
+  final int createdAt;
+  const ProductReviewRow({
+    required this.id,
+    required this.productId,
+    required this.rating,
+    required this.reviewerName,
+    required this.comment,
+    required this.isApproved,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['product_id'] = Variable<int>(productId);
+    map['rating'] = Variable<int>(rating);
+    map['reviewer_name'] = Variable<String>(reviewerName);
+    map['comment'] = Variable<String>(comment);
+    map['is_approved'] = Variable<bool>(isApproved);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  ProductReviewsCompanion toCompanion(bool nullToAbsent) {
+    return ProductReviewsCompanion(
+      id: Value(id),
+      productId: Value(productId),
+      rating: Value(rating),
+      reviewerName: Value(reviewerName),
+      comment: Value(comment),
+      isApproved: Value(isApproved),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ProductReviewRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductReviewRow(
+      id: serializer.fromJson<int>(json['id']),
+      productId: serializer.fromJson<int>(json['productId']),
+      rating: serializer.fromJson<int>(json['rating']),
+      reviewerName: serializer.fromJson<String>(json['reviewerName']),
+      comment: serializer.fromJson<String>(json['comment']),
+      isApproved: serializer.fromJson<bool>(json['isApproved']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'productId': serializer.toJson<int>(productId),
+      'rating': serializer.toJson<int>(rating),
+      'reviewerName': serializer.toJson<String>(reviewerName),
+      'comment': serializer.toJson<String>(comment),
+      'isApproved': serializer.toJson<bool>(isApproved),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  ProductReviewRow copyWith({
+    int? id,
+    int? productId,
+    int? rating,
+    String? reviewerName,
+    String? comment,
+    bool? isApproved,
+    int? createdAt,
+  }) => ProductReviewRow(
+    id: id ?? this.id,
+    productId: productId ?? this.productId,
+    rating: rating ?? this.rating,
+    reviewerName: reviewerName ?? this.reviewerName,
+    comment: comment ?? this.comment,
+    isApproved: isApproved ?? this.isApproved,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ProductReviewRow copyWithCompanion(ProductReviewsCompanion data) {
+    return ProductReviewRow(
+      id: data.id.present ? data.id.value : this.id,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      rating: data.rating.present ? data.rating.value : this.rating,
+      reviewerName: data.reviewerName.present
+          ? data.reviewerName.value
+          : this.reviewerName,
+      comment: data.comment.present ? data.comment.value : this.comment,
+      isApproved: data.isApproved.present
+          ? data.isApproved.value
+          : this.isApproved,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductReviewRow(')
+          ..write('id: $id, ')
+          ..write('productId: $productId, ')
+          ..write('rating: $rating, ')
+          ..write('reviewerName: $reviewerName, ')
+          ..write('comment: $comment, ')
+          ..write('isApproved: $isApproved, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    productId,
+    rating,
+    reviewerName,
+    comment,
+    isApproved,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductReviewRow &&
+          other.id == this.id &&
+          other.productId == this.productId &&
+          other.rating == this.rating &&
+          other.reviewerName == this.reviewerName &&
+          other.comment == this.comment &&
+          other.isApproved == this.isApproved &&
+          other.createdAt == this.createdAt);
+}
+
+class ProductReviewsCompanion extends UpdateCompanion<ProductReviewRow> {
+  final Value<int> id;
+  final Value<int> productId;
+  final Value<int> rating;
+  final Value<String> reviewerName;
+  final Value<String> comment;
+  final Value<bool> isApproved;
+  final Value<int> createdAt;
+  const ProductReviewsCompanion({
+    this.id = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.rating = const Value.absent(),
+    this.reviewerName = const Value.absent(),
+    this.comment = const Value.absent(),
+    this.isApproved = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ProductReviewsCompanion.insert({
+    this.id = const Value.absent(),
+    required int productId,
+    required int rating,
+    required String reviewerName,
+    this.comment = const Value.absent(),
+    this.isApproved = const Value.absent(),
+    required int createdAt,
+  }) : productId = Value(productId),
+       rating = Value(rating),
+       reviewerName = Value(reviewerName),
+       createdAt = Value(createdAt);
+  static Insertable<ProductReviewRow> custom({
+    Expression<int>? id,
+    Expression<int>? productId,
+    Expression<int>? rating,
+    Expression<String>? reviewerName,
+    Expression<String>? comment,
+    Expression<bool>? isApproved,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (productId != null) 'product_id': productId,
+      if (rating != null) 'rating': rating,
+      if (reviewerName != null) 'reviewer_name': reviewerName,
+      if (comment != null) 'comment': comment,
+      if (isApproved != null) 'is_approved': isApproved,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ProductReviewsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? productId,
+    Value<int>? rating,
+    Value<String>? reviewerName,
+    Value<String>? comment,
+    Value<bool>? isApproved,
+    Value<int>? createdAt,
+  }) {
+    return ProductReviewsCompanion(
+      id: id ?? this.id,
+      productId: productId ?? this.productId,
+      rating: rating ?? this.rating,
+      reviewerName: reviewerName ?? this.reviewerName,
+      comment: comment ?? this.comment,
+      isApproved: isApproved ?? this.isApproved,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (rating.present) {
+      map['rating'] = Variable<int>(rating.value);
+    }
+    if (reviewerName.present) {
+      map['reviewer_name'] = Variable<String>(reviewerName.value);
+    }
+    if (comment.present) {
+      map['comment'] = Variable<String>(comment.value);
+    }
+    if (isApproved.present) {
+      map['is_approved'] = Variable<bool>(isApproved.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductReviewsCompanion(')
+          ..write('id: $id, ')
+          ..write('productId: $productId, ')
+          ..write('rating: $rating, ')
+          ..write('reviewerName: $reviewerName, ')
+          ..write('comment: $comment, ')
+          ..write('isApproved: $isApproved, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $WishlistItemsTable extends WishlistItems
     with TableInfo<$WishlistItemsTable, WishlistItemRow> {
   @override
@@ -4858,6 +5325,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ProductsTable products = $ProductsTable(this);
+  late final $ProductReviewsTable productReviews = $ProductReviewsTable(this);
   late final $WishlistItemsTable wishlistItems = $WishlistItemsTable(this);
   late final $CartItemsTable cartItems = $CartItemsTable(this);
   late final $CouponsTable coupons = $CouponsTable(this);
@@ -4872,6 +5340,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxProductsCategory = Index(
     'idx_products_category',
     'CREATE INDEX idx_products_category ON products (category_id)',
+  );
+  late final Index idxReviewsProduct = Index(
+    'idx_reviews_product',
+    'CREATE INDEX idx_reviews_product ON product_reviews (product_id)',
   );
   late final Index idxOrdersStatus = Index(
     'idx_orders_status',
@@ -4892,6 +5364,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     categories,
     products,
+    productReviews,
     wishlistItems,
     cartItems,
     coupons,
@@ -4903,12 +5376,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     uiPrefs,
     appMeta,
     idxProductsCategory,
+    idxReviewsProduct,
     idxOrdersStatus,
     idxOrderItemsOrder,
     idxStatusHistoryOrder,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'products',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('product_reviews', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'products',
@@ -5275,6 +5756,24 @@ final class $$ProductsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$ProductReviewsTable, List<ProductReviewRow>>
+  _productReviewsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.productReviews,
+    aliasName: 'products__id__product_reviews__product_id',
+  );
+
+  $$ProductReviewsTableProcessedTableManager get productReviewsRefs {
+    final manager = $$ProductReviewsTableTableManager(
+      $_db,
+      $_db.productReviews,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_productReviewsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$WishlistItemsTable, List<WishlistItemRow>>
   _wishlistItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.wishlistItems,
@@ -5415,6 +5914,31 @@ class $$ProductsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> productReviewsRefs(
+    Expression<bool> Function($$ProductReviewsTableFilterComposer f) f,
+  ) {
+    final $$ProductReviewsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.productReviews,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductReviewsTableFilterComposer(
+            $db: $db,
+            $table: $db.productReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> wishlistItemsRefs(
@@ -5654,6 +6178,31 @@ class $$ProductsTableAnnotationComposer
     return composer;
   }
 
+  Expression<T> productReviewsRefs<T extends Object>(
+    Expression<T> Function($$ProductReviewsTableAnnotationComposer a) f,
+  ) {
+    final $$ProductReviewsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.productReviews,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductReviewsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.productReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> wishlistItemsRefs<T extends Object>(
     Expression<T> Function($$WishlistItemsTableAnnotationComposer a) f,
   ) {
@@ -5745,6 +6294,7 @@ class $$ProductsTableTableManager
           ProductRow,
           PrefetchHooks Function({
             bool categoryId,
+            bool productReviewsRefs,
             bool wishlistItemsRefs,
             bool cartItemsRefs,
             bool orderItemsRefs,
@@ -5828,6 +6378,7 @@ class $$ProductsTableTableManager
           prefetchHooksCallback:
               ({
                 categoryId = false,
+                productReviewsRefs = false,
                 wishlistItemsRefs = false,
                 cartItemsRefs = false,
                 orderItemsRefs = false,
@@ -5835,6 +6386,7 @@ class $$ProductsTableTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (productReviewsRefs) db.productReviews,
                     if (wishlistItemsRefs) db.wishlistItems,
                     if (cartItemsRefs) db.cartItems,
                     if (orderItemsRefs) db.orderItems,
@@ -5873,6 +6425,27 @@ class $$ProductsTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (productReviewsRefs)
+                        await $_getPrefetchedData<
+                          ProductRow,
+                          $ProductsTable,
+                          ProductReviewRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._productReviewsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).productReviewsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.productId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (wishlistItemsRefs)
                         await $_getPrefetchedData<
                           ProductRow,
@@ -5958,10 +6531,372 @@ typedef $$ProductsTableProcessedTableManager =
       ProductRow,
       PrefetchHooks Function({
         bool categoryId,
+        bool productReviewsRefs,
         bool wishlistItemsRefs,
         bool cartItemsRefs,
         bool orderItemsRefs,
       })
+    >;
+typedef $$ProductReviewsTableCreateCompanionBuilder =
+    ProductReviewsCompanion Function({
+      Value<int> id,
+      required int productId,
+      required int rating,
+      required String reviewerName,
+      Value<String> comment,
+      Value<bool> isApproved,
+      required int createdAt,
+    });
+typedef $$ProductReviewsTableUpdateCompanionBuilder =
+    ProductReviewsCompanion Function({
+      Value<int> id,
+      Value<int> productId,
+      Value<int> rating,
+      Value<String> reviewerName,
+      Value<String> comment,
+      Value<bool> isApproved,
+      Value<int> createdAt,
+    });
+
+final class $$ProductReviewsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $ProductReviewsTable, ProductReviewRow> {
+  $$ProductReviewsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias('product_reviews__product_id__products__id');
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<int>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ProductReviewsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductReviewsTable> {
+  $$ProductReviewsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reviewerName => $composableBuilder(
+    column: $table.reviewerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get comment => $composableBuilder(
+    column: $table.comment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isApproved => $composableBuilder(
+    column: $table.isApproved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProductReviewsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductReviewsTable> {
+  $$ProductReviewsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reviewerName => $composableBuilder(
+    column: $table.reviewerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get comment => $composableBuilder(
+    column: $table.comment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isApproved => $composableBuilder(
+    column: $table.isApproved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProductReviewsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductReviewsTable> {
+  $$ProductReviewsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => column);
+
+  GeneratedColumn<String> get reviewerName => $composableBuilder(
+    column: $table.reviewerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get comment =>
+      $composableBuilder(column: $table.comment, builder: (column) => column);
+
+  GeneratedColumn<bool> get isApproved => $composableBuilder(
+    column: $table.isApproved,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProductReviewsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProductReviewsTable,
+          ProductReviewRow,
+          $$ProductReviewsTableFilterComposer,
+          $$ProductReviewsTableOrderingComposer,
+          $$ProductReviewsTableAnnotationComposer,
+          $$ProductReviewsTableCreateCompanionBuilder,
+          $$ProductReviewsTableUpdateCompanionBuilder,
+          (ProductReviewRow, $$ProductReviewsTableReferences),
+          ProductReviewRow,
+          PrefetchHooks Function({bool productId})
+        > {
+  $$ProductReviewsTableTableManager(
+    _$AppDatabase db,
+    $ProductReviewsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductReviewsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductReviewsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductReviewsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> productId = const Value.absent(),
+                Value<int> rating = const Value.absent(),
+                Value<String> reviewerName = const Value.absent(),
+                Value<String> comment = const Value.absent(),
+                Value<bool> isApproved = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+              }) => ProductReviewsCompanion(
+                id: id,
+                productId: productId,
+                rating: rating,
+                reviewerName: reviewerName,
+                comment: comment,
+                isApproved: isApproved,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int productId,
+                required int rating,
+                required String reviewerName,
+                Value<String> comment = const Value.absent(),
+                Value<bool> isApproved = const Value.absent(),
+                required int createdAt,
+              }) => ProductReviewsCompanion.insert(
+                id: id,
+                productId: productId,
+                rating: rating,
+                reviewerName: reviewerName,
+                comment: comment,
+                isApproved: isApproved,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ProductReviewsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({productId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (productId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.productId,
+                                referencedTable: $$ProductReviewsTableReferences
+                                    ._productIdTable(db),
+                                referencedColumn:
+                                    $$ProductReviewsTableReferences
+                                        ._productIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ProductReviewsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProductReviewsTable,
+      ProductReviewRow,
+      $$ProductReviewsTableFilterComposer,
+      $$ProductReviewsTableOrderingComposer,
+      $$ProductReviewsTableAnnotationComposer,
+      $$ProductReviewsTableCreateCompanionBuilder,
+      $$ProductReviewsTableUpdateCompanionBuilder,
+      (ProductReviewRow, $$ProductReviewsTableReferences),
+      ProductReviewRow,
+      PrefetchHooks Function({bool productId})
     >;
 typedef $$WishlistItemsTableCreateCompanionBuilder =
     WishlistItemsCompanion Function({
@@ -8778,6 +9713,8 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db, _db.products);
+  $$ProductReviewsTableTableManager get productReviews =>
+      $$ProductReviewsTableTableManager(_db, _db.productReviews);
   $$WishlistItemsTableTableManager get wishlistItems =>
       $$WishlistItemsTableTableManager(_db, _db.wishlistItems);
   $$CartItemsTableTableManager get cartItems =>

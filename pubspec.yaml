@@ -93,6 +93,14 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  # Admin order CSV export (roadmap): native Save-As dialog via the
+  # Flutter-endorsed file_selector (first-party, Windows/Android supported —
+  # matches image_picker's platform-channel pattern already in use). The CSV
+  # bytes themselves are produced by a pure serializer (core/utils/order_csv)
+  # and only the dialog+write touch the platform, so the export logic stays
+  # fully unit-testable. Alternatives rejected: file_picker (community, both
+  # pick+save — we only need save), hand-rolled platform channels (no).
+  file_selector: ^1.1.0
 
 dev_dependencies:
   flutter_test:

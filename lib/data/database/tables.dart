@@ -86,6 +86,29 @@ class Coupons extends Table {
   IntColumn get createdAt => integer()();
 }
 
+/// Customer reviews & star ratings, one row per submission.
+///
+/// Moderation lives at the data boundary: [isApproved] defaults to false and
+/// the repository forces it on write, so a review is never storefront-visible
+/// until an admin approves it. The storefront reads only approved rows;
+/// the admin moderation screen reads all of them.
+@TableIndex(name: 'idx_reviews_product', columns: {#productId})
+@DataClassName('ProductReviewRow')
+class ProductReviews extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// CASCADE — deleting a product removes its reviews automatically.
+  IntColumn get productId =>
+      integer().references(Products, #id, onDelete: KeyAction.cascade)();
+  IntColumn get rating => integer().check(
+        rating.isBiggerOrEqualValue(1) & rating.isSmallerOrEqualValue(5),
+      )();
+  TextColumn get reviewerName => text()();
+  TextColumn get comment => text().withDefault(const Constant(''))();
+  BoolColumn get isApproved => boolean().withDefault(const Constant(false))();
+  IntColumn get createdAt => integer()();
+}
+
 /// Wishlist contents: one row per saved product, keyed by product id.
 /// CASCADE — deleting a product removes it from wishlists automatically.
 @DataClassName('WishlistItemRow')

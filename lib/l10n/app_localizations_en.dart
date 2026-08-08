@@ -400,6 +400,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentOrders => 'Recent orders';
 
   @override
+  String get revenueTrendTitle => 'Revenue trend';
+
+  @override
+  String get orderVolumeTitle => 'Order volume';
+
+  @override
+  String get topProductsTitle => 'Top products';
+
+  @override
+  String get last7Days => 'Last 7 days';
+
+  @override
+  String unitsSold(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count units',
+      one: '1 unit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noTopProducts => 'No products sold yet.';
+
+  @override
   String get overviewActiveCoupons => 'Active coupons';
 
   @override
@@ -590,19 +616,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiredStatus => 'Expired';
 
   @override
-  String noFilterOrdersTitle(String status) {
-    return 'No $status orders';
-  }
-
-  @override
   String get ordersWillAppear =>
       'Orders will appear here once customers check out.';
-
-  @override
-  String get tryDifferentFilter => 'Try a different status filter.';
-
-  @override
-  String get showAllOrders => 'Show all orders';
 
   @override
   String markedAs(String order, String status) {
@@ -843,4 +858,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorCouponCodeTaken => 'That code is already in use.';
+
+  @override
+  String get errorReviewNotFound => 'Review not found.';
+
+  @override
+  String get errorReviewRatingInvalid => 'Choose a rating from 1 to 5.';
+
+  @override
+  String get tabReviews => 'Reviews';
+
+  @override
+  String get reviewsTitle => 'Reviews';
+
+  @override
+  String get noReviewsTitle => 'No reviews yet';
+
+  @override
+  String get noReviewsMessage => 'Be the first to write a review.';
+
+  @override
+  String get writeReview => 'Write a review';
+
+  @override
+  String get reviewRatingLabel => 'Rating';
+
+  @override
+  String get reviewNameLabel => 'Your name';
+
+  @override
+  String get reviewCommentLabel => 'Your review';
+
+  @override
+  String get submitReview => 'Submit review';
+
+  @override
+  String get reviewSubmitted =>
+      'Thank you! Your review will appear after approval.';
+
+  @override
+  String reviewCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '1 review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String averageRating(String average) {
+    return '$average / 5';
+  }
+
+  @override
+  String get reviewPending => 'Pending';
+
+  @override
+  String get reviewApproved => 'Approved';
+
+  @override
+  String get approveReview => 'Approve';
+
+  @override
+  String get hideReview => 'Hide';
+
+  @override
+  String get noReviewsPendingTitle => 'No reviews to moderate';
+
+  @override
+  String get noReviewsPendingMessage =>
+      'Reviews submitted by customers will appear here.';
+
+  @override
+  String get deleteReviewTitle => 'Delete review?';
+
+  @override
+  String get deleteReviewMessage => 'This review will be removed permanently.';
+
+  @override
+  String get deleteReviewTooltip => 'Delete review';
+
+  @override
+  String get searchOrders => 'Search orders';
+
+  @override
+  String get fromDate => 'From';
+
+  @override
+  String get toDate => 'To';
+
+  @override
+  String get clearDates => 'Clear dates';
+
+  @override
+  String get noOrdersMatchTitle => 'No matching orders';
+
+  @override
+  String get noOrdersMatchMessage => 'Try different filters.';
+
+  @override
+  String get exportOrders => 'Export orders';
+
+  @override
+  String exportDone(int count) {
+    return 'Exported $count orders to CSV.';
+  }
 }

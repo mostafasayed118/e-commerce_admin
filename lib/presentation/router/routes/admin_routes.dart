@@ -4,6 +4,7 @@ import '../../features/admin/catalog/categories_screen.dart';
 import '../../features/admin/catalog/products_screen.dart';
 import '../../features/admin/coupons/coupons_screen.dart';
 import '../../features/admin/gate/admin_gate_screen.dart';
+import '../../features/admin/reviews/reviews_screen.dart';
 import '../../features/admin/orders/admin_orders_screen.dart';
 import '../../features/admin/overview/admin_overview_screen.dart';
 import '../../shells/admin_shell.dart';
@@ -57,6 +58,15 @@ List<RouteBase> adminRoutes() => [
                 path: '/admin/coupons',
                 name: RouteNames.adminCoupons,
                 builder: (context, state) => const CouponsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/reviews',
+                name: RouteNames.adminReviews,
+                builder: (context, state) => const ReviewsScreen(),
               ),
             ],
           ),

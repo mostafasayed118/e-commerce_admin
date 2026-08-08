@@ -42,6 +42,15 @@ void main() {
     expect(find.text('ORD-000001'), findsOneWidget);
     expect(find.text('ORD-000006'), findsOneWidget);
 
+    // The CSV export action is present (enabled — orders are visible). It is
+    // not tapped here: the native save dialog is a platform boundary outside
+    // widget tests; the serialization is unit-tested in order_csv_test.
+    expect(find.byTooltip('Export orders'), findsOneWidget);
+    final exportButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.download_outlined),
+    );
+    expect(exportButton.onPressed, isNotNull);
+
     // --- Filter by Pending: only ORD-000004 remains -----------------------
     // Target the ChoiceChip, not the status chip on the ORD-000004 tile.
     await tester.tap(find.widgetWithText(ChoiceChip, 'Pending'));
@@ -82,6 +91,52 @@ void main() {
     expect(historyRows, hasLength(2));
 
     await settleSnackBar(tester);
+    await unmountApp(tester);
+  });
+
+  testWidgets('search and date filters narrow the order list and clear',
+      (WidgetTester tester) async {
+    router = await pumpRouterApp(tester, size: const Size(900, 1600));
+    await unlockAdmin(tester, router: router);
+    await goToDestination(tester, router, '/admin/orders');
+
+    expect(find.text('ORD-000001'), findsOneWidget);
+
+    // --- Search by order number, hyphen-insensitive ------------------------
+    await tester.enterText(find.byType(TextField), 'ord-4');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('ORD-000004'), findsOneWidget);
+    expect(find.text('ORD-000001'), findsNothing);
+
+    // The field's one-tap clear restores the list.
+    await tester.tap(find.byIcon(Icons.clear));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('ORD-000001'), findsOneWidget);
+
+    // --- Date range: From = today (seed orders are July 2026) --------------
+    await tester.tap(find.widgetWithText(ActionChip, 'From'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    // Every seeded order predates today, so the range leaves nothing; the
+    // adapted empty state offers Clear filters, which restores everything.
+    expect(find.text('No matching orders'), findsOneWidget);
+
+    // With nothing visible, the export action disables (the BlocBuilder
+    // gate in action).
+    final disabledExport = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.download_outlined),
+    );
+    expect(disabledExport.onPressed, isNull);
+
+    await tester.tap(find.text('Clear filters'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('ORD-000001'), findsOneWidget);
+
     await unmountApp(tester);
   });
 

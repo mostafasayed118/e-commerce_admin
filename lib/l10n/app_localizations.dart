@@ -818,6 +818,42 @@ abstract class AppLocalizations {
   /// **'Recent orders'**
   String get recentOrders;
 
+  /// No description provided for @revenueTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue trend'**
+  String get revenueTrendTitle;
+
+  /// No description provided for @orderVolumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order volume'**
+  String get orderVolumeTitle;
+
+  /// No description provided for @topProductsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top products'**
+  String get topProductsTitle;
+
+  /// No description provided for @last7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get last7Days;
+
+  /// Units-sold label on the dashboard's top-products ranking.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 unit} other{{count} units}}'**
+  String unitsSold(num count);
+
+  /// No description provided for @noTopProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No products sold yet.'**
+  String get noTopProducts;
+
   /// No description provided for @overviewActiveCoupons.
   ///
   /// In en, this message translates to:
@@ -1124,29 +1160,11 @@ abstract class AppLocalizations {
   /// **'Expired'**
   String get expiredStatus;
 
-  /// No description provided for @noFilterOrdersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No {status} orders'**
-  String noFilterOrdersTitle(String status);
-
   /// No description provided for @ordersWillAppear.
   ///
   /// In en, this message translates to:
   /// **'Orders will appear here once customers check out.'**
   String get ordersWillAppear;
-
-  /// No description provided for @tryDifferentFilter.
-  ///
-  /// In en, this message translates to:
-  /// **'Try a different status filter.'**
-  String get tryDifferentFilter;
-
-  /// No description provided for @showAllOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Show all orders'**
-  String get showAllOrders;
 
   /// No description provided for @markedAs.
   ///
@@ -1531,6 +1549,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That code is already in use.'**
   String get errorCouponCodeTaken;
+
+  /// No description provided for @errorReviewNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Review not found.'**
+  String get errorReviewNotFound;
+
+  /// No description provided for @errorReviewRatingInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a rating from 1 to 5.'**
+  String get errorReviewRatingInvalid;
+
+  /// No description provided for @tabReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get tabReviews;
+
+  /// No description provided for @reviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviewsTitle;
+
+  /// No description provided for @noReviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get noReviewsTitle;
+
+  /// No description provided for @noReviewsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to write a review.'**
+  String get noReviewsMessage;
+
+  /// No description provided for @writeReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review'**
+  String get writeReview;
+
+  /// No description provided for @reviewRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get reviewRatingLabel;
+
+  /// No description provided for @reviewNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get reviewNameLabel;
+
+  /// No description provided for @reviewCommentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review'**
+  String get reviewCommentLabel;
+
+  /// No description provided for @submitReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review'**
+  String get submitReview;
+
+  /// No description provided for @reviewSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you! Your review will appear after approval.'**
+  String get reviewSubmitted;
+
+  /// No description provided for @reviewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 review} other{{count} reviews}}'**
+  String reviewCount(num count);
+
+  /// No description provided for @averageRating.
+  ///
+  /// In en, this message translates to:
+  /// **'{average} / 5'**
+  String averageRating(String average);
+
+  /// No description provided for @reviewPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get reviewPending;
+
+  /// No description provided for @reviewApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get reviewApproved;
+
+  /// No description provided for @approveReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approveReview;
+
+  /// No description provided for @hideReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hideReview;
+
+  /// No description provided for @noReviewsPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews to moderate'**
+  String get noReviewsPendingTitle;
+
+  /// No description provided for @noReviewsPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews submitted by customers will appear here.'**
+  String get noReviewsPendingMessage;
+
+  /// No description provided for @deleteReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete review?'**
+  String get deleteReviewTitle;
+
+  /// No description provided for @deleteReviewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This review will be removed permanently.'**
+  String get deleteReviewMessage;
+
+  /// No description provided for @deleteReviewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete review'**
+  String get deleteReviewTooltip;
+
+  /// No description provided for @searchOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Search orders'**
+  String get searchOrders;
+
+  /// No description provided for @fromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get fromDate;
+
+  /// No description provided for @toDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get toDate;
+
+  /// No description provided for @clearDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear dates'**
+  String get clearDates;
+
+  /// No description provided for @noOrdersMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching orders'**
+  String get noOrdersMatchTitle;
+
+  /// No description provided for @noOrdersMatchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try different filters.'**
+  String get noOrdersMatchMessage;
+
+  /// No description provided for @exportOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Export orders'**
+  String get exportOrders;
+
+  /// No description provided for @exportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {count} orders to CSV.'**
+  String exportDone(int count);
 }
 
 class _AppLocalizationsDelegate

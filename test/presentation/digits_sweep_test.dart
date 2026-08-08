@@ -97,8 +97,9 @@ void main() {
 
   Future<void> pumpArabicApp(WidgetTester tester) async {
     // Tall + wide: the admin rail layout, and long screens (overview) fit
-    // without scrolling so the sweep sees the whole screen.
-    await pumpFullApp(tester, size: const Size(900, 2200));
+    // without scrolling so the sweep sees the whole screen (the dashboard
+    // gained two trend charts + a top-products ranking).
+    await pumpFullApp(tester, size: const Size(900, 3600));
 
     // Switch to Arabic via the DI-owned LocaleCubit (the full app listens).
     await getIt<LocaleCubit>().setLocaleCode('ar');
@@ -133,6 +134,8 @@ void main() {
     // --- Product detail -----------------------------------------------
     await tester.tap(find.text('تيشيرت كلاسيك'));
     await tester.pumpAndSettle();
+    // The reviews section renders here too: approved seeded reviews with
+    // their dates + the Eastern-digit average/count.
     await _sweepNoWesternDigits(tester, where: 'product detail');
     await goBack(tester);
 
@@ -212,6 +215,13 @@ void main() {
     await tapAdminFab(tester);
     await _sweepNoWesternDigits(tester, where: 'coupon form');
     await goBack(tester);
+
+    // --- Admin: reviews moderation -----------------------------------------
+    await tester.tap(find.text('المراجعات').last);
+    await settleAction(tester);
+    // Seeded review comments are English content (typed data, never
+    // reformatted); the review dates and the average/count convert.
+    await _sweepNoWesternDigits(tester, where: 'admin reviews');
 
     // --- Admin: orders list -----------------------------------------------
     await tester.tap(find.text('الطلبات').last);

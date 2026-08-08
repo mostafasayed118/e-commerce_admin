@@ -35,7 +35,7 @@ void main() {
 
   testWidgets('overview shows derived metrics and the chart', (
       WidgetTester tester) async {
-    router = await pumpRouterApp(tester, size: const Size(900, 2200));
+    router = await pumpRouterApp(tester, size: const Size(900, 3600));
     await unlockAdmin(tester, router: router);
     await settleDrift(tester); // overview cubit streams
     await tester.pumpAndSettle();
@@ -46,10 +46,23 @@ void main() {
     expect(find.text('6'), findsOneWidget); // orders card
     expect(find.text('5'), findsOneWidget); // low-stock card
 
-    // The fl_chart bar chart renders with all five status labels.
-    expect(find.byType(BarChart), findsOneWidget);
+    // The fl_chart charts render: the revenue line, the order-volume bars
+    // and the orders-by-status bars (three chart widgets total, with all
+    // five status labels on the status chart).
+    expect(find.byType(LineChart), findsOneWidget);
+    expect(find.byType(BarChart), findsNWidgets(2));
     expect(find.text('Pending'), findsWidgets);
     expect(find.text('Cancelled'), findsWidgets);
+
+    // Trends: the dashboard shows a 7-day sales window. The seed's newest
+    // order is 3 hours before the fixed base date, so the window's labels
+    // are the surrounding calendar days, and the top product by revenue is
+    // the Mechanical Keyboard ($120.00) from ORD-000003.
+    expect(find.text('REVENUE TREND'), findsOneWidget);
+    expect(find.text('ORDER VOLUME'), findsOneWidget);
+    expect(find.text('TOP PRODUCTS'), findsOneWidget);
+    expect(find.text('Mechanical Keyboard'), findsOneWidget);
+    expect(find.text(r'$120.00'), findsOneWidget);
 
     // Recent orders: the newest seed order tops the list.
     expect(find.text('ORD-000004'), findsOneWidget);
@@ -92,7 +105,7 @@ void main() {
       (WidgetTester tester) async {
     router = await pumpRouterApp(
       tester,
-      size: const Size(900, 2200),
+      size: const Size(900, 3600),
       locale: const Locale('ar'),
     );
     await unlockAdmin(tester, router: router, setPinLabel: 'تعيين الرمز');
@@ -118,7 +131,7 @@ void main() {
 
   testWidgets('dashboard links reach the order detail, product edit, and '
       'coupons tab', (WidgetTester tester) async {
-    router = await pumpRouterApp(tester, size: const Size(900, 2200));
+    router = await pumpRouterApp(tester, size: const Size(900, 3600));
     await unlockAdmin(tester, router: router);
     await settleDrift(tester);
     await tester.pumpAndSettle();

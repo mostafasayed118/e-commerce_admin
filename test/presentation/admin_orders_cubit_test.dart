@@ -79,6 +79,103 @@ void main() {
     cubit.close();
   });
 
+  test('setQuery matches order number (hyphen-insensitive), name, and phone',
+      () {
+    final cubit = AdminOrdersCubit(repository);
+    ordersCtrl.add(const [pending, delivered]);
+
+    // 'ORD-1' (with hyphen) and 'ord1' (without) both find ORD-000001.
+    cubit.setQuery('ORD-1');
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, [pending]);
+    cubit.setQuery('ord1');
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, [pending]);
+
+    // Customer name and phone match too.
+    cubit.setQuery('A');
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, [pending]);
+    cubit.setQuery('2');
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, [delivered]);
+
+    // No match -> empty, but distinguishable from "no orders at all".
+    cubit.setQuery('zzz');
+    final noMatch = cubit.state as AdminOrdersLoaded;
+    expect(noMatch.visibleOrders, isEmpty);
+    expect(noMatch.hasActiveFilter, isTrue);
+
+    cubit.setQuery('');
+    final cleared = cubit.state as AdminOrdersLoaded;
+    expect(cleared.visibleOrders, hasLength(2));
+    expect(cleared.hasActiveFilter, isFalse);
+
+    cubit.close();
+  });
+
+  test('setDateRange is inclusive over whole days and excludes null createdAt',
+      () {
+    final cubit = AdminOrdersCubit(repository);
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    final yesterdays = Order(
+      id: 3,
+      orderNumber: 'ORD-000003',
+      status: OrderStatus.pending,
+      subtotalCents: 3000,
+      discountCents: 0,
+      totalCents: 3000,
+      shipping: const ShippingInfo(name: 'C', phone: '3', address: 'Rd'),
+      createdAt: yesterday,
+    );
+    ordersCtrl.add([pending, delivered, yesterdays]);
+
+    // From today: pending/delivered carry no createdAt (excluded by any
+    // date filter) and yesterdays predates today -> nothing remains.
+    cubit.setDateRange(from: DateTime.now());
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, isEmpty);
+
+    // A single-day window on yesterday keeps exactly that order.
+    cubit.setDateRange(from: yesterday, to: yesterday);
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, [yesterdays]);
+
+    // Clearing both bounds restores everything.
+    cubit.setDateRange(from: null, to: null);
+    final cleared = cubit.state as AdminOrdersLoaded;
+    expect(cleared.visibleOrders, hasLength(3));
+    expect(cleared.hasActiveFilter, isFalse);
+
+    cubit.close();
+  });
+
+  test('combined filters AND together; clearFilters resets all', () {
+    final cubit = AdminOrdersCubit(repository);
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    final yesterdays = Order(
+      id: 3,
+      orderNumber: 'ORD-000003',
+      status: OrderStatus.pending,
+      subtotalCents: 3000,
+      discountCents: 0,
+      totalCents: 3000,
+      shipping: const ShippingInfo(name: 'C', phone: '3', address: 'Rd'),
+      createdAt: yesterday,
+    );
+    ordersCtrl.add([pending, delivered, yesterdays]);
+
+    cubit.setFilter(OrderStatus.pending);
+    cubit.setQuery('000003');
+    cubit.setDateRange(from: yesterday, to: yesterday);
+    expect((cubit.state as AdminOrdersLoaded).visibleOrders, [yesterdays]);
+
+    cubit.clearFilters();
+    final cleared = cubit.state as AdminOrdersLoaded;
+    expect(cleared.visibleOrders, hasLength(3));
+    expect(cleared.filter, isNull);
+    expect(cleared.query, isEmpty);
+    expect(cleared.fromDate, isNull);
+    expect(cleared.toDate, isNull);
+    expect(cleared.hasActiveFilter, isFalse);
+
+    cubit.close();
+  });
+
   test('a stream error becomes AdminOrdersError and is sticky', () {
     final cubit = AdminOrdersCubit(repository);
     ordersCtrl.add(const [pending]);
