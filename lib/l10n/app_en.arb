@@ -89,6 +89,23 @@
     }
   },
   "moveToCart": "Move to cart",
+  "addAllToCart": "Add all to cart",
+  "addedAllToCart": "{count, plural, one{Added 1 item to cart} other{Added {count} items to cart}}",
+  "@addedAllToCart": {
+    "description": "Confirmation after moving the whole wishlist to the cart.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "addedAllPartial": "Added {added} to cart · {skipped} unavailable",
+  "@addedAllPartial": {
+    "description": "Partial bulk move: some items could not be added (out of stock / stock cap) and stay in the wishlist.",
+    "placeholders": {
+      "added": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "addAllNoneAdded": "Nothing was added — unavailable items stay in your wishlist.",
 
   "checkoutSummary": "Order summary",
   "couponLabel": "Coupon ({code})",

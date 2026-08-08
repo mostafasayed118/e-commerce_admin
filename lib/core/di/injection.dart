@@ -36,6 +36,7 @@ import '../../domain/usecases/cart/add_to_cart.dart';
 import '../../domain/usecases/cart/clear_cart.dart';
 import '../../domain/usecases/cart/remove_from_cart.dart';
 import '../../domain/usecases/cart/update_cart_quantity.dart';
+import '../../domain/usecases/wishlist/add_all_wishlist_to_cart.dart';
 import '../../domain/usecases/wishlist/move_wishlist_item_to_cart.dart';
 import '../../domain/usecases/wishlist/toggle_wishlist.dart';
 import '../../domain/usecases/checkout/place_order.dart';
@@ -150,6 +151,11 @@ void setupDependencies() {
   getIt.registerLazySingleton<MoveWishlistItemToCart>(() =>
       MoveWishlistItemToCart(
         getIt<AddToCart>(),
+        getIt<WishlistRepository>(),
+      ));
+  getIt.registerLazySingleton<AddAllWishlistToCart>(() =>
+      AddAllWishlistToCart(
+        getIt<MoveWishlistItemToCart>(),
         getIt<WishlistRepository>(),
       ));
   getIt.registerLazySingleton<PlaceOrder>(() => PlaceOrder(

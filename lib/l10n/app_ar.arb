@@ -63,6 +63,23 @@
   "addedToWishlist": "تمت إضافة {product} إلى المفضلة",
   "removedFromWishlist": "تمت إزالة {product} من المفضلة",
   "moveToCart": "نقل إلى السلة",
+  "addAllToCart": "أضف الكل إلى السلة",
+  "addedAllToCart": "{count, plural, zero{لم تُضف أي عناصر إلى السلة} one{أُضيف عنصر واحد إلى السلة} two{أُضيف عنصران إلى السلة} few{أُضيف {count} عناصر إلى السلة} many{أُضيف {count} عنصرًا إلى السلة} other{أُضيف {count} عنصرًا إلى السلة}}",
+  "@addedAllToCart": {
+    "description": "Confirmation after moving the whole wishlist to the cart.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "addedAllPartial": "تمت إضافة {added} إلى السلة · {skipped} غير متوفرة",
+  "@addedAllPartial": {
+    "description": "Partial bulk move: some items could not be added (out of stock / stock cap) and stay in the wishlist.",
+    "placeholders": {
+      "added": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "addAllNoneAdded": "لم يُضف شيء — تبقى العناصر غير المتوفرة في المفضلة.",
 
   "checkoutSummary": "ملخص الطلب",
   "couponLabel": "القسيمة ({code})",

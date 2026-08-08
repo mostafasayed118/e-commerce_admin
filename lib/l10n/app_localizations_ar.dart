@@ -189,6 +189,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moveToCart => 'نقل إلى السلة';
 
   @override
+  String get addAllToCart => 'أضف الكل إلى السلة';
+
+  @override
+  String addedAllToCart(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أُضيف $count عنصرًا إلى السلة',
+      many: 'أُضيف $count عنصرًا إلى السلة',
+      few: 'أُضيف $count عناصر إلى السلة',
+      two: 'أُضيف عنصران إلى السلة',
+      one: 'أُضيف عنصر واحد إلى السلة',
+      zero: 'لم تُضف أي عناصر إلى السلة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String addedAllPartial(int added, int skipped) {
+    return 'تمت إضافة $added إلى السلة · $skipped غير متوفرة';
+  }
+
+  @override
+  String get addAllNoneAdded =>
+      'لم يُضف شيء — تبقى العناصر غير المتوفرة في المفضلة.';
+
+  @override
   String get checkoutSummary => 'ملخص الطلب';
 
   @override

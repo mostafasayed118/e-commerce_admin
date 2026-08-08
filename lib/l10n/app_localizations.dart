@@ -416,6 +416,30 @@ abstract class AppLocalizations {
   /// **'Move to cart'**
   String get moveToCart;
 
+  /// No description provided for @addAllToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add all to cart'**
+  String get addAllToCart;
+
+  /// Confirmation after moving the whole wishlist to the cart.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Added 1 item to cart} other{Added {count} items to cart}}'**
+  String addedAllToCart(num count);
+
+  /// Partial bulk move: some items could not be added (out of stock / stock cap) and stay in the wishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {added} to cart · {skipped} unavailable'**
+  String addedAllPartial(int added, int skipped);
+
+  /// No description provided for @addAllNoneAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was added — unavailable items stay in your wishlist.'**
+  String get addAllNoneAdded;
+
   /// No description provided for @checkoutSummary.
   ///
   /// In en, this message translates to:

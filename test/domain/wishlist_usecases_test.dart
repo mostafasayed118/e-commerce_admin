@@ -10,6 +10,7 @@ import 'package:shop_admin/domain/repositories/cart_repository.dart';
 import 'package:shop_admin/domain/repositories/product_repository.dart';
 import 'package:shop_admin/domain/repositories/wishlist_repository.dart';
 import 'package:shop_admin/domain/usecases/cart/add_to_cart.dart';
+import 'package:shop_admin/domain/usecases/wishlist/add_all_wishlist_to_cart.dart';
 import 'package:shop_admin/domain/usecases/wishlist/move_wishlist_item_to_cart.dart';
 import 'package:shop_admin/domain/usecases/wishlist/toggle_wishlist.dart';
 
@@ -18,6 +19,9 @@ class MockWishlistRepository extends Mock implements WishlistRepository {}
 class MockCartRepository extends Mock implements CartRepository {}
 
 class MockProductRepository extends Mock implements ProductRepository {}
+
+class MockMoveWishlistItemToCart extends Mock
+    implements MoveWishlistItemToCart {}
 
 void main() {
   late MockWishlistRepository wishlist;
@@ -167,6 +171,69 @@ void main() {
 
       expect(result, isA<Failure<void>>());
       expect((result as Failure<void>).error, same(dbError));
+    });
+  });
+
+  group('AddAllWishlistToCart', () {
+    late MockMoveWishlistItemToCart move;
+    late AddAllWishlistToCart addAll;
+
+    setUp(() {
+      move = MockMoveWishlistItemToCart();
+      addAll = AddAllWishlistToCart(move, wishlist);
+    });
+
+    test('moves every saved item in order when all succeed', () async {
+      mockContents(const [
+        WishlistItem(productId: 1),
+        WishlistItem(productId: 2),
+      ]);
+      when(() => move(any()))
+          .thenAnswer((_) async => const Success<void>(null));
+
+      final result = await addAll();
+
+      expect(result.added, 2);
+      expect(result.skipped, 0);
+      expect(result.allAdded, isTrue);
+      expect(result.noneAdded, isFalse);
+      // Sequential, in save order (each move reads the live cart quantity,
+      // so a parallel fan-out would race the stock cap).
+      verifyInOrder([() => move(1), () => move(2)]);
+    });
+
+    test('skips failed moves and keeps their wishlist entries', () async {
+      mockContents(const [
+        WishlistItem(productId: 1),
+        WishlistItem(productId: 2),
+        WishlistItem(productId: 3),
+      ]);
+      const dbError = DatabaseError(message: 'Could not add to cart');
+      when(() => move(1))
+          .thenAnswer((_) async => const Success<void>(null));
+      when(() => move(2))
+          .thenAnswer((_) async => const Failure<void>(dbError));
+      when(() => move(3))
+          .thenAnswer((_) async => const Success<void>(null));
+
+      final result = await addAll();
+
+      expect(result.added, 2);
+      expect(result.skipped, 1);
+      expect(result.allAdded, isFalse);
+      expect(result.noneAdded, isFalse);
+    });
+
+    test('an empty wishlist adds nothing', () async {
+      mockContents(const []);
+
+      final result = await addAll();
+
+      expect(result.added, 0);
+      expect(result.skipped, 0);
+      expect(result.allAdded, isTrue); // vacuously true
+      expect(result.noneAdded, isFalse);
+      verifyNever(() => move(any()));
     });
   });
 }

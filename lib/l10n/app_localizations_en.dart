@@ -187,6 +187,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveToCart => 'Move to cart';
 
   @override
+  String get addAllToCart => 'Add all to cart';
+
+  @override
+  String addedAllToCart(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count items to cart',
+      one: 'Added 1 item to cart',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String addedAllPartial(int added, int skipped) {
+    return 'Added $added to cart · $skipped unavailable';
+  }
+
+  @override
+  String get addAllNoneAdded =>
+      'Nothing was added — unavailable items stay in your wishlist.';
+
+  @override
   String get checkoutSummary => 'Order summary';
 
   @override
