@@ -7,13 +7,12 @@ import 'package:shop_admin/core/entities/order_item.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/core/entities/shipping_info.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/data/database/seed_data.dart';
 import 'package:shop_admin/l10n/app_localizations.dart';
-import 'package:shop_admin/presentation/app.dart';
 import 'package:shop_admin/presentation/features/orders/order_detail_view.dart';
 import 'package:shop_admin/presentation/locale/locale_cubit.dart';
 
 import '../helpers/drift_settle.dart';
+import '../helpers/shop_flow.dart';
 import '../helpers/test_di.dart';
 
 /// Task 23: the language switch must (1) swap every visible string to the
@@ -30,15 +29,6 @@ void main() {
     await db.close();
     await getIt.reset();
   });
-
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
-    await tester.pumpWidget(const ShopAdminApp());
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-  }
 
   TextDirection directionOf(WidgetTester tester) =>
       tester.widget<Directionality>(find.byType(Directionality).first)
@@ -103,7 +93,7 @@ void main() {
 
   testWidgets('boots in English, LTR, with the shop shell',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    await pumpFullApp(tester);
 
     expect(find.text('Shop'), findsWidgets); // nav label + screen title
     expect(directionOf(tester), TextDirection.ltr);
@@ -113,7 +103,7 @@ void main() {
 
   testWidgets('switching to Arabic localizes strings and flips to RTL',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    await pumpFullApp(tester);
 
     await getIt<LocaleCubit>().setLocaleCode('ar');
     await tester.pumpAndSettle();
@@ -127,6 +117,8 @@ void main() {
     // canonical English stays stored in the DB.
     expect(find.text('ملابس'), findsWidgets); // Clothing category
     expect(find.text('مقلاة من حديد الزهر'), findsOneWidget);
+    // The catalog's result count converts too (13 seeded products).
+    expect(find.text('١٣ منتجًا'), findsOneWidget);
 
     // Switching back restores English immediately (no restart needed).
     await getIt<LocaleCubit>().setLocaleCode('en');

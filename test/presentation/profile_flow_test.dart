@@ -8,12 +8,12 @@ import 'package:shop_admin/core/error/result.dart';
 import 'package:shop_admin/data/database/app_database.dart';
 import 'package:shop_admin/domain/repositories/settings_repository.dart';
 import 'package:shop_admin/presentation/features/admin/gate/admin_gate_screen.dart';
-import 'package:shop_admin/presentation/router/app_router.dart';
 import 'package:shop_admin/presentation/theme/theme_cubit.dart';
 
 import '../helpers/drift_settle.dart';
+import '../helpers/nav.dart';
+import '../helpers/shop_flow.dart';
 import '../helpers/test_di.dart';
-import '../helpers/test_app.dart';
 
 /// End-to-end customer profile: real DI graph + router. The profile is the
 /// same single-row [ShippingInfo] the checkout writes (PlaceOrder), so these
@@ -32,22 +32,6 @@ void main() {
     await getIt.reset();
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    router = buildAppRouter();
-    await tester.pumpWidget(testApp(router));
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-  }
-
-  Future<void> goToProfile(WidgetTester tester) async {
-    router.go('/profile');
-    await tester.pump();
-    await settleDrift(tester); // ProfileCubit watch stream
-    await tester.pumpAndSettle();
-  }
-
   String fieldText(WidgetTester tester, String key) {
     final field = tester.widget<TextFormField>(find.byKey(Key(key)));
     return field.controller!.text;
@@ -55,8 +39,8 @@ void main() {
 
   testWidgets('an empty profile is a blank form; saving persists and confirms',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await goToProfile(tester);
+    router = await pumpRouterApp(tester, seed: false);
+    await goToDestination(tester, router, '/profile');
 
     // Fresh install: blank form + the hint.
     expect(find.textContaining('No saved details yet'), findsOneWidget);
@@ -69,9 +53,7 @@ void main() {
       '1 Analytical Way',
     );
     await tester.tap(find.byKey(const Key('profile-save')));
-    await tester.pump();
-    await settleDrift(tester); // SaveProfile → drift write → stream re-emit
-    await tester.pumpAndSettle();
+    await settleAction(tester); // SaveProfile → drift write → stream re-emit
 
     expect(find.text('Profile saved.'), findsOneWidget);
 
@@ -98,8 +80,8 @@ void main() {
       ),
     );
 
-    await pumpApp(tester);
-    await goToProfile(tester);
+    router = await pumpRouterApp(tester, seed: false);
+    await goToDestination(tester, router, '/profile');
 
     expect(fieldText(tester, 'profile-name'), 'Grace Hopper');
     expect(fieldText(tester, 'profile-phone'), '555-0200');
@@ -111,8 +93,8 @@ void main() {
 
   testWidgets('an external save re-seeds a pristine form but never clobbers edits',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await goToProfile(tester);
+    router = await pumpRouterApp(tester, seed: false);
+    await goToDestination(tester, router, '/profile');
 
     // A checkout (elsewhere) saves a profile while we sit on the tab: the
     // pristine form picks it up automatically.
@@ -144,8 +126,8 @@ void main() {
 
   testWidgets('the Appearance switch applies and persists the theme',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await goToProfile(tester);
+    router = await pumpRouterApp(tester, seed: false);
+    await goToDestination(tester, router, '/profile');
 
     // Default: follows the OS (the DI singleton's initial state).
     expect(getIt<ThemeCubit>().state, ThemeMode.system);
@@ -170,8 +152,8 @@ void main() {
 
   testWidgets('the Admin entry on the profile tab reaches the locked gate',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await goToProfile(tester);
+    router = await pumpRouterApp(tester, seed: false);
+    await goToDestination(tester, router, '/profile');
 
     // The one on-screen path to the admin area (everything else is deep
     // links behind the redirect guard). The Preferences section sits above
@@ -186,9 +168,7 @@ void main() {
     // render tree still holds the pre-scroll layout — settle before tapping.
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-admin-entry')));
-    await tester.pump();
-    await settleDrift(tester); // gate's isPinSet() query
-    await tester.pumpAndSettle();
+    await settleAction(tester); // gate's isPinSet() query
 
     expect(find.byType(AdminGateScreen), findsOneWidget);
     expect(find.text('Set an admin PIN'), findsOneWidget);
@@ -198,13 +178,11 @@ void main() {
 
   testWidgets('saving an empty form shows the shared inline validation errors',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await goToProfile(tester);
+    router = await pumpRouterApp(tester, seed: false);
+    await goToDestination(tester, router, '/profile');
 
     await tester.tap(find.byKey(const Key('profile-save')));
-    await tester.pump();
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
+    await settleAction(tester);
 
     // The same validateShipping rules checkout uses (one source of truth).
     expect(find.text('Name is required'), findsOneWidget);

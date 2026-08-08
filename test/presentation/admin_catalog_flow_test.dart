@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/data/database/seed_data.dart';
-import 'package:shop_admin/presentation/router/app_router.dart';
 
+import '../helpers/admin_flow.dart';
 import '../helpers/drift_settle.dart';
+import '../helpers/nav.dart';
+import '../helpers/shop_flow.dart';
 import '../helpers/test_di.dart';
-import '../helpers/test_app.dart';
 
 /// End-to-end admin catalog: real DI graph (memory DB + seed) + the real
 /// router. Drives the PIN gate, unlocks, then exercises product and category
@@ -33,55 +33,12 @@ void main() {
     await getIt.reset();
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
-    // Wide + tall: NavigationRail layout, and every list tile visible without
-    // scrolling (so finders stay simple and deterministic).
-    await tester.binding.setSurfaceSize(const Size(900, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
-    router = buildAppRouter();
-    await tester.pumpWidget(testApp(router));
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-  }
-
-  Future<String> currentPath(WidgetTester tester) async {
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-    return router.routerDelegate.currentConfiguration.uri.path;
-  }
-
-  /// Fresh DB has no PIN → the gate shows the set-PIN form; set one and land
-  /// on the admin overview (the guard now lets /admin/* through).
-  Future<void> unlockAdmin(WidgetTester tester) async {
-    router.go('/admin/gate');
-    await tester.pump();
-    await settleDrift(tester); // isPinSet query
-    await tester.pumpAndSettle();
-
-    expect(find.text('Set an admin PIN'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), '1234');
-    await tester.tap(find.text('Set PIN'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
-
-    expect(await currentPath(tester), '/admin/overview');
-  }
-
-  Future<void> goToProducts(WidgetTester tester) async {
-    router.go('/admin/products');
-    await tester.pump();
-    await settleDrift(tester); // AdminCatalogCubit watch streams
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('admin sets a PIN, unlocks, and manages products end-to-end',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await unlockAdmin(tester);
+    router = await pumpRouterApp(tester, size: const Size(900, 1600));
+    await unlockAdmin(tester, router: router, setPinTitle: 'Set an admin PIN');
 
-    await goToProducts(tester);
+    await goToDestination(tester, router, '/admin/products');
     expect(find.text('Classic Tee'), findsOneWidget);
     expect(find.text('Out of stock'), findsWidgets); // seed has some
 
@@ -102,9 +59,7 @@ void main() {
         find.byKey(const Key('product-name-ar')), 'قميص تجريبي');
     await tester.enterText(find.byKey(const Key('product-price')), '19.99');
     await tester.tap(find.text('Save product'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
 
     expect(find.text('Test Product'), findsOneWidget);
 
@@ -120,9 +75,7 @@ void main() {
       'Test Product V2',
     );
     await tester.tap(find.text('Save product'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
 
     expect(find.text('Test Product V2'), findsOneWidget);
 
@@ -134,9 +87,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Delete product?'), findsOneWidget);
     await tester.tap(find.text('Delete'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
 
     expect(find.text('Test Product V2'), findsNothing);
 
@@ -145,13 +96,10 @@ void main() {
 
   testWidgets('admin manages categories: add, blocked delete, empty delete',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await unlockAdmin(tester);
+    router = await pumpRouterApp(tester, size: const Size(900, 1600));
+    await unlockAdmin(tester, router: router, setPinTitle: 'Set an admin PIN');
 
-    router.go('/admin/categories');
-    await tester.pump();
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
+    await goToDestination(tester, router, '/admin/categories');
     expect(find.text('Clothing'), findsOneWidget);
 
     // --- Add ---------------------------------------------------------------
@@ -166,9 +114,7 @@ void main() {
       'أجهزة',
     );
     await tester.tap(find.text('Create'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
     expect(find.text('Gadgets'), findsOneWidget);
 
     // The optional Arabic label persisted: the rename dialog pre-fills it.
@@ -188,15 +134,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
     expect(find.textContaining('before deleting the category'), findsOneWidget);
     expect(find.text('Clothing'), findsOneWidget); // still there
 
-    // Flush the SnackBar's auto-dismiss timer before interacting again.
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
+    await settleSnackBar(tester);
 
     // --- Empty delete succeeds ---------------------------------------------
     await tester.tap(find.descendant(
@@ -205,9 +147,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
     expect(find.text('Gadgets'), findsNothing);
 
     await unmountApp(tester);

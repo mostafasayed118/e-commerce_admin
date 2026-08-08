@@ -5,13 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/core/error/result.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/data/database/seed_data.dart';
 import 'package:shop_admin/domain/repositories/settings_repository.dart';
-import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
+import '../helpers/nav.dart';
+import '../helpers/shop_flow.dart';
 import '../helpers/test_di.dart';
-import '../helpers/test_app.dart';
 
 /// End-to-end cart + checkout: real DI graph (memory DB + seed) + the real
 /// router. Adds Classic Tee (25% off: $20.00 → $15.00) from the catalog,
@@ -31,48 +30,9 @@ void main() {
     await getIt.reset();
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
-    router = buildAppRouter();
-    await tester.pumpWidget(testApp(router));
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-  }
-
-  /// Adds Classic Tee (qty 1) through the detail screen, then returns to the
-  /// catalog. Assumes the catalog is the current screen.
-  Future<void> addClassicTee(WidgetTester tester) async {
-    await tester.tap(find.text('Classic Tee'));
-    await tester.pump();
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Add to Cart'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
-
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-
-    // Flush the "added to cart" SnackBar: it floats over the bottom of the
-    // screen and would otherwise swallow taps on the cart's Checkout button.
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
-  }
-
-  Future<void> goToCart(WidgetTester tester) async {
-    await tester.tap(find.text('Cart'));
-    await tester.pump();
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('cart shows added items with live totals, steppers and badge',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    router = await pumpRouterApp(tester);
     await addClassicTee(tester);
 
     // The shell's Cart destination carries the count badge.
@@ -81,7 +41,7 @@ void main() {
       findsOneWidget,
     );
 
-    await goToCart(tester);
+    await goToDestinationByLabel(tester, 'Cart');
 
     expect(find.text('Classic Tee'), findsOneWidget);
     // qty 1: savings -$5.00 (unique to the totals bar); the line total and
@@ -91,9 +51,7 @@ void main() {
 
     // --- Step up to 2: totals recompute live --------------------------------
     await tester.tap(find.byIcon(Icons.add_circle_outline));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAction(tester, delay: const Duration(milliseconds: 200));
 
     expect(find.text(r'$40.00'), findsOneWidget); // subtotal 2 × $20.00
     expect(find.text(r'-$10.00'), findsOneWidget); // savings 2 × $5.00
@@ -105,27 +63,23 @@ void main() {
 
     // --- Step down back to 1 ------------------------------------------------
     await tester.tap(find.byIcon(Icons.remove_circle_outline));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAction(tester, delay: const Duration(milliseconds: 200));
 
     // --- Remove the line: stepping down at qty 1 deletes it → empty state ---
     await tester.tap(find.byIcon(Icons.remove_circle_outline));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAction(tester, delay: const Duration(milliseconds: 200));
 
     expect(find.text('Your cart is empty'), findsOneWidget);
 
-    await tester.pump(const Duration(seconds: 5)); // flush snackbar timers
+    await settleSnackBar(tester);
     await unmountApp(tester);
   });
 
   testWidgets('checkout validates, places the order, and clears the cart',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    router = await pumpRouterApp(tester);
     await addClassicTee(tester);
-    await goToCart(tester);
+    await goToDestinationByLabel(tester, 'Cart');
 
     await tester.tap(find.text('Checkout'));
     await tester.pumpAndSettle();
@@ -147,9 +101,7 @@ void main() {
       '1 Test Street',
     );
     await tester.tap(find.text('Place order — Cash on delivery'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
+    await settleAction(tester, delay: const Duration(milliseconds: 300));
 
     // Success view with the generated order number.
     expect(find.text('Order placed!'), findsOneWidget);
@@ -174,7 +126,7 @@ void main() {
       findsNothing,
     );
 
-    await tester.pump(const Duration(seconds: 5)); // flush snackbar timers
+    await settleSnackBar(tester);
     await unmountApp(tester);
   });
 }

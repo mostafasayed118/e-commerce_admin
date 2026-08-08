@@ -3,10 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/data/database/seed_data.dart';
-import 'package:shop_admin/presentation/app.dart';
 
 import '../helpers/drift_settle.dart';
+import '../helpers/shop_flow.dart';
 import '../helpers/test_di.dart';
 
 /// End-to-end: the real DI graph (memory DB + seed) drives the real catalog
@@ -27,27 +26,16 @@ void main() {
     await getIt.reset();
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
-    await tester.pumpWidget(const ShopAdminApp());
-    await settleDrift(tester); // deliver the catalog's initial watch emissions
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('catalog shows seeded products and opens the detail screen',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    await pumpFullApp(tester);
 
     expect(find.text('Classic Tee'), findsOneWidget);
     // Discounted product shows its discount badge from the seed.
     expect(find.text('-25%'), findsOneWidget);
 
     await tester.tap(find.text('Classic Tee'));
-    await tester.pump();
-    await settleDrift(tester); // detail screen's watchProductById stream
-    await tester.pumpAndSettle();
+    await settleAction(tester); // detail screen's watchProductById stream
 
     expect(find.text('Add to Cart'), findsOneWidget);
     expect(find.text('In stock'), findsOneWidget);
@@ -71,12 +59,10 @@ void main() {
 
   testWidgets('Add to Cart adds the product through the use case',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    await pumpFullApp(tester);
 
     await tester.tap(find.text('Classic Tee'));
-    await tester.pump();
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
+    await settleAction(tester);
 
     await tester.tap(find.text('Add to Cart'));
     await tester.pump();
@@ -89,14 +75,13 @@ void main() {
     expect(cartRows, hasLength(1));
     expect(cartRows.single.quantity, 1);
 
-    // Flush the SnackBar's 4s auto-dismiss timer before unmounting.
-    await tester.pump(const Duration(seconds: 5));
+    await settleSnackBar(tester);
     await unmountApp(tester);
   });
 
   testWidgets('search filters the catalog in real time',
       (WidgetTester tester) async {
-    await pumpApp(tester);
+    await pumpFullApp(tester);
 
     await tester.enterText(find.byType(TextField), 'yoga');
     // NOTE: pumpAndSettle would never settle here — the focused TextField's
