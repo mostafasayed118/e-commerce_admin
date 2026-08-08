@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/data/database/app_database.dart';
+import 'package:shop_admin/data/database/seed_data.dart';
 import 'package:shop_admin/presentation/features/admin/catalog/products_screen.dart';
 import 'package:shop_admin/presentation/features/cart/cart_screen.dart';
 import 'package:shop_admin/presentation/features/admin/gate/admin_gate_screen.dart';
@@ -10,8 +11,9 @@ import 'package:shop_admin/presentation/router/admin_session.dart';
 import 'package:shop_admin/presentation/router/app_router.dart';
 
 import '../helpers/drift_settle.dart';
-import '../helpers/test_di.dart';
+import '../helpers/storefront_exit.dart';
 import '../helpers/test_app.dart';
+import '../helpers/test_di.dart';
 
 void main() {
   late AppDatabase db;
@@ -29,6 +31,13 @@ void main() {
   });
 
   Future<void> pumpRouter(WidgetTester tester) async {
+    // Deliberately not pumpRouterApp: the router is built in setUp (this
+    // file tests the guard itself) and pumped on the default test surface —
+    // pumpRouterApp would impose a phone surface and replace the setUp
+    // router, orphaning it from tearDown's dispose.
+    // Seed so the storefront-exit assertion can anchor on the catalog's
+    // headline product (the flow tests' full-app pumps seed too).
+    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
     await tester.pumpWidget(testApp(router));
     // Initial route is the catalog (drift-backed) — settle the streams.
     await settleDrift(tester);
@@ -74,6 +83,23 @@ void main() {
       router.go('/admin/gate');
       expect(await currentPath(tester), '/admin/gate');
       expect(find.byType(AdminGateScreen), findsOneWidget);
+
+      await unmountApp(tester);
+    });
+
+    testWidgets('the gate storefront exit returns to the customer view',
+        (WidgetTester tester) async {
+      await pumpRouter(tester);
+
+      // Land on the gate while locked, back out through its storefront
+      // action, and verify we're on the shop root — not stuck in admin.
+      router.go('/admin/gate');
+      expect(await currentPath(tester), '/admin/gate');
+
+      // The shared verification: tap → settle → the catalog is showing
+      // (the catalog only renders on '/', so the content assert is the
+      // route proof).
+      await tapStorefrontExitToStore(tester);
 
       await unmountApp(tester);
     });

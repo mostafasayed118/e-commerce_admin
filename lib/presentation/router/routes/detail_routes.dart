@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/catalog/product_form_screen.dart';
+import '../../features/admin/coupons/coupon_form_screen.dart';
 import '../../features/admin/orders/admin_order_detail_screen.dart';
 import '../../features/catalog/product_detail_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
 import 'route_names.dart';
+
+/// Parses a `:param` path segment as an id. Guarded: a malformed deep link
+/// (missing or non-numeric) resolves to -1, which each screen's watch stream
+/// maps to its "not found" view.
+int _pathId(GoRouterState state, String param) =>
+    int.tryParse(state.pathParameters[param] ?? '') ?? -1;
 
 /// Top-level pages pushed on the root navigator so they cover the shells
 /// (full-screen, standard shop UX).
@@ -18,10 +25,7 @@ List<RouteBase> detailRoutes(GlobalKey<NavigatorState> rootNavigatorKey) => [
         name: RouteNames.productDetail,
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => ProductDetailScreen(
-          // Guarded: a malformed deep link resolves to -1, which the detail
-          // screen's watch stream maps to its "Product not found" view.
-          productId:
-              int.tryParse(state.pathParameters['productId'] ?? '') ?? -1,
+          productId: _pathId(state, 'productId'),
         ),
       ),
 
@@ -32,7 +36,7 @@ List<RouteBase> detailRoutes(GlobalKey<NavigatorState> rootNavigatorKey) => [
         name: RouteNames.orderDetail,
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => OrderDetailScreen(
-          orderId: int.tryParse(state.pathParameters['orderId'] ?? '') ?? -1,
+          orderId: _pathId(state, 'orderId'),
         ),
       ),
 
@@ -52,7 +56,7 @@ List<RouteBase> detailRoutes(GlobalKey<NavigatorState> rootNavigatorKey) => [
         name: RouteNames.adminOrderDetail,
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => AdminOrderDetailScreen(
-          orderId: int.tryParse(state.pathParameters['orderId'] ?? '') ?? -1,
+          orderId: _pathId(state, 'orderId'),
         ),
       ),
 
@@ -70,8 +74,24 @@ List<RouteBase> detailRoutes(GlobalKey<NavigatorState> rootNavigatorKey) => [
         name: RouteNames.adminProductEdit,
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => ProductFormScreen(
-          productId:
-              int.tryParse(state.pathParameters['productId'] ?? '') ?? -1,
+          productId: _pathId(state, 'productId'),
+        ),
+      ),
+
+      // --- Coupon create/edit forms: same pattern as the product forms
+      // (root navigator, gated by the /admin/ guard automatically). ---
+      GoRoute(
+        path: '/admin/coupons/new',
+        name: RouteNames.adminCouponNew,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const CouponFormScreen(),
+      ),
+      GoRoute(
+        path: '/admin/coupons/:couponId/edit',
+        name: RouteNames.adminCouponEdit,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => CouponFormScreen(
+          couponId: _pathId(state, 'couponId'),
         ),
       ),
     ];

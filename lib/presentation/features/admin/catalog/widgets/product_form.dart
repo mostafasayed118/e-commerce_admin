@@ -10,6 +10,7 @@ import '../../../../../core/entities/product.dart';
 import '../../../../../core/error/result.dart';
 import '../../../../../data/services/image_store.dart';
 import '../../../../l10n/l10n_ext.dart';
+import '../../widgets/admin_storefront_action.dart';
 import '../admin_catalog_cubit.dart';
 import 'product_basic_fields.dart';
 import 'product_image_field.dart';
@@ -209,10 +210,12 @@ class _ProductFormState extends State<ProductForm> {
       ? context.l10n.requiredField
       : null;
 
+  // Validation messages are display text — the digits (0, 100) follow the
+  // active locale, like every other number in the app.
   String? _validatePrice(String? value) {
     final cents = value == null ? null : _parseCents(value);
     if (cents == null || cents <= 0) {
-      return context.l10n.priceGreaterThanZero;
+      return context.localizeDigits(context.l10n.priceGreaterThanZero);
     }
     return null;
   }
@@ -220,14 +223,16 @@ class _ProductFormState extends State<ProductForm> {
   String? _validatePercent(String? value) {
     final parsed = int.tryParse(value ?? '');
     if (parsed == null || parsed < 0 || parsed > 100) {
-      return context.l10n.percentRange;
+      return context.localizeDigits(context.l10n.percentRange);
     }
     return null;
   }
 
   String? _validateStock(String? value) {
     final parsed = int.tryParse(value ?? '');
-    if (parsed == null || parsed < 0) return context.l10n.stockNonNegative;
+    if (parsed == null || parsed < 0) {
+      return context.localizeDigits(context.l10n.stockNonNegative);
+    }
     return null;
   }
 
@@ -240,6 +245,7 @@ class _ProductFormState extends State<ProductForm> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditing ? l10n.editProduct : l10n.newProduct),
+        actions: const [AdminStorefrontAction()],
       ),
       body: Form(
         key: _formKey,

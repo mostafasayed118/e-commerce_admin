@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection.dart';
 import '../features/cart/cart_cubit.dart';
+import '../features/wishlist/wishlist_cubit.dart';
 import '../l10n/l10n_ext.dart';
 import 'shell_scaffold.dart';
 
-/// The customer-facing shell: Shop, Cart (with a live item-count badge),
-/// Orders, Profile.
+/// The customer-facing shell: Shop, Wishlist (with a live count badge),
+/// Cart (with a live item-count badge), Orders, Profile.
 class ShopShell extends StatelessWidget {
   const ShopShell(this.navigationShell, {super.key});
 
@@ -21,6 +22,11 @@ class ShopShell extends StatelessWidget {
           icon: Icons.storefront_outlined,
           selectedIcon: Icons.storefront,
           label: context.l10n.tabShop,
+        ),
+        ShellDestination(
+          icon: Icons.favorite_border,
+          selectedIcon: Icons.favorite,
+          label: context.l10n.tabWishlist,
         ),
         ShellDestination(
           icon: Icons.shopping_cart_outlined,
@@ -41,8 +47,8 @@ class ShopShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The badge listens to the DI-owned CartCubit (never closed here). The
-    // count comes from CartLoaded; any other state means no badge.
+    // Both badges listen to the DI-owned cubits (never closed here). The
+    // counts come from the Loaded states; any other state means no badge.
     return BlocBuilder<CartCubit, CartState>(
       bloc: getIt<CartCubit>(),
       // Rebuild only when the count could actually have changed — the badge
@@ -51,25 +57,48 @@ class ShopShell extends StatelessWidget {
           previous is! CartLoaded ||
           current is! CartLoaded ||
           previous.itemCount != current.itemCount,
-      builder: (context, state) {
-        final count = switch (state) {
-          CartLoaded(:final itemCount) => itemCount,
-          _ => 0,
-        };
-        final destinations = List<ShellDestination>.of(
-          baseDestinations(context),
-        );
-        destinations[1] = ShellDestination(
-          icon: destinations[1].icon,
-          selectedIcon: destinations[1].selectedIcon,
-          label: destinations[1].label,
-          badgeCount: count,
-        );
-        return ShellScaffold(
-          navigationShell: navigationShell,
-          destinations: destinations,
+      builder: (context, cartState) {
+        return BlocBuilder<WishlistCubit, WishlistState>(
+          bloc: getIt<WishlistCubit>(),
+          buildWhen: (previous, current) =>
+              previous is! WishlistLoaded ||
+              current is! WishlistLoaded ||
+              previous.itemCount != current.itemCount,
+          builder: (context, wishlistState) {
+            final cartCount = switch (cartState) {
+              CartLoaded(:final itemCount) => itemCount,
+              _ => 0,
+            };
+            final wishlistCount = switch (wishlistState) {
+              WishlistLoaded(:final itemCount) => itemCount,
+              _ => 0,
+            };
+            final destinations = List<ShellDestination>.of(
+              baseDestinations(context),
+            );
+            destinations[1] = _withBadge(destinations[1], wishlistCount);
+            destinations[2] = _withBadge(destinations[2], cartCount);
+            return ShellScaffold(
+              navigationShell: navigationShell,
+              destinations: destinations,
+            );
+          },
         );
       },
+    );
+  }
+
+  /// Copies a destination with [badgeCount] applied (the badge hides at 0
+  /// in ShellScaffold).
+  static ShellDestination _withBadge(
+    ShellDestination destination,
+    int count,
+  ) {
+    return ShellDestination(
+      icon: destination.icon,
+      selectedIcon: destination.selectedIcon,
+      label: destination.label,
+      badgeCount: count,
     );
   }
 }

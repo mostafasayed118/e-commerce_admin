@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:shop_admin/l10n/app_localizations.dart';
 import 'package:shop_admin/presentation/shells/admin_shell.dart';
 
+import '../helpers/storefront_exit.dart';
+import '../helpers/test_app.dart';
+
 /// A minimal admin shell route so [AdminShell] gets a real
 /// [StatefulNavigationShell] (built by go_router — not mockable).
 GoRouter adminRouter() => GoRouter(
@@ -14,10 +17,14 @@ GoRouter adminRouter() => GoRouter(
           builder: (context, state, navigationShell) =>
               AdminShell(navigationShell),
           branches: [
+            // The branch order must mirror AdminShell.destinations (the shell
+            // maps destinations to branches positionally): Coupons sits
+            // before Orders in the app.
             for (final (path, label) in [
               ('/admin/overview', 'Branch Overview'),
               ('/admin/products', 'Branch Products'),
               ('/admin/categories', 'Branch Categories'),
+              ('/admin/coupons', 'Branch Coupons'),
               ('/admin/orders', 'Branch Orders'),
             ])
               StatefulShellBranch(
@@ -35,22 +42,26 @@ GoRouter adminRouter() => GoRouter(
     );
 
 Future<void> pumpAdminShell(WidgetTester tester, {Locale? locale}) async {
-  await tester.binding.setSurfaceSize(const Size(400, 844));
-  addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(MaterialApp.router(
-    routerConfig: adminRouter(),
+  await pumpRouterSurface(
+    tester,
+    router: adminRouter(),
+    size: const Size(400, 844),
     locale: locale,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-  ));
+  );
 }
 
 void main() {
-  testWidgets('renders the four admin destinations with English labels',
+  testWidgets('renders the five admin destinations with English labels',
       (WidgetTester tester) async {
     await pumpAdminShell(tester);
 
-    for (final label in ['Overview', 'Products', 'Categories', 'Orders']) {
+    for (final label in [
+      'Overview',
+      'Products',
+      'Categories',
+      'Orders',
+      'Coupons',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
     // The admin shell is a plain shell: no destination carries a badge count.
@@ -74,6 +85,7 @@ void main() {
       'المنتجات',
       'التصنيفات',
       'الطلبات',
+      'القسائم',
     ]) {
       expect(find.text(label), findsOneWidget);
     }
@@ -94,7 +106,19 @@ void main() {
     expect(find.text('Content Branch Overview'), findsNothing);
   });
 
-  testWidgets('destinations() exposes the four localized labels',
+  testWidgets('renders the exit-to-store affordance with the localized label',
+      (WidgetTester tester) async {
+    await pumpAdminShell(tester);
+    expectStorefrontLabel(const Locale('en'));
+  });
+
+  testWidgets('the exit affordance follows the active locale (Arabic)',
+      (WidgetTester tester) async {
+    await pumpAdminShell(tester, locale: const Locale('ar'));
+    expectStorefrontLabel(const Locale('ar'));
+  });
+
+  testWidgets('destinations() exposes the five localized labels',
       (WidgetTester tester) async {
     final labels = <String>[];
     await tester.pumpWidget(MaterialApp(
@@ -110,6 +134,9 @@ void main() {
       ),
     ));
 
-    expect(labels, ['Overview', 'Products', 'Categories', 'Orders']);
+    expect(
+      labels,
+      ['Overview', 'Products', 'Categories', 'Coupons', 'Orders'],
+    );
   });
 }

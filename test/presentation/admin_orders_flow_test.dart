@@ -5,12 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/data/database/seed_data.dart';
-import 'package:shop_admin/presentation/router/app_router.dart';
 
+import '../helpers/admin_flow.dart';
 import '../helpers/drift_settle.dart';
+import '../helpers/nav.dart';
+import '../helpers/shop_flow.dart';
+import '../helpers/storefront_exit.dart';
 import '../helpers/test_di.dart';
-import '../helpers/test_app.dart';
 
 /// End-to-end admin order management: real DI graph (memory DB + seed) +
 /// router. Unlocks through the PIN gate, filters the order list, then moves a
@@ -31,46 +32,11 @@ void main() {
     await getIt.reset();
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(900, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
-    router = buildAppRouter();
-    await tester.pumpWidget(testApp(router));
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
-  }
-
-  Future<void> unlockAdmin(WidgetTester tester) async {
-    router.go('/admin/gate');
-    await tester.pump();
-    await settleDrift(tester); // isPinSet query
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(TextField), '1234');
-    await tester.tap(find.text('Set PIN'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
-
-    expect(
-      router.routerDelegate.currentConfiguration.uri.path,
-      '/admin/overview',
-    );
-  }
-
-  Future<void> goToOrders(WidgetTester tester) async {
-    router.go('/admin/orders');
-    await tester.pump();
-    await settleDrift(tester); // AdminOrdersCubit watch stream
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('admin filters orders and moves a pending order to confirmed',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await unlockAdmin(tester);
-    await goToOrders(tester);
+    router = await pumpRouterApp(tester, size: const Size(900, 1600));
+    await unlockAdmin(tester, router: router);
+    await goToDestination(tester, router, '/admin/orders');
 
     // All six seeded orders are listed.
     expect(find.text('ORD-000001'), findsOneWidget);
@@ -85,9 +51,10 @@ void main() {
 
     // --- Open the pending order and advance it ------------------------------
     await tester.tap(find.text('ORD-000004'));
-    await tester.pump();
-    await settleDrift(tester); // detail watchOrderById stream
-    await tester.pumpAndSettle();
+    await settleAction(tester); // detail watchOrderById stream
+
+    // The pushed admin detail carries its own storefront exit.
+    expectStorefrontAction(reason: 'admin order detail');
 
     // A pending order offers exactly: confirm (forward) + cancel.
     expect(find.text('Mark confirmed'), findsOneWidget);
@@ -95,9 +62,7 @@ void main() {
     expect(find.text('Mark shipped'), findsNothing); // not yet legal
 
     await tester.tap(find.text('Mark confirmed'));
-    await tester.pump();
-    await settleDrift(tester, delay: const Duration(milliseconds: 200));
-    await tester.pumpAndSettle();
+    await settleAdminWrite(tester);
 
     // Success feedback + the live-refreshed detail: chip, timeline, buttons.
     expect(find.text('ORD-000004 marked as Confirmed'), findsOneWidget);
@@ -116,22 +81,19 @@ void main() {
         .get();
     expect(historyRows, hasLength(2));
 
-    // Flush the SnackBar timer before unmounting.
-    await tester.pump(const Duration(seconds: 5));
+    await settleSnackBar(tester);
     await unmountApp(tester);
   });
 
   testWidgets('terminal orders offer no further actions',
       (WidgetTester tester) async {
-    await pumpApp(tester);
-    await unlockAdmin(tester);
-    await goToOrders(tester);
+    router = await pumpRouterApp(tester, size: const Size(900, 1600));
+    await unlockAdmin(tester, router: router);
+    await goToDestination(tester, router, '/admin/orders');
 
     // ORD-000001 is delivered (terminal).
     await tester.tap(find.text('ORD-000001'));
-    await tester.pump();
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
+    await settleAction(tester);
 
     expect(
       find.textContaining('no further actions'),

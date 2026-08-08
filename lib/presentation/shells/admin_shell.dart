@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/admin/widgets/admin_storefront_action.dart';
 import '../l10n/l10n_ext.dart';
 import 'shell_scaffold.dart';
 
-/// The admin-facing shell: Overview, Products, Categories, Orders. Only
-/// reachable after the gate (Task 12's router guard).
+/// The admin-facing shell: Overview, Products, Categories, Coupons, Orders.
+/// Only reachable after the gate (Task 12's router guard).
 class AdminShell extends StatelessWidget {
   const AdminShell(this.navigationShell, {super.key});
 
@@ -30,6 +31,11 @@ class AdminShell extends StatelessWidget {
           label: context.l10n.tabCategories,
         ),
         ShellDestination(
+          icon: Icons.confirmation_number_outlined,
+          selectedIcon: Icons.confirmation_number,
+          label: context.l10n.tabCoupons,
+        ),
+        ShellDestination(
           icon: Icons.receipt_long_outlined,
           selectedIcon: Icons.receipt_long,
           label: context.l10n.tabOrders,
@@ -41,6 +47,14 @@ class AdminShell extends StatelessWidget {
     return ShellScaffold(
       navigationShell: navigationShell,
       destinations: destinations(context),
+      // The mirror of the profile tab's admin entry: a pinned way back to the
+      // customer view. It only navigates — AdminSession deliberately has no
+      // logout (mock gate), so exiting keeps the session unlocked.
+      exitAction: (
+        icon: AdminStorefrontAction.icon,
+        label: context.l10n.backToStore,
+        onTap: () => context.go('/'),
+      ),
     );
   }
 }

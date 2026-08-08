@@ -4,6 +4,7 @@ import '../../features/cart/cart_screen.dart';
 import '../../features/catalog/catalog_screen.dart';
 import '../../features/orders/orders_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/wishlist/wishlist_screen.dart';
 import '../../shells/shop_shell.dart';
 import 'route_names.dart';
 
@@ -19,6 +20,15 @@ RouteBase shopShellRoutes() {
             path: '/',
             name: RouteNames.shop,
             builder: (context, state) => const CatalogScreen(),
+          ),
+        ],
+      ),
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: '/wishlist',
+            name: RouteNames.wishlist,
+            builder: (context, state) => const WishlistScreen(),
           ),
         ],
       ),

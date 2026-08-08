@@ -3,6 +3,7 @@
 abstract final class RouteNames {
   // Shop shell branches.
   static const String shop = 'shop';
+  static const String wishlist = 'wishlist';
   static const String cart = 'cart';
   static const String orders = 'orders';
   static const String profile = 'profile';
@@ -17,6 +18,9 @@ abstract final class RouteNames {
   static const String adminProductNew = 'admin-product-new';
   static const String adminProductEdit = 'admin-product-edit';
   static const String adminCategories = 'admin-categories';
+  static const String adminCoupons = 'admin-coupons';
+  static const String adminCouponNew = 'admin-coupon-new';
+  static const String adminCouponEdit = 'admin-coupon-edit';
   static const String adminOrders = 'admin-orders';
   static const String adminOrderDetail = 'admin-order-detail';
 }
