@@ -6,6 +6,7 @@
 
 import 'package:drift/drift.dart';
 
+import '../../core/entities/coupon.dart';
 import '../../core/entities/order_status.dart';
 
 // NOTE on @DataClassName: drift generates a row class per table named after
@@ -57,6 +58,46 @@ class Products extends Table {
   IntColumn get updatedAt => integer()();
 }
 
+/// Promo codes. Validation rules (active/expiry/usage/min-spend math) live in
+/// [Coupon.applyTo] — the DB only guarantees the shape of the rows.
+@DataClassName('CouponRow')
+class Coupons extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// Normalized uppercase code, unique.
+  TextColumn get code => text().unique()();
+  IntColumn get discountType => intEnum<CouponDiscountType>()();
+
+  /// Percent (1-100) or fixed cents (> 0), depending on [discountType].
+  IntColumn get value => integer().check(value.isBiggerThanValue(0))();
+  IntColumn get minSpendCents => integer()
+      .withDefault(const Constant(0))
+      .check(minSpendCents.isBiggerOrEqualValue(0))();
+
+  /// Epoch ms; null = never expires.
+  IntColumn get expiresAt => integer().nullable()();
+
+  /// Usage cap; null = unlimited.
+  IntColumn get maxUses => integer().nullable()();
+  IntColumn get usedCount => integer()
+      .withDefault(const Constant(0))
+      .check(usedCount.isBiggerOrEqualValue(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  IntColumn get createdAt => integer()();
+}
+
+/// Wishlist contents: one row per saved product, keyed by product id.
+/// CASCADE — deleting a product removes it from wishlists automatically.
+@DataClassName('WishlistItemRow')
+class WishlistItems extends Table {
+  IntColumn get productId =>
+      integer().references(Products, #id, onDelete: KeyAction.cascade)();
+  IntColumn get addedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {productId};
+}
+
 /// Cart contents: one row per product, keyed by product id.
 @DataClassName('CartItemRow')
 class CartItems extends Table {
@@ -90,6 +131,16 @@ class Orders extends Table {
   TextColumn get shippingName => text()();
   TextColumn get shippingPhone => text()();
   TextColumn get shippingAddress => text()();
+
+  /// Snapshot of the applied promo code, if any (Decision E — the receipt
+  /// survives later coupon edits/deletes).
+  TextColumn get couponCode => text().nullable()();
+
+  /// The coupon's contribution to [discountCents]; 0 when no coupon was
+  /// applied. Kept separate so the receipt can show "Savings" vs "Coupon".
+  IntColumn get couponDiscountCents => integer()
+      .withDefault(const Constant(0))
+      .check(couponDiscountCents.isBiggerOrEqualValue(0))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 }

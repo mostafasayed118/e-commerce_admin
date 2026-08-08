@@ -6,7 +6,10 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/entities/product.dart';
 import '../../../../core/error/result.dart';
 import '../../../l10n/l10n_ext.dart';
-import '../../../widgets/message_view.dart';
+import '../../../widgets/confirm_dialog.dart';
+import '../../../widgets/error_view.dart';
+import '../../../widgets/snack_bar.dart';
+import '../widgets/admin_fab.dart';
 import 'admin_catalog_cubit.dart';
 import 'widgets/product_list.dart';
 
@@ -33,24 +36,12 @@ class _ProductsView extends StatelessWidget {
 
   Future<void> _confirmDelete(BuildContext context, Product product) async {
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteProductTitle),
-        content: Text(l10n.deleteProductMessage(context.productName(product))),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.deleteProductTitle,
+      message: l10n.deleteProductMessage(context.productName(product)),
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     final result = await context.read<AdminCatalogCubit>().deleteProduct(
           product.id,
@@ -59,11 +50,7 @@ class _ProductsView extends StatelessWidget {
     result.fold(
       onSuccess: (_) {},
       // Success is silent — the watch stream re-emits the shorter list.
-      onFailure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.errorText(error))),
-        );
-      },
+      onFailure: (error) => showErrorSnackBar(context, error),
     );
   }
 
@@ -74,20 +61,16 @@ class _ProductsView extends StatelessWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.productsTitle)),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: AdminFab(
+        branch: 'products',
+        label: l10n.newProduct,
         onPressed: () => _openNewProduct(context),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newProduct),
       ),
       body: BlocBuilder<AdminCatalogCubit, AdminCatalogState>(
         builder: (context, state) => switch (state) {
           AdminCatalogLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminCatalogError() => MessageView(
-              icon: Icons.error_outline,
-              title: l10n.somethingWentWrong,
-              message: l10n.errorLoadFailed,
-            ),
+          AdminCatalogError() => const ErrorView(),
           AdminCatalogLoaded() => ProductList(
               state: state,
               onEdit: (product) => context.push('/admin/products/${product.id}/edit'),

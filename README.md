@@ -156,7 +156,80 @@ The suite covers every layer with the same stack the app ships with:
   catalog → cart → checkout → orders → admin gate → dashboard → status
   transitions → profile).
 
-248 tests, all green; `flutter analyze` is clean.
+631 tests, all green; `flutter analyze` is clean.
+
+### Coverage audit (one command)
+
+```bash
+flutter test test/tool/coverage_audit_test.dart
+```
+
+Also runs inside the full suite, so a regression fails CI like any other test.
+For the fast local gate — analyzer + audit in one shot — run
+`./tool/check.sh` (bash) or `./tool/check.ps1` (PowerShell); CI runs the
+bash script before the full suite.
+
+It enforces two contracts:
+
+1. **Every `lib/` source is referenced by a test.** Each source must be
+   imported directly by a test file (`package:shop_admin/...`), or be listed
+   in the audit's `_allowed` map **with a reason**. Generated output
+   (`.g.dart`, gen-l10n `app_localizations*`) is exempt. Adding a new source
+   without a test fails the audit.
+2. **No duplicated public helpers.** Public top-level definitions across
+   `test/helpers/` must each live in exactly one file (a duplicate would
+   collide on import); `_`-private names are library-scoped and exempt.
+
+#### The allowlist (23 entries)
+
+Files with no direct test import are covered through composition rather than
+being gaps. Each entry carries its justification:
+
+**Infrastructure**
+
+| Source | Why no direct test import |
+| --- | --- |
+| `lib/main.dart` | App entrypoint glue — `main()` is never invoked by a test, but the `ShopAdminApp` it boots is pumped by every full-app test via `setupTestDi`. |
+| `lib/data/database/tables.dart` | Schema declarations — columns/constraints are pinned through `app_database_test`'s migrations and `seed_data_test`. |
+
+**Screens** (pure wiring, reached only through the router, driven end-to-end by the flow tests)
+
+| Source | Driven by |
+| --- | --- |
+| `lib/presentation/features/catalog/catalog_screen.dart` | `catalog_flow_test` |
+| `lib/presentation/features/catalog/product_detail_screen.dart` | `catalog_flow_test` + `product_detail_screen_test` |
+| `lib/presentation/features/checkout/checkout_screen.dart` | `checkout_coupon_flow_test` |
+| `lib/presentation/features/orders/orders_screen.dart` | `orders_flow_test` |
+| `lib/presentation/features/orders/order_detail_screen.dart` | `orders_flow_test` |
+| `lib/presentation/features/profile/profile_screen.dart` | `profile_flow_test` |
+| `lib/presentation/features/wishlist/wishlist_screen.dart` | `wishlist_flow_test` |
+| `lib/presentation/features/admin/catalog/categories_screen.dart` | `admin_catalog_flow_test` |
+| `lib/presentation/features/admin/catalog/product_form_screen.dart` | `admin_form_push_test` |
+| `lib/presentation/features/admin/coupons/coupons_screen.dart` | `admin_coupons_flow_test` |
+| `lib/presentation/features/admin/coupons/coupon_form_screen.dart` | `admin_form_push_test` |
+| `lib/presentation/features/admin/orders/admin_orders_screen.dart` | `admin_orders_flow_test` |
+| `lib/presentation/features/admin/overview/admin_overview_screen.dart` | `admin_overview_flow_test` |
+
+**States** (re-exported by their cubit — `export '..._state.dart'` — so the cubit tests construct and assert them through the cubit import)
+
+| Source | Covered via |
+| --- | --- |
+| `lib/presentation/features/catalog/catalog_state.dart` | `catalog_cubit_test` |
+| `lib/presentation/features/orders/orders_state.dart` | `orders_cubit_test` |
+| `lib/presentation/features/profile/profile_state.dart` | `profile_cubit_test` |
+| `lib/presentation/features/admin/orders/admin_orders_state.dart` | `admin_orders_cubit_test` |
+
+**Routes** (route tables + name constants, exercised through the router)
+
+| Source | Exercised via |
+| --- | --- |
+| `lib/presentation/router/routes/admin_routes.dart` | `app_router_test` + admin flows |
+| `lib/presentation/router/routes/detail_routes.dart` | `app_router_test` + detail flows |
+| `lib/presentation/router/routes/shop_routes.dart` | `app_router_test` + shop flows |
+| `lib/presentation/router/routes/route_names.dart` | the route tables above, navigated in every flow |
+
+If a file in this list gains a direct test import, remove its row **and** its
+`_allowed` entry — the exception only exists while no test imports the file.
 
 ---
 

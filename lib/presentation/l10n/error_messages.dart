@@ -19,22 +19,32 @@ String errorTextForCode(BuildContext context, AppErrorCode code) =>
       AppErrorCode.orderNotFound => context.l10n.errorOrderNotFound,
       AppErrorCode.cartProductUnavailable =>
         context.l10n.errorCartProductUnavailable,
-      AppErrorCode.quantityMin => context.l10n.errorQuantityMin,
+      // The minimum (1) is guidance prose — convert like every other number.
+      AppErrorCode.quantityMin =>
+        context.localizeDigits(context.l10n.errorQuantityMin),
       AppErrorCode.cartEmpty => context.l10n.errorCartEmpty,
       AppErrorCode.invalidStatusTransition =>
         context.l10n.errorInvalidStatusTransition,
       AppErrorCode.nameRequired => context.l10n.nameRequired,
       AppErrorCode.phoneRequired => context.l10n.phoneRequired,
       AppErrorCode.addressRequired => context.l10n.addressRequired,
-      AppErrorCode.pinFormat => context.l10n.pinFormatError,
+      // The 4-6 range is guidance prose — convert like every other number.
+      AppErrorCode.pinFormat =>
+        context.localizeDigits(context.l10n.pinFormatError),
       AppErrorCode.pinNotSet => context.l10n.pinNotSet,
       AppErrorCode.pinIncorrect => context.l10n.pinIncorrect,
+      AppErrorCode.couponCodeTaken => context.l10n.errorCouponCodeTaken,
       // Data-carrying codes are only reachable through their typed variants
       // (handled in [localizedErrorMessage]); a bare code has no data to
       // format, so fall back to the generic message rather than crash.
       AppErrorCode.productOutOfStock ||
       AppErrorCode.stockLimit ||
-      AppErrorCode.categoryInUse =>
+      AppErrorCode.categoryInUse ||
+      AppErrorCode.couponNotFound ||
+      AppErrorCode.couponInactive ||
+      AppErrorCode.couponExpired ||
+      AppErrorCode.couponMinSpend ||
+      AppErrorCode.couponUsageLimit =>
         _dataCarryingCodeFallback(context),
     };
 
@@ -57,14 +67,39 @@ String localizedErrorMessage(BuildContext context, AppError error) =>
         :final stock,
         :final currentInCart,
       ) =>
-        // Hint is its own sentence (no punctuation coupling between strings):
-        // join with a plain space so each part stays independently
-        // translatable and RTL-safe.
-        currentInCart > 0
-            ? '${context.l10n.errorStockLimit(stock, productName)} '
-                '${context.l10n.errorStockLimitHint(currentInCart)}'
-            : context.l10n.errorStockLimit(stock, productName),
+        // Digits (stock, in-cart count) follow the active locale. The hint is
+        // its own sentence (no punctuation coupling between strings): join
+        // with a plain space so each part stays independently translatable
+        // and RTL-safe.
+        context.localizeDigits(
+          currentInCart > 0
+              ? '${context.l10n.errorStockLimit(stock, productName)} '
+                  '${context.l10n.errorStockLimitHint(currentInCart)}'
+              : context.l10n.errorStockLimit(stock, productName),
+        ),
       CategoryInUseError(:final productCount) =>
-        context.l10n.errorCategoryInUse(productCount),
+        context.localizeDigits(context.l10n.errorCategoryInUse(productCount)),
+      CouponNotFoundError(:final couponCode) =>
+        context.l10n.errorCouponNotFound(couponCode),
+      CouponInactiveError(:final couponCode) =>
+        context.l10n.errorCouponInactive(couponCode),
+      CouponExpiredError(:final couponCode) =>
+        context.l10n.errorCouponExpired(couponCode),
+      CouponMinSpendError(
+        :final requiredCents,
+        :final currentCents,
+      ) =>
+        // Cents are formatted for display — the ARB placeholders are strings.
+        context.l10n.errorCouponMinSpend(
+          context.formatCents(currentCents),
+          context.formatCents(requiredCents),
+        ),
+      CouponUsageLimitError(:final couponCode, :final maxUses) =>
+        // The cap renders in the active locale's digits (like prices). The
+        // code is an identifier, so a code containing digits converts too
+        // (e.g. SAVE10 → SAVE١٠) — accepted message-level tradeoff.
+        context.localizeDigits(
+          context.l10n.errorCouponUsageLimit(couponCode, maxUses),
+        ),
       _ => errorTextForCode(context, error.code),
     };

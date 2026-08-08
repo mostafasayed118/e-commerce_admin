@@ -31,9 +31,8 @@ class AddToCart {
         ),
       );
     }
-    return (await _products.getById(productId)).fold(
-      onSuccess: (product) => _add(product, quantity),
-      onFailure: (error) => Failure(error),
+    return (await _products.getById(productId)).flatMapAsync(
+      (product) => _add(product, quantity),
     );
   }
 
@@ -46,10 +45,7 @@ class AddToCart {
     }
 
     // Current quantity in the cart (0 when absent — one row per product).
-    final items = await _cart.watchCart().first;
-    final current = items
-        .where((item) => item.productId == product.id)
-        .fold(0, (sum, item) => sum + item.quantity);
+    final current = await currentCartQuantity(_cart, product.id);
 
     final target = current + quantity;
     if (target > product.stock) {

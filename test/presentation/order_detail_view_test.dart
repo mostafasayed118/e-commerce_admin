@@ -101,6 +101,44 @@ void main() {
     expect(find.text('Pending'), findsWidgets); // chip + timeline entry
   });
 
+  testWidgets('renders the coupon line separately from line savings',
+      (WidgetTester tester) async {
+    final order = Order(
+      id: 2,
+      orderNumber: 'ORD-000007',
+      status: OrderStatus.pending,
+      subtotalCents: 5000,
+      discountCents: 900, // 600 line savings + 300 coupon
+      totalCents: 4100,
+      couponCode: 'SAVE10',
+      couponDiscountCents: 300,
+      shipping: const ShippingInfo(name: 'X', phone: '0', address: 'Y'),
+      items: const [
+        OrderItem(
+          id: 1,
+          orderId: 2,
+          productId: 1,
+          productName: 'Mug',
+          unitPriceCents: 2500,
+          discountPercent: 0,
+          quantity: 2,
+        ),
+      ],
+      statusHistory: const [],
+      createdAt: DateTime(2026, 7, 2),
+    );
+    await pumpView(tester, order);
+
+    // The receipt breaks the discount into its two sources: line savings
+    // and the coupon (Decision E — the snapshot survives later edits).
+    expect(find.text('Savings'), findsOneWidget);
+    expect(find.text(r'-$6.00'), findsOneWidget);
+    expect(find.text('Coupon (SAVE10)'), findsOneWidget);
+    expect(find.text(r'-$3.00'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
+    expect(find.text(r'$41.00'), findsOneWidget);
+  });
+
   testWidgets('an empty history shows the no-history message',
       (WidgetTester tester) async {
     final order = Order(
@@ -147,4 +185,24 @@ void main() {
 
     expect(find.text('سجادة يوجا'), findsOneWidget);
   });
+
+  testWidgets(
+      'Arabic: the phone converts to Eastern digits; the order number '
+      'stays canonical', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ar'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: OrderDetailView(order: sampleOrder())),
+      ),
+    );
+
+    // Phone is display data — converts (same as prices/dates).
+    expect(find.text('٠١٠٠ ٠٠٠ ٠٠٠٤'), findsOneWidget);
+    expect(find.text('0100 000 0004'), findsNothing);
+    // Order number is an identifier — rendered canonically, like coupon codes.
+    expect(find.text('ORD-000004'), findsOneWidget);
+  });
 }
+

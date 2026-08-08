@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/injection.dart';
 import '../../l10n/l10n_ext.dart';
-import '../../widgets/message_view.dart';
+import '../../widgets/error_view.dart';
 import 'profile_cubit.dart';
 import 'widgets/profile_form.dart';
 
@@ -35,11 +35,7 @@ class _ProfileView extends StatelessWidget {
       body: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) => switch (state) {
           ProfileLoading() => const Center(child: CircularProgressIndicator()),
-          ProfileError() => MessageView(
-              icon: Icons.error_outline,
-              title: l10n.somethingWentWrong,
-              message: l10n.errorLoadFailed,
-            ),
+          ProfileError() => const ErrorView(),
           ProfileLoaded() => ProfileForm(state: state),
         },
       ),

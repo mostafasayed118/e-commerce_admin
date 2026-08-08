@@ -8,6 +8,7 @@ import '../../core/utils/security.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../database/app_database.dart';
 import '../database/daos/settings_dao.dart';
+import '../guarded_result.dart';
 
 /// drift-backed [SettingsRepository].
 ///
@@ -25,86 +26,67 @@ class SettingsRepositoryImpl implements SettingsRepository {
       );
 
   @override
-  Future<Result<ShippingInfo?>> getProfile() async {
-    try {
-      final row = await _dao.getProfile();
-      return Success(row == null ? null : _toShippingInfo(row));
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not load profile', cause: error),
+  Future<Result<ShippingInfo?>> getProfile() => guardedResult(
+        () async {
+          final row = await _dao.getProfile();
+          return Success(row == null ? null : _toShippingInfo(row));
+        },
+        message: 'Could not load profile',
       );
-    }
-  }
 
   @override
-  Future<Result<void>> updateProfile(ShippingInfo profile) async {
-    try {
-      await _dao.upsertProfile(ProfileCompanion.insert(
-        // id is the (non-autoIncrement) primary key, hence Value().
-        id: const Value(1),
-        name: Value(profile.name),
-        phone: Value(profile.phone),
-        address: Value(profile.address),
-        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
-      ));
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not save profile', cause: error),
+  Future<Result<void>> updateProfile(ShippingInfo profile) => guardedResult(
+        () async {
+          await _dao.upsertProfile(ProfileCompanion.insert(
+            // id is the (non-autoIncrement) primary key, hence Value().
+            id: const Value(1),
+            name: Value(profile.name),
+            phone: Value(profile.phone),
+            address: Value(profile.address),
+            updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+          ));
+          return const Success<void>(null);
+        },
+        message: 'Could not save profile',
       );
-    }
-  }
 
   @override
-  Stream<UiPrefs> watchUiPrefs() =>
-      _dao.watchUiPrefs().map(_toUiPrefs);
+  Stream<UiPrefs> watchUiPrefs() => _dao.watchUiPrefs().map(_toUiPrefs);
 
   @override
-  Future<Result<UiPrefs>> getUiPrefs() async {
-    try {
-      return Success(_toUiPrefs(await _dao.getUiPrefs()));
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not load preferences', cause: error),
+  Future<Result<UiPrefs>> getUiPrefs() => guardedResult(
+        () async => Success(_toUiPrefs(await _dao.getUiPrefs())),
+        message: 'Could not load preferences',
       );
-    }
-  }
 
   @override
   Future<Result<void>> updateUiPrefs({
     String? themeModeCode,
     String? localeCode,
-  }) async {
-    try {
-      // Absent columns (Value.absent) keep their stored value on conflict,
-      // so a theme-only write never wipes the stored locale and vice versa.
-      await _dao.upsertUiPrefs(UiPrefsCompanion.insert(
-        id: const Value(1),
-        themeMode: themeModeCode == null
-            ? const Value.absent()
-            : Value(themeModeCode),
-        localeCode: localeCode == null
-            ? const Value.absent()
-            : Value(localeCode),
-      ));
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not save preferences', cause: error),
+  }) =>
+      guardedResult(
+        () async {
+          // Absent columns (Value.absent) keep their stored value on conflict,
+          // so a theme-only write never wipes the stored locale and vice versa.
+          await _dao.upsertUiPrefs(UiPrefsCompanion.insert(
+            id: const Value(1),
+            themeMode: themeModeCode == null
+                ? const Value.absent()
+                : Value(themeModeCode),
+            localeCode: localeCode == null
+                ? const Value.absent()
+                : Value(localeCode),
+          ));
+          return const Success<void>(null);
+        },
+        message: 'Could not save preferences',
       );
-    }
-  }
 
   @override
-  Future<Result<bool>> isPinSet() async {
-    try {
-      return Success((await _dao.getAdminSettings()) != null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not read PIN settings', cause: error),
+  Future<Result<bool>> isPinSet() => guardedResult(
+        () async => Success((await _dao.getAdminSettings()) != null),
+        message: 'Could not read PIN settings',
       );
-    }
-  }
 
   @override
   Future<Result<void>> setPin(String pin) async {
@@ -116,7 +98,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         ),
       );
     }
-    try {
+    return guardedResult(() async {
       final salt = generateSalt();
       await _dao.upsertAdminSettings(AdminSettingsCompanion.insert(
         id: const Value(1),
@@ -125,39 +107,32 @@ class SettingsRepositoryImpl implements SettingsRepository {
         createdAt: DateTime.now().millisecondsSinceEpoch,
       ));
       return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not save PIN', cause: error),
-      );
-    }
+    }, message: 'Could not save PIN');
   }
 
   @override
-  Future<Result<void>> verifyPin(String pin) async {
-    try {
-      final row = await _dao.getAdminSettings();
-      if (row == null) {
-        return const Failure(PinError(
-          code: AppErrorCode.pinNotSet,
-          message: 'PIN has not been set',
-        ));
-      }
-      // Compare the hash of the presented PIN against the stored hash. The
-      // equality check is not constant-time; acceptable for a mock local
-      // gate where the attacker already has the DB on the same device.
-      if (hashPin(pin, row.pinSalt) != row.pinHash) {
-        return const Failure(PinError(
-          code: AppErrorCode.pinIncorrect,
-          message: 'Incorrect PIN',
-        ));
-      }
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not verify PIN', cause: error),
+  Future<Result<void>> verifyPin(String pin) => guardedResult(
+        () async {
+          final row = await _dao.getAdminSettings();
+          if (row == null) {
+            return const Failure(PinError(
+              code: AppErrorCode.pinNotSet,
+              message: 'PIN has not been set',
+            ));
+          }
+          // Compare the hash of the presented PIN against the stored hash. The
+          // equality check is not constant-time; acceptable for a mock local
+          // gate where the attacker already has the DB on the same device.
+          if (hashPin(pin, row.pinSalt) != row.pinHash) {
+            return const Failure(PinError(
+              code: AppErrorCode.pinIncorrect,
+              message: 'Incorrect PIN',
+            ));
+          }
+          return const Success<void>(null);
+        },
+        message: 'Could not verify PIN',
       );
-    }
-  }
 
   ShippingInfo _toShippingInfo(ProfileRow row) => ShippingInfo(
         name: row.name ?? '',

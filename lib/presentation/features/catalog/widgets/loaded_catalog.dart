@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../widgets/message_view.dart';
+import '../../wishlist/wishlist_cubit.dart';
+import '../../wishlist/widgets/wishlist_heart.dart';
 import '../catalog_cubit.dart';
 import '../catalog_sort.dart';
 import 'category_filter_chips.dart';
@@ -70,7 +73,8 @@ class _LoadedCatalogState extends State<LoadedCatalog> {
           child: Row(
             children: [
               Text(
-                l10n.productCount(state.products.length),
+                // The result count follows the active locale's digits.
+                context.localizeDigits(l10n.productCount(state.products.length)),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -131,9 +135,22 @@ class _LoadedCatalogState extends State<LoadedCatalog> {
                   itemCount: state.products.length,
                   itemBuilder: (context, index) {
                     final product = state.products[index];
-                    return ProductCard(
-                      product: product,
-                      onTap: () => context.push('/product/${product.id}'),
+                    // Per-card BlocBuilder so a wishlist toggle rebuilds only
+                    // the affected card's heart, not the whole grid. The
+                    // DI-owned cubit is read directly — the catalog screen
+                    // has no wishlist provider of its own.
+                    return BlocBuilder<WishlistCubit, WishlistState>(
+                      bloc: getIt<WishlistCubit>(),
+                      buildWhen: (previous, current) =>
+                          isWishlisted(previous, product.id) !=
+                          isWishlisted(current, product.id),
+                      builder: (context, wishlistState) => ProductCard(
+                        product: product,
+                        wishlisted: isWishlisted(wishlistState, product.id),
+                        onToggleWishlist: () =>
+                            toggleWishlistAndNotify(context, product),
+                        onTap: () => context.push('/product/${product.id}'),
+                      ),
                     );
                   },
                 ),

@@ -8,9 +8,11 @@ import 'package:shop_admin/core/entities/shipping_info.dart';
 import 'package:shop_admin/l10n/app_localizations.dart';
 import 'package:shop_admin/presentation/features/orders/order_list_tile.dart';
 
-Future<void> pumpTile(WidgetTester tester, Order order, {VoidCallback? onTap}) =>
+Future<void> pumpTile(WidgetTester tester, Order order,
+        {VoidCallback? onTap, Locale? locale}) =>
     tester.pumpWidget(
       MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: OrderListTile(order: order, onTap: onTap)),
@@ -61,6 +63,15 @@ void main() {
     await pumpTile(tester, order(itemCount: 1));
 
     expect(find.text('5 Aug 2026 · 1 item · \$58.00'), findsOneWidget);
+  });
+
+  testWidgets('Arabic renders Eastern digits in the subtitle parts',
+      (WidgetTester tester) async {
+    await pumpTile(tester, order(itemCount: 3), locale: const Locale('ar'));
+
+    // date · 3 items · total — the item count converts (the date and money
+    // were already localized, so the wrap is idempotent for them).
+    expect(find.textContaining('٣ عناصر'), findsOneWidget);
   });
 
   testWidgets('a missing createdAt omits the date part from the subtitle',

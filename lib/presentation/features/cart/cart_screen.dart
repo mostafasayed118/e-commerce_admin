@@ -3,10 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection.dart';
-import '../../../core/error/app_error.dart';
 import '../../../core/error/result.dart';
 import '../../l10n/l10n_ext.dart';
-import '../../widgets/message_view.dart';
+import '../../widgets/confirm_dialog.dart';
+import '../../widgets/error_view.dart';
+import '../../widgets/snack_bar.dart';
 import 'cart_cubit.dart';
 import 'widgets/cart_empty_view.dart';
 import 'widgets/cart_line_tile.dart';
@@ -33,35 +34,18 @@ class _CartView extends StatelessWidget {
 
   Future<void> _confirmClear(BuildContext context) async {
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.clearCartTitle),
-        content: Text(l10n.clearCartMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.clear),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.clearCartTitle,
+      message: l10n.clearCartMessage,
+      confirmLabel: l10n.clear,
     );
     if (confirmed != true || !context.mounted) return;
     final result = await context.read<CartCubit>().clear();
     if (!context.mounted) return;
     result.fold(
       onSuccess: (_) {},
-      onFailure: (error) => _showError(context, error),
-    );
-  }
-
-  void _showError(BuildContext context, AppError error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.errorText(error))),
+      onFailure: (error) => showErrorSnackBar(context, error),
     );
   }
 
@@ -87,11 +71,7 @@ class _CartView extends StatelessWidget {
           ),
           body: switch (state) {
             CartLoading() => const Center(child: CircularProgressIndicator()),
-            CartError() => MessageView(
-                icon: Icons.error_outline,
-                title: l10n.somethingWentWrong,
-                message: l10n.errorLoadFailed,
-              ),
+            CartError() => const ErrorView(),
             CartLoaded() => state.lines.isEmpty
                 ? const CartEmptyView()
                 : _FilledCart(state: state),
@@ -129,7 +109,7 @@ class _FilledCart extends StatelessWidget {
                   if (context.mounted) {
                     result.fold(
                       onSuccess: (_) {},
-                      onFailure: (error) => _showCartError(context, error),
+                      onFailure: (error) => showErrorSnackBar(context, error),
                     );
                   }
                 },
@@ -145,7 +125,7 @@ class _FilledCart extends StatelessWidget {
                   if (context.mounted) {
                     result.fold(
                       onSuccess: (_) {},
-                      onFailure: (error) => _showCartError(context, error),
+                      onFailure: (error) => showErrorSnackBar(context, error),
                     );
                   }
                 },
@@ -160,12 +140,6 @@ class _FilledCart extends StatelessWidget {
           onCheckout: () => context.push('/checkout'),
         ),
       ],
-    );
-  }
-
-  void _showCartError(BuildContext context, AppError error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.errorText(error))),
     );
   }
 }

@@ -5,7 +5,10 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/entities/category.dart';
 import '../../../../core/error/result.dart';
 import '../../../l10n/l10n_ext.dart';
-import '../../../widgets/message_view.dart';
+import '../../../widgets/confirm_dialog.dart';
+import '../../../widgets/error_view.dart';
+import '../../../widgets/snack_bar.dart';
+import '../widgets/admin_fab.dart';
 import 'admin_catalog_cubit.dart';
 import 'widgets/category_list.dart';
 import 'widgets/category_name_dialog.dart';
@@ -56,24 +59,12 @@ class _CategoriesView extends StatelessWidget {
 
   Future<void> _confirmDelete(BuildContext context, Category category) async {
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteCategoryTitle(context.categoryName(category))),
-        content: Text(l10n.deleteCategoryMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.deleteCategoryTitle(context.categoryName(category)),
+      message: l10n.deleteCategoryMessage,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     final result = await context.read<AdminCatalogCubit>().deleteCategory(
           category.id,
@@ -83,11 +74,7 @@ class _CategoriesView extends StatelessWidget {
       onSuccess: (_) {},
       // The blocked rule (products still reference it) or other failures land
       // here as a localized message.
-      onFailure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.errorText(error))),
-        );
-      },
+      onFailure: (error) => showErrorSnackBar(context, error),
     );
   }
 
@@ -97,7 +84,9 @@ class _CategoriesView extends StatelessWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.categoriesTitle)),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: AdminFab(
+        branch: 'categories',
+        label: l10n.newCategory,
         onPressed: () => _promptForName(
           context,
           title: l10n.newCategory,
@@ -107,24 +96,16 @@ class _CategoriesView extends StatelessWidget {
             if (!context.mounted) return;
             result.fold(
               onSuccess: (_) {},
-              onFailure: (error) => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(context.errorText(error))),
-              ),
+              onFailure: (error) => showErrorSnackBar(context, error),
             );
           },
         ),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newCategory),
       ),
       body: BlocBuilder<AdminCatalogCubit, AdminCatalogState>(
         builder: (context, state) => switch (state) {
           AdminCatalogLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminCatalogError() => MessageView(
-              icon: Icons.error_outline,
-              title: l10n.somethingWentWrong,
-              message: l10n.errorLoadFailed,
-            ),
+          AdminCatalogError() => const ErrorView(),
           AdminCatalogLoaded() => CategoryList(
               state: state,
               onRename: (category) => _promptForName(
@@ -139,10 +120,7 @@ class _CategoriesView extends StatelessWidget {
                   if (!context.mounted) return;
                   result.fold(
                     onSuccess: (_) {},
-                    onFailure: (error) =>
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.errorText(error))),
-                        ),
+                    onFailure: (error) => showErrorSnackBar(context, error),
                   );
                 },
               ),

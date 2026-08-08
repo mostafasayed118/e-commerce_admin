@@ -124,6 +124,137 @@ void main() {
     );
   });
 
+  testWidgets('CouponNotFoundError interpolates the entered code',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CouponNotFoundError(couponCode: 'NOPE', message: 'dev log'),
+      ),
+    ));
+
+    expect(find.text('NOPE is not a valid code.'), findsOneWidget);
+  });
+
+  testWidgets('CouponExpiredError and CouponInactiveError name the code',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CouponExpiredError(couponCode: 'SAVE10', message: 'dev log'),
+      ),
+    ));
+    expect(find.text('Code SAVE10 has expired.'), findsOneWidget);
+
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CouponInactiveError(couponCode: 'SAVE10', message: 'dev log'),
+      ),
+    ));
+    expect(find.text('Code SAVE10 is not active.'), findsOneWidget);
+  });
+
+  testWidgets('CouponMinSpendError formats both amounts',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CouponMinSpendError(
+          couponCode: 'SAVE10',
+          requiredCents: 5000,
+          currentCents: 3000,
+          message: 'dev log',
+        ),
+      ),
+    ));
+
+    expect(
+      find.text(
+        'Spend at least \$50.00 to use this code (your subtotal is \$30.00).',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('CouponUsageLimitError names the code and the cap',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CouponUsageLimitError(
+          couponCode: 'SAVE10',
+          maxUses: 5,
+          message: 'dev log',
+        ),
+      ),
+    ));
+
+    expect(
+      find.text('Code SAVE10 has reached its 5-use limit.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('CouponUsageLimitError localizes the cap digits in Arabic',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CouponUsageLimitError(
+          couponCode: 'SAVE10',
+          maxUses: 5,
+          message: 'dev log',
+        ),
+      ),
+      locale: const Locale('ar'),
+    ));
+
+    // The cap renders in Eastern Arabic digits; the code is an identifier
+    // whose own digits convert too (SAVE10 → SAVE١٠) — documented tradeoff.
+    expect(
+      find.text('بلغ الرمز SAVE١٠ الحد الأقصى لاستخداماته (٥).'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('StockLimitError localizes its digits in Arabic',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const StockLimitError(
+          productName: 'Classic Tee',
+          stock: 3,
+          currentInCart: 2,
+          message: 'dev log',
+        ),
+      ),
+      locale: const Locale('ar'),
+    ));
+
+    expect(
+      find.text('متبقي ٣ فقط في المخزون من Classic Tee. لديك بالفعل ٢ في سلتك.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('CategoryInUseError localizes its count in Arabic',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => localizedErrorMessage(
+        context,
+        const CategoryInUseError(productCount: 3, message: 'dev log'),
+      ),
+      locale: const Locale('ar'),
+    ));
+
+    expect(
+      find.text('يحتوي هذا التصنيف على ٣ منتجات. احذفها قبل حذف التصنيف.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('the same code localizes to Arabic under the ar locale',
       (WidgetTester tester) async {
     await tester.pumpWidget(probe(
@@ -132,6 +263,31 @@ void main() {
     ));
 
     expect(find.text('رمز PIN غير صحيح'), findsOneWidget);
+  });
+
+  testWidgets('pinFormatError converts the 4-6 range to Eastern digits',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => errorTextForCode(context, AppErrorCode.pinFormat),
+    ));
+    expect(find.text('PIN must be 4-6 digits'), findsOneWidget);
+
+    await tester.pumpWidget(probe(
+      (context) => errorTextForCode(context, AppErrorCode.pinFormat),
+      locale: const Locale('ar'),
+    ));
+    expect(find.text('يجب أن يتكون رمز PIN من ٤-٦ أرقام'), findsOneWidget);
+    expect(find.textContaining('4-6'), findsNothing);
+  });
+
+  testWidgets('errorQuantityMin converts its 1 to Eastern digits',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(probe(
+      (context) => errorTextForCode(context, AppErrorCode.quantityMin),
+      locale: const Locale('ar'),
+    ));
+    expect(find.text('يجب أن تكون الكمية ١ على الأقل.'), findsOneWidget);
+    expect(find.textContaining('1'), findsNothing);
   });
 
   testWidgets('every AppErrorCode maps to a non-empty localized string',
@@ -145,6 +301,11 @@ void main() {
       AppErrorCode.productOutOfStock,
       AppErrorCode.stockLimit,
       AppErrorCode.categoryInUse,
+      AppErrorCode.couponNotFound,
+      AppErrorCode.couponInactive,
+      AppErrorCode.couponExpired,
+      AppErrorCode.couponMinSpend,
+      AppErrorCode.couponUsageLimit,
     };
     final plainCodes =
         AppErrorCode.values.where((code) => !dataCarrying.contains(code));

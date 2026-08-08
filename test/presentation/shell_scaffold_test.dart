@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shop_admin/presentation/shells/shell_scaffold.dart';
 
+import '../helpers/test_app.dart';
+
 /// A minimal shell route so the shell gets a real [StatefulNavigationShell]
 /// (it is a concrete StatefulWidget built by go_router — not mockable).
 ///
@@ -41,11 +43,15 @@ GoRouter shellRouter(Widget Function(StatefulNavigationShell) shellBuilder) =>
 Future<ShellScaffold> pumpShell(
   WidgetTester tester,
   GoRouter router,
-  Size size,
-) async {
-  await tester.binding.setSurfaceSize(size);
-  addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+  Size size, {
+  Locale? locale,
+}) async {
+  await pumpRouterSurface(
+    tester,
+    router: router,
+    size: size,
+    locale: locale,
+  );
   return tester.widget<ShellScaffold>(find.byType(ShellScaffold));
 }
 
@@ -187,6 +193,41 @@ void main() {
       );
     });
 
+    testWidgets('the badge count converts to Eastern digits under ar',
+        (tester) async {
+      final router = shellRouter(
+        (navigationShell) => ShellScaffold(
+          navigationShell: navigationShell,
+          destinations: [
+            const ShellDestination(
+              icon: Icons.home,
+              selectedIcon: Icons.home,
+              label: 'Home',
+            ),
+            ShellDestination(
+              icon: Icons.shopping_cart,
+              selectedIcon: Icons.shopping_cart,
+              label: 'Cart',
+              badgeCount: 3,
+            ),
+          ],
+        ),
+      );
+      await pumpShell(tester, router, const Size(400, 800),
+          locale: const Locale('ar'));
+
+      expect(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.descendant(
+            of: find.byType(Badge),
+            matching: find.text('٣'),
+          ),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('a zero badge count hides the label entirely', (tester) async {
       final router = shellRouter(
         (navigationShell) => ShellScaffold(
@@ -248,6 +289,120 @@ void main() {
       await tester.tap(find.text('C'));
       await tester.pumpAndSettle();
       expect(find.text('Content Branch C'), findsOneWidget);
+    });
+  });
+
+  group('exit action', () {
+    testWidgets('wide pins the exit to the rail; tapping runs onTap',
+        (WidgetTester tester) async {
+      var exited = false;
+      final router = shellRouter(
+        (navigationShell) => ShellScaffold(
+          navigationShell: navigationShell,
+          destinations: const [
+            ShellDestination(
+              icon: Icons.home,
+              selectedIcon: Icons.home,
+              label: 'Home',
+            ),
+          ],
+          exitAction: (
+            icon: Icons.storefront_outlined,
+            label: 'Leave',
+            onTap: () => exited = true,
+          ),
+        ),
+      );
+      await pumpShell(tester, router, const Size(1000, 700));
+
+      expect(find.byType(NavigationRail), findsOneWidget);
+      expect(find.text('Leave'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.storefront_outlined));
+      await tester.pump();
+      expect(exited, isTrue);
+      // The exit is not a destination switch — the branch is unchanged.
+      expect(find.text('Content Branch A'), findsOneWidget);
+    });
+
+    testWidgets('narrow renders the exit as an extra bar entry running onTap',
+        (WidgetTester tester) async {
+      var exited = false;
+      final router = shellRouter(
+        (navigationShell) => ShellScaffold(
+          navigationShell: navigationShell,
+          destinations: const [
+            ShellDestination(
+              icon: Icons.home,
+              selectedIcon: Icons.home,
+              label: 'Home',
+            ),
+          ],
+          exitAction: (
+            icon: Icons.storefront_outlined,
+            label: 'Leave',
+            onTap: () => exited = true,
+          ),
+        ),
+      );
+      await pumpShell(tester, router, const Size(400, 800));
+
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.text('Leave'), findsOneWidget);
+      // One branch destination + the exit entry.
+      expect(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.byType(NavigationDestination),
+        ),
+        findsNWidgets(2),
+      );
+
+      await tester.tap(find.byIcon(Icons.storefront_outlined));
+      await tester.pump();
+      expect(exited, isTrue);
+      expect(find.text('Content Branch A'), findsOneWidget);
+    });
+
+    testWidgets('no exit action renders no affordance in either layout',
+        (WidgetTester tester) async {
+      // Two branch destinations: NavigationBar requires >= 2.
+      ShellScaffold shellWithoutExit(StatefulNavigationShell shell) =>
+          ShellScaffold(
+            navigationShell: shell,
+            destinations: const [
+              ShellDestination(
+                icon: Icons.home,
+                selectedIcon: Icons.home,
+                label: 'Home',
+              ),
+              ShellDestination(
+                icon: Icons.search,
+                selectedIcon: Icons.search,
+                label: 'Search',
+              ),
+            ],
+          );
+
+      await pumpShell(
+        tester,
+        shellRouter(shellWithoutExit),
+        const Size(1000, 700),
+      );
+      expect(find.byType(IconButton), findsNothing); // no rail trailing
+
+      await pumpShell(
+        tester,
+        shellRouter(shellWithoutExit),
+        const Size(400, 800),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.byType(NavigationDestination),
+        ),
+        findsNWidgets(2), // branch destinations only, no exit entry
+      );
     });
   });
 }

@@ -6,8 +6,10 @@ import 'package:shop_admin/l10n/app_localizations.dart';
 import 'package:shop_admin/presentation/features/cart/cart_state.dart';
 import 'package:shop_admin/presentation/features/cart/widgets/cart_line_tile.dart';
 
-Future<void> pumpTile(WidgetTester tester, Widget tile) => tester.pumpWidget(
+Future<void> pumpTile(WidgetTester tester, Widget tile, {Locale? locale}) =>
+    tester.pumpWidget(
       MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: tile),
@@ -101,6 +103,22 @@ void main() {
     // Tooltips carry the localized labels.
     expect(find.byTooltip('Add one'), findsOneWidget);
     expect(find.byTooltip('Remove one'), findsOneWidget);
+  });
+
+  testWidgets('Arabic renders Eastern digits for the warning and quantity',
+      (WidgetTester tester) async {
+    await pumpTile(
+      tester,
+      CartLineTile(
+        line: line(quantity: 5, stock: 3),
+        onAdd: () {},
+        onRemoveOne: () {},
+      ),
+      locale: const Locale('ar'),
+    );
+
+    expect(find.text('متبقي ٣ فقط في المخزون'), findsOneWidget);
+    expect(find.text('٥'), findsOneWidget); // the quantity readout
   });
 
   testWidgets('a line exceeding stock warns and disables the + button',

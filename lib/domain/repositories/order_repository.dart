@@ -30,10 +30,20 @@ abstract interface class OrderRepository {
   /// history entry — all in one drift transaction, so any failure rolls
   /// everything back and the cart is untouched.
   ///
-  /// Errors: [ValidationError] when the cart is empty or stock is
-  /// insufficient; [NotFoundError] when a cart product no longer exists;
-  /// [DatabaseError] on any storage failure.
-  Future<Result<Order>> placeOrder(ShippingInfo shipping);
+  /// Errors: [ValidationError] when the cart is empty, stock is insufficient,
+  /// or the coupon is not applicable ([CouponNotFoundError] / inactive /
+  /// expired / min-spend / usage-limit); [NotFoundError] when a cart product
+  /// no longer exists; [DatabaseError] on any storage failure.
+  ///
+  /// When [couponCode] is provided (nullable for no coupon), the coupon is
+  /// re-validated inside the transaction against the line-discounted subtotal
+  /// via [Coupon.applyTo] — the authoritative check, never the checkout
+  /// preview — and a valid coupon is snapshotted on the order while its
+  /// usage counter increments atomically.
+  Future<Result<Order>> placeOrder(
+    ShippingInfo shipping, {
+    String? couponCode,
+  });
 
   /// Moves the order to [newStatus] if [OrderStatus.canTransitionTo] allows
   /// it, appending a timestamped history entry in the same transaction.

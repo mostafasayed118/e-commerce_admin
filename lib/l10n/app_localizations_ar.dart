@@ -21,6 +21,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get save => 'حفظ';
 
   @override
+  String get backToStore => 'العودة إلى المتجر';
+
+  @override
   String get create => 'إنشاء';
 
   @override
@@ -28,6 +31,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tabShop => 'المتجر';
+
+  @override
+  String get tabWishlist => 'المفضلة';
 
   @override
   String get tabCart => 'السلة';
@@ -46,6 +52,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tabCategories => 'التصنيفات';
+
+  @override
+  String get tabCoupons => 'القسائم';
 
   @override
   String get statusPending => 'قيد الانتظار';
@@ -149,6 +158,52 @@ class AppLocalizationsAr extends AppLocalizations {
   String addedToCart(String product) {
     return 'تمت إضافة $product إلى السلة';
   }
+
+  @override
+  String get wishlistTitle => 'المفضلة';
+
+  @override
+  String get wishlistEmptyTitle => 'قائمة المفضلة فارغة';
+
+  @override
+  String get wishlistEmptyMessage =>
+      'اضغط على القلب في أي منتج لحفظه لوقت لاحق.';
+
+  @override
+  String get addToWishlist => 'أضف إلى المفضلة';
+
+  @override
+  String get removeFromWishlist => 'أزل من المفضلة';
+
+  @override
+  String addedToWishlist(String product) {
+    return 'تمت إضافة $product إلى المفضلة';
+  }
+
+  @override
+  String removedFromWishlist(String product) {
+    return 'تمت إزالة $product من المفضلة';
+  }
+
+  @override
+  String get moveToCart => 'نقل إلى السلة';
+
+  @override
+  String get checkoutSummary => 'ملخص الطلب';
+
+  @override
+  String couponLabel(String code) {
+    return 'القسيمة ($code)';
+  }
+
+  @override
+  String get couponApply => 'تطبيق';
+
+  @override
+  String get removeCoupon => 'إزالة القسيمة';
+
+  @override
+  String get couponCodeHint => 'مثال: SAVE10';
 
   @override
   String get cartTitle => 'السلة';
@@ -346,6 +401,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recentOrders => 'أحدث الطلبات';
 
   @override
+  String get overviewActiveCoupons => 'قسائم نشطة';
+
+  @override
+  String get couponUsageTitle => 'استخدام القسائم';
+
+  @override
+  String get noCouponUsage => 'لا يوجد استخدام للقسائم بعد.';
+
+  @override
+  String get topCouponsTitle => 'أفضل القسائم';
+
+  @override
+  String get noTopCoupons => 'لا توجد قسائم مستخدمة بعد.';
+
+  @override
+  String couponUsesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count استخدامًا',
+      many: '$count استخدامًا',
+      few: '$count استخدامات',
+      two: 'استخدامان',
+      one: 'استخدام واحد',
+      zero: 'لا استخدامات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String couponUsedPercent(int percent) {
+    return '$percent% مستخدمة';
+  }
+
+  @override
   String get noOrdersYet => 'لا توجد طلبات بعد.';
 
   @override
@@ -413,6 +503,99 @@ class AppLocalizationsAr extends AppLocalizations {
   String percentOff(int percent) {
     return '(خصم $percent%)';
   }
+
+  @override
+  String get couponsTitle => 'القسائم';
+
+  @override
+  String get newCoupon => 'قسيمة جديدة';
+
+  @override
+  String get editCoupon => 'تعديل القسيمة';
+
+  @override
+  String get couponNotFoundView => 'القسيمة غير موجودة';
+
+  @override
+  String get deleteCouponTitle => 'حذف القسيمة؟';
+
+  @override
+  String deleteCouponMessage(String code) {
+    return 'ستتم إزالة $code. تحتفظ الطلبات السابقة بنسختها المحفوظة.';
+  }
+
+  @override
+  String deleteCouponTooltip(String code) {
+    return 'حذف $code';
+  }
+
+  @override
+  String get noCouponsTitle => 'لا توجد قسائم بعد';
+
+  @override
+  String get noCouponsMessage => 'أنشئ رمزًا لبدء الترويج.';
+
+  @override
+  String get couponCode => 'الرمز';
+
+  @override
+  String get couponFixedType => 'مبلغ ثابت';
+
+  @override
+  String get couponFixedValue => 'مبلغ الخصم';
+
+  @override
+  String couponPercentOff(int value) {
+    return 'خصم $value%';
+  }
+
+  @override
+  String couponFixedOff(String amount) {
+    return 'خصم $amount';
+  }
+
+  @override
+  String get minSpendOptional => 'الحد الأدنى للشراء (اختياري)';
+
+  @override
+  String get minSpendHint => '0 = بدون حد أدنى';
+
+  @override
+  String couponMinSpendShort(String amount) {
+    return 'الحد الأدنى $amount';
+  }
+
+  @override
+  String get expiryOptional => 'تاريخ الانتهاء (اختياري)';
+
+  @override
+  String get neverExpires => 'لا ينتهي';
+
+  @override
+  String get removeExpiry => 'إزالة تاريخ الانتهاء';
+
+  @override
+  String get maxUsesOptional => 'حد الاستخدام (اختياري)';
+
+  @override
+  String get unlimited => 'غير محدود';
+
+  @override
+  String couponUsesLeft(int used, int max) {
+    return '$used/$max استخدامات';
+  }
+
+  @override
+  String get couponActive => 'نشطة';
+
+  @override
+  String get activeStatus => 'نشطة';
+
+  @override
+  String get inactiveStatus => 'معطّلة';
+
+  @override
+  String get expiredStatus => 'منتهية';
 
   @override
   String noFilterOrdersTitle(String status) {
@@ -640,4 +823,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorImageDelete => 'تعذّر حذف الصورة.';
+
+  @override
+  String errorCouponNotFound(String code) {
+    return '$code ليس رمزًا صالحًا.';
+  }
+
+  @override
+  String errorCouponInactive(String code) {
+    return 'الرمز $code غير نشط.';
+  }
+
+  @override
+  String errorCouponExpired(String code) {
+    return 'انتهت صلاحية الرمز $code.';
+  }
+
+  @override
+  String errorCouponMinSpend(String current, String required) {
+    return 'أنفق $required على الأقل لاستخدام هذا الرمز (مجموعك الحالي $current).';
+  }
+
+  @override
+  String errorCouponUsageLimit(String code, int maxUses) {
+    return 'بلغ الرمز $code الحد الأقصى لاستخداماته ($maxUses).';
+  }
+
+  @override
+  String get errorCouponCodeTaken => 'هذا الرمز مستخدم بالفعل.';
 }

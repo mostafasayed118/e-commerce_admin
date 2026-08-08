@@ -8,16 +8,19 @@
   "cancel": "إلغاء",
   "delete": "حذف",
   "save": "حفظ",
+  "backToStore": "العودة إلى المتجر",
   "create": "إنشاء",
   "all": "الكل",
 
   "tabShop": "المتجر",
+  "tabWishlist": "المفضلة",
   "tabCart": "السلة",
   "tabOrders": "الطلبات",
   "tabProfile": "الملف الشخصي",
   "tabOverview": "نظرة عامة",
   "tabProducts": "المنتجات",
   "tabCategories": "التصنيفات",
+  "tabCoupons": "القسائم",
 
   "statusPending": "قيد الانتظار",
   "statusConfirmed": "مؤكد",
@@ -51,6 +54,21 @@
   "adding": "جارٍ الإضافة…",
   "addToCart": "أضف إلى السلة",
   "addedToCart": "تمت إضافة {product} إلى السلة",
+
+  "wishlistTitle": "المفضلة",
+  "wishlistEmptyTitle": "قائمة المفضلة فارغة",
+  "wishlistEmptyMessage": "اضغط على القلب في أي منتج لحفظه لوقت لاحق.",
+  "addToWishlist": "أضف إلى المفضلة",
+  "removeFromWishlist": "أزل من المفضلة",
+  "addedToWishlist": "تمت إضافة {product} إلى المفضلة",
+  "removedFromWishlist": "تمت إزالة {product} من المفضلة",
+  "moveToCart": "نقل إلى السلة",
+
+  "checkoutSummary": "ملخص الطلب",
+  "couponLabel": "القسيمة ({code})",
+  "couponApply": "تطبيق",
+  "removeCoupon": "إزالة القسيمة",
+  "couponCodeHint": "مثال: SAVE10",
 
   "cartTitle": "السلة",
   "clearCart": "إفراغ السلة",
@@ -117,6 +135,25 @@
   "orders": "الطلبات",
   "lowStock": "مخزون منخفض",
   "ordersByStatus": "الطلبات حسب الحالة",
+  "overviewActiveCoupons": "قسائم نشطة",
+  "couponUsageTitle": "استخدام القسائم",
+  "noCouponUsage": "لا يوجد استخدام للقسائم بعد.",
+  "topCouponsTitle": "أفضل القسائم",
+  "noTopCoupons": "لا توجد قسائم مستخدمة بعد.",
+  "couponUsesCount": "{count, plural, zero{لا استخدامات} one{استخدام واحد} two{استخدامان} few{{count} استخدامات} many{{count} استخدامًا} other{{count} استخدامًا}}",
+  "@couponUsesCount": {
+    "description": "Redemption count on the dashboard's top-coupons ranking.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "couponUsedPercent": "{percent}% مستخدمة",
+  "@couponUsedPercent": {
+    "description": "Exhaustion percentage of a capped coupon on the dashboard's top-coupons ranking.",
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
   "recentOrders": "أحدث الطلبات",
   "noOrdersYet": "لا توجد طلبات بعد.",
   "allStockedUp": "المخزون مكتمل.",
@@ -136,6 +173,34 @@
   "status": "الحالة",
   "noStatusHistory": "لا يوجد سجل للحالة بعد.",
   "percentOff": "(خصم {percent}%)",
+
+  "couponsTitle": "القسائم",
+  "newCoupon": "قسيمة جديدة",
+  "editCoupon": "تعديل القسيمة",
+  "couponNotFoundView": "القسيمة غير موجودة",
+  "deleteCouponTitle": "حذف القسيمة؟",
+  "deleteCouponMessage": "ستتم إزالة {code}. تحتفظ الطلبات السابقة بنسختها المحفوظة.",
+  "deleteCouponTooltip": "حذف {code}",
+  "noCouponsTitle": "لا توجد قسائم بعد",
+  "noCouponsMessage": "أنشئ رمزًا لبدء الترويج.",
+  "couponCode": "الرمز",
+  "couponFixedType": "مبلغ ثابت",
+  "couponFixedValue": "مبلغ الخصم",
+  "couponPercentOff": "خصم {value}%",
+  "couponFixedOff": "خصم {amount}",
+  "minSpendOptional": "الحد الأدنى للشراء (اختياري)",
+  "minSpendHint": "0 = بدون حد أدنى",
+  "couponMinSpendShort": "الحد الأدنى {amount}",
+  "expiryOptional": "تاريخ الانتهاء (اختياري)",
+  "neverExpires": "لا ينتهي",
+  "removeExpiry": "إزالة تاريخ الانتهاء",
+  "maxUsesOptional": "حد الاستخدام (اختياري)",
+  "unlimited": "غير محدود",
+  "couponUsesLeft": "{used}/{max} استخدامات",
+  "couponActive": "نشطة",
+  "activeStatus": "نشطة",
+  "inactiveStatus": "معطّلة",
+  "expiredStatus": "منتهية",
 
   "noFilterOrdersTitle": "لا توجد طلبات {status}",
   "ordersWillAppear": "ستظهر الطلبات هنا بعد أن يقوم العملاء بإتمام الشراء.",
@@ -202,5 +267,11 @@
   "errorInvalidStatusTransition": "تغيير الحالة هذا غير مسموح به.",
   "errorCategoryInUse": "{count, plural, zero{لا يحتوي هذا التصنيف على منتجات.} one{يحتوي هذا التصنيف على منتج واحد. احذفه قبل حذف التصنيف.} two{يحتوي هذا التصنيف على منتجين. احذفهما قبل حذف التصنيف.} few{يحتوي هذا التصنيف على {count} منتجات. احذفها قبل حذف التصنيف.} many{يحتوي هذا التصنيف على {count} منتجًا. احذفها قبل حذف التصنيف.} other{يحتوي هذا التصنيف على {count} منتجًا. احذفها قبل حذف التصنيف.}}",
   "errorImageSave": "تعذّر حفظ الصورة.",
-  "errorImageDelete": "تعذّر حذف الصورة."
+  "errorImageDelete": "تعذّر حذف الصورة.",
+  "errorCouponNotFound": "{code} ليس رمزًا صالحًا.",
+  "errorCouponInactive": "الرمز {code} غير نشط.",
+  "errorCouponExpired": "انتهت صلاحية الرمز {code}.",
+  "errorCouponMinSpend": "أنفق {required} على الأقل لاستخدام هذا الرمز (مجموعك الحالي {current}).",
+  "errorCouponUsageLimit": "بلغ الرمز {code} الحد الأقصى لاستخداماته ({maxUses}).",
+  "errorCouponCodeTaken": "هذا الرمز مستخدم بالفعل."
 }

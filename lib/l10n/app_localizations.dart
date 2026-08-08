@@ -122,6 +122,12 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @backToStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to store'**
+  String get backToStore;
+
   /// No description provided for @create.
   ///
   /// In en, this message translates to:
@@ -139,6 +145,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shop'**
   String get tabShop;
+
+  /// No description provided for @tabWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist'**
+  String get tabWishlist;
 
   /// No description provided for @tabCart.
   ///
@@ -175,6 +187,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Categories'**
   String get tabCategories;
+
+  /// No description provided for @tabCoupons.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupons'**
+  String get tabCoupons;
 
   /// No description provided for @statusPending.
   ///
@@ -349,6 +367,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{product} added to cart'**
   String addedToCart(String product);
+
+  /// No description provided for @wishlistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist'**
+  String get wishlistTitle;
+
+  /// No description provided for @wishlistEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wishlist is empty'**
+  String get wishlistEmptyTitle;
+
+  /// No description provided for @wishlistEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the heart on any product to save it for later.'**
+  String get wishlistEmptyMessage;
+
+  /// No description provided for @addToWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to wishlist'**
+  String get addToWishlist;
+
+  /// No description provided for @removeFromWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from wishlist'**
+  String get removeFromWishlist;
+
+  /// No description provided for @addedToWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} added to wishlist'**
+  String addedToWishlist(String product);
+
+  /// No description provided for @removedFromWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} removed from wishlist'**
+  String removedFromWishlist(String product);
+
+  /// No description provided for @moveToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to cart'**
+  String get moveToCart;
+
+  /// No description provided for @checkoutSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Order summary'**
+  String get checkoutSummary;
+
+  /// No description provided for @couponLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon ({code})'**
+  String couponLabel(String code);
+
+  /// No description provided for @couponApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get couponApply;
+
+  /// No description provided for @removeCoupon.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove coupon'**
+  String get removeCoupon;
+
+  /// No description provided for @couponCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. SAVE10'**
+  String get couponCodeHint;
 
   /// No description provided for @cartTitle.
   ///
@@ -722,6 +818,48 @@ abstract class AppLocalizations {
   /// **'Recent orders'**
   String get recentOrders;
 
+  /// No description provided for @overviewActiveCoupons.
+  ///
+  /// In en, this message translates to:
+  /// **'Active coupons'**
+  String get overviewActiveCoupons;
+
+  /// No description provided for @couponUsageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon usage'**
+  String get couponUsageTitle;
+
+  /// No description provided for @noCouponUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'No coupon usage yet.'**
+  String get noCouponUsage;
+
+  /// No description provided for @topCouponsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top coupons'**
+  String get topCouponsTitle;
+
+  /// No description provided for @noTopCoupons.
+  ///
+  /// In en, this message translates to:
+  /// **'No coupons used yet.'**
+  String get noTopCoupons;
+
+  /// Redemption count on the dashboard's top-coupons ranking.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 use} other{{count} uses}}'**
+  String couponUsesCount(num count);
+
+  /// Exhaustion percentage of a capped coupon on the dashboard's top-coupons ranking.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String couponUsedPercent(int percent);
+
   /// No description provided for @noOrdersYet.
   ///
   /// In en, this message translates to:
@@ -823,6 +961,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'({percent}% off)'**
   String percentOff(int percent);
+
+  /// No description provided for @couponsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupons'**
+  String get couponsTitle;
+
+  /// No description provided for @newCoupon.
+  ///
+  /// In en, this message translates to:
+  /// **'New coupon'**
+  String get newCoupon;
+
+  /// No description provided for @editCoupon.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit coupon'**
+  String get editCoupon;
+
+  /// No description provided for @couponNotFoundView.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon not found'**
+  String get couponNotFoundView;
+
+  /// No description provided for @deleteCouponTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete coupon?'**
+  String get deleteCouponTitle;
+
+  /// No description provided for @deleteCouponMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} will be removed. Past orders keep their snapshot.'**
+  String deleteCouponMessage(String code);
+
+  /// No description provided for @deleteCouponTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {code}'**
+  String deleteCouponTooltip(String code);
+
+  /// No description provided for @noCouponsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No coupons yet'**
+  String get noCouponsTitle;
+
+  /// No description provided for @noCouponsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a code to start promoting.'**
+  String get noCouponsMessage;
+
+  /// No description provided for @couponCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get couponCode;
+
+  /// No description provided for @couponFixedType.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed amount'**
+  String get couponFixedType;
+
+  /// No description provided for @couponFixedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount amount'**
+  String get couponFixedValue;
+
+  /// No description provided for @couponPercentOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}% off'**
+  String couponPercentOff(int value);
+
+  /// No description provided for @couponFixedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} off'**
+  String couponFixedOff(String amount);
+
+  /// No description provided for @minSpendOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum spend (optional)'**
+  String get minSpendOptional;
+
+  /// No description provided for @minSpendHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0 = no minimum'**
+  String get minSpendHint;
+
+  /// No description provided for @couponMinSpendShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min {amount}'**
+  String couponMinSpendShort(String amount);
+
+  /// No description provided for @expiryOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry date (optional)'**
+  String get expiryOptional;
+
+  /// No description provided for @neverExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get neverExpires;
+
+  /// No description provided for @removeExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove expiry'**
+  String get removeExpiry;
+
+  /// No description provided for @maxUsesOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage limit (optional)'**
+  String get maxUsesOptional;
+
+  /// No description provided for @unlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get unlimited;
+
+  /// No description provided for @couponUsesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{used}/{max} uses'**
+  String couponUsesLeft(int used, int max);
+
+  /// No description provided for @couponActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get couponActive;
+
+  /// No description provided for @activeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeStatus;
+
+  /// No description provided for @inactiveStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get inactiveStatus;
+
+  /// No description provided for @expiredStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expiredStatus;
 
   /// No description provided for @noFilterOrdersTitle.
   ///
@@ -1195,6 +1495,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not delete the image.'**
   String get errorImageDelete;
+
+  /// No description provided for @errorCouponNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} is not a valid code.'**
+  String errorCouponNotFound(String code);
+
+  /// No description provided for @errorCouponInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {code} is not active.'**
+  String errorCouponInactive(String code);
+
+  /// No description provided for @errorCouponExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {code} has expired.'**
+  String errorCouponExpired(String code);
+
+  /// No description provided for @errorCouponMinSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend at least {required} to use this code (your subtotal is {current}).'**
+  String errorCouponMinSpend(String current, String required);
+
+  /// No description provided for @errorCouponUsageLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {code} has reached its {maxUses}-use limit.'**
+  String errorCouponUsageLimit(String code, int maxUses);
+
+  /// No description provided for @errorCouponCodeTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is already in use.'**
+  String get errorCouponCodeTaken;
 }
 
 class _AppLocalizationsDelegate

@@ -81,10 +81,12 @@ class OrderDetailView extends StatelessWidget {
                 children: [
                   Text(order.shipping.name,
                       style: theme.textTheme.bodyMedium),
-                  Text(order.shipping.phone,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      )),
+                  Text(
+                    context.localizeDigits(order.shipping.phone),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                   Text(order.shipping.address,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
@@ -103,10 +105,17 @@ class OrderDetailView extends StatelessWidget {
         const SizedBox(height: 8),
         const Divider(),
         OrderTotalRow(label: l10n.subtotal, cents: order.subtotalCents),
-        if (order.discountCents > 0)
+        if (order.lineDiscountCents > 0)
           OrderTotalRow(
             label: l10n.savings,
-            cents: order.discountCents,
+            cents: order.lineDiscountCents,
+            negative: true,
+            highlight: true,
+          ),
+        if (order.couponDiscountCents > 0)
+          OrderTotalRow(
+            label: l10n.couponLabel(order.couponCode ?? ''),
+            cents: order.couponDiscountCents,
             negative: true,
             highlight: true,
           ),

@@ -6,6 +6,7 @@ import '../../../../core/error/result.dart';
 import '../../../../domain/repositories/settings_repository.dart';
 import '../../../l10n/l10n_ext.dart';
 import '../../../router/admin_session.dart';
+import '../widgets/admin_storefront_action.dart';
 
 /// The admin gate: shows a "set a PIN" form on first run or an "enter PIN"
 /// form afterwards (the repository decides which). On success it unlocks the
@@ -80,7 +81,12 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.adminTitle),
+        // Standard back affordance + the same storefront exit the pushed
+        // admin screens carry (the gate floats above the shell, so it never
+        // sees the rail/bar exit — an admin who changed their mind here can
+        // leave with one tap, without unlocking).
         leading: BackButton(onPressed: () => context.go('/')),
+        actions: const [AdminStorefrontAction()],
       ),
       body: Center(
         child: ConstrainedBox(
@@ -114,8 +120,12 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 8),
+                    // The 4-6 range is guidance prose — convert like every
+                    // other number (matches the PIN error mapping).
                     Text(
-                      isSetting ? l10n.setPinHint : l10n.enterPinHint,
+                      context.localizeDigits(
+                        isSetting ? l10n.setPinHint : l10n.enterPinHint,
+                      ),
                       textAlign: TextAlign.center,
                       style: Theme.of(context)
                           .textTheme

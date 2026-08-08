@@ -44,6 +44,27 @@ enum AppErrorCode {
   /// (typed: [CategoryInUseError]).
   categoryInUse,
 
+  // --- Coupons -----------------------------------------------------------
+
+  /// The entered code does not match any coupon (typed: [CouponNotFoundError]).
+  couponNotFound,
+
+  /// The coupon exists but is disabled (typed: [CouponInactiveError]).
+  couponInactive,
+
+  /// The coupon's expiry date has passed (typed: [CouponExpiredError]).
+  couponExpired,
+
+  /// The order subtotal is below the coupon's minimum spend
+  /// (typed: [CouponMinSpendError]).
+  couponMinSpend,
+
+  /// The coupon's usage cap is exhausted (typed: [CouponUsageLimitError]).
+  couponUsageLimit,
+
+  /// Admin tried to save a coupon whose code already exists.
+  couponCodeTaken,
+
   nameRequired,
   phoneRequired,
   addressRequired,
@@ -146,4 +167,60 @@ final class CategoryInUseError extends ValidationError {
   }) : super(code: AppErrorCode.categoryInUse);
 
   final int productCount;
+}
+
+/// The entered code does not match any coupon.
+final class CouponNotFoundError extends ValidationError {
+  const CouponNotFoundError({
+    required this.couponCode,
+    required super.message,
+  }) : super(code: AppErrorCode.couponNotFound);
+
+  final String couponCode;
+}
+
+/// The coupon exists but is disabled (isActive = false).
+final class CouponInactiveError extends ValidationError {
+  const CouponInactiveError({
+    required this.couponCode,
+    required super.message,
+  }) : super(code: AppErrorCode.couponInactive);
+
+  final String couponCode;
+}
+
+/// The coupon's expiry date has passed.
+final class CouponExpiredError extends ValidationError {
+  const CouponExpiredError({
+    required this.couponCode,
+    required super.message,
+  }) : super(code: AppErrorCode.couponExpired);
+
+  final String couponCode;
+}
+
+/// The order subtotal is below the coupon's minimum spend.
+final class CouponMinSpendError extends ValidationError {
+  const CouponMinSpendError({
+    required this.couponCode,
+    required this.requiredCents,
+    required this.currentCents,
+    required super.message,
+  }) : super(code: AppErrorCode.couponMinSpend);
+
+  final String couponCode;
+  final int requiredCents;
+  final int currentCents;
+}
+
+/// The coupon's usage cap is exhausted.
+final class CouponUsageLimitError extends ValidationError {
+  const CouponUsageLimitError({
+    required this.couponCode,
+    required this.maxUses,
+    required super.message,
+  }) : super(code: AppErrorCode.couponUsageLimit);
+
+  final String couponCode;
+  final int maxUses;
 }

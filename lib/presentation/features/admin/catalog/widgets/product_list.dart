@@ -63,10 +63,15 @@ class ProductList extends StatelessWidget {
             ),
           ),
           title: Text(context.productName(product)),
+          // Digits (the price, the discount %) follow the active locale —
+          // Eastern Arabic in `ar`, like everywhere else. Money already went
+          // through formatCents, so the wrap is idempotent for it.
           subtitle: Text(
-            '${_categoryName(context, product.categoryId)} · '
-            '${context.formatCents(product.finalPriceCents)}'
-            '${product.hasDiscount ? ' ${context.l10n.percentOff(product.discountPercent)}' : ''}',
+            context.localizeDigits(
+              '${_categoryName(context, product.categoryId)} · '
+              '${context.formatCents(product.finalPriceCents)}'
+              '${product.hasDiscount ? ' ${context.l10n.percentOff(product.discountPercent)}' : ''}',
+            ),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -85,7 +90,8 @@ class ProductList extends StatelessWidget {
                 )
               else
                 StockChip(
-                  label: l10n.stockInStock(product.stock),
+                  // The chip's count follows the active locale's digits.
+                  label: context.localizeDigits(l10n.stockInStock(product.stock)),
                   color: scheme.primary,
                   background: scheme.primaryContainer,
                 ),

@@ -21,6 +21,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get backToStore => 'Back to store';
+
+  @override
   String get create => 'Create';
 
   @override
@@ -28,6 +31,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabShop => 'Shop';
+
+  @override
+  String get tabWishlist => 'Wishlist';
 
   @override
   String get tabCart => 'Cart';
@@ -46,6 +52,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabCategories => 'Categories';
+
+  @override
+  String get tabCoupons => 'Coupons';
 
   @override
   String get statusPending => 'Pending';
@@ -147,6 +156,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get wishlistTitle => 'Wishlist';
+
+  @override
+  String get wishlistEmptyTitle => 'Your wishlist is empty';
+
+  @override
+  String get wishlistEmptyMessage =>
+      'Tap the heart on any product to save it for later.';
+
+  @override
+  String get addToWishlist => 'Add to wishlist';
+
+  @override
+  String get removeFromWishlist => 'Remove from wishlist';
+
+  @override
+  String addedToWishlist(String product) {
+    return '$product added to wishlist';
+  }
+
+  @override
+  String removedFromWishlist(String product) {
+    return '$product removed from wishlist';
+  }
+
+  @override
+  String get moveToCart => 'Move to cart';
+
+  @override
+  String get checkoutSummary => 'Order summary';
+
+  @override
+  String couponLabel(String code) {
+    return 'Coupon ($code)';
+  }
+
+  @override
+  String get couponApply => 'Apply';
+
+  @override
+  String get removeCoupon => 'Remove coupon';
+
+  @override
+  String get couponCodeHint => 'e.g. SAVE10';
 
   @override
   String get cartTitle => 'Cart';
@@ -345,6 +400,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentOrders => 'Recent orders';
 
   @override
+  String get overviewActiveCoupons => 'Active coupons';
+
+  @override
+  String get couponUsageTitle => 'Coupon usage';
+
+  @override
+  String get noCouponUsage => 'No coupon usage yet.';
+
+  @override
+  String get topCouponsTitle => 'Top coupons';
+
+  @override
+  String get noTopCoupons => 'No coupons used yet.';
+
+  @override
+  String couponUsesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uses',
+      one: '1 use',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String couponUsedPercent(int percent) {
+    return '$percent% used';
+  }
+
+  @override
   String get noOrdersYet => 'No orders yet.';
 
   @override
@@ -409,6 +495,99 @@ class AppLocalizationsEn extends AppLocalizations {
   String percentOff(int percent) {
     return '($percent% off)';
   }
+
+  @override
+  String get couponsTitle => 'Coupons';
+
+  @override
+  String get newCoupon => 'New coupon';
+
+  @override
+  String get editCoupon => 'Edit coupon';
+
+  @override
+  String get couponNotFoundView => 'Coupon not found';
+
+  @override
+  String get deleteCouponTitle => 'Delete coupon?';
+
+  @override
+  String deleteCouponMessage(String code) {
+    return '$code will be removed. Past orders keep their snapshot.';
+  }
+
+  @override
+  String deleteCouponTooltip(String code) {
+    return 'Delete $code';
+  }
+
+  @override
+  String get noCouponsTitle => 'No coupons yet';
+
+  @override
+  String get noCouponsMessage => 'Create a code to start promoting.';
+
+  @override
+  String get couponCode => 'Code';
+
+  @override
+  String get couponFixedType => 'Fixed amount';
+
+  @override
+  String get couponFixedValue => 'Discount amount';
+
+  @override
+  String couponPercentOff(int value) {
+    return '$value% off';
+  }
+
+  @override
+  String couponFixedOff(String amount) {
+    return '$amount off';
+  }
+
+  @override
+  String get minSpendOptional => 'Minimum spend (optional)';
+
+  @override
+  String get minSpendHint => '0 = no minimum';
+
+  @override
+  String couponMinSpendShort(String amount) {
+    return 'min $amount';
+  }
+
+  @override
+  String get expiryOptional => 'Expiry date (optional)';
+
+  @override
+  String get neverExpires => 'Never';
+
+  @override
+  String get removeExpiry => 'Remove expiry';
+
+  @override
+  String get maxUsesOptional => 'Usage limit (optional)';
+
+  @override
+  String get unlimited => 'Unlimited';
+
+  @override
+  String couponUsesLeft(int used, int max) {
+    return '$used/$max uses';
+  }
+
+  @override
+  String get couponActive => 'Active';
+
+  @override
+  String get activeStatus => 'Active';
+
+  @override
+  String get inactiveStatus => 'Inactive';
+
+  @override
+  String get expiredStatus => 'Expired';
 
   @override
   String noFilterOrdersTitle(String status) {
@@ -636,4 +815,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorImageDelete => 'Could not delete the image.';
+
+  @override
+  String errorCouponNotFound(String code) {
+    return '$code is not a valid code.';
+  }
+
+  @override
+  String errorCouponInactive(String code) {
+    return 'Code $code is not active.';
+  }
+
+  @override
+  String errorCouponExpired(String code) {
+    return 'Code $code has expired.';
+  }
+
+  @override
+  String errorCouponMinSpend(String current, String required) {
+    return 'Spend at least $required to use this code (your subtotal is $current).';
+  }
+
+  @override
+  String errorCouponUsageLimit(String code, int maxUses) {
+    return 'Code $code has reached its $maxUses-use limit.';
+  }
+
+  @override
+  String get errorCouponCodeTaken => 'That code is already in use.';
 }

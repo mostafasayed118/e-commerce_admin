@@ -40,7 +40,10 @@ class OrderListTile extends StatelessWidget {
         order.orderNumber,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      subtitle: Text(subtitleParts.join(' · ')),
+      // Digits in every part (date, item count, total) follow the active
+      // locale — idempotent for the date and money, which are already
+      // formatted with Eastern Arabic digits under `ar`.
+      subtitle: Text(context.localizeDigits(subtitleParts.join(' · '))),
       trailing: StatusChip(order.status),
     );
   }

@@ -6,9 +6,12 @@ import '../../../../core/entities/order_status.dart';
 import '../../../../core/error/result.dart';
 import '../../../../domain/repositories/order_repository.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../widgets/error_view.dart';
 import '../../../widgets/message_view.dart';
+import '../../../widgets/snack_bar.dart';
 import '../../orders/order_detail_view.dart';
 import '../../orders/status_visuals.dart';
+import '../widgets/admin_storefront_action.dart';
 import 'admin_orders_cubit.dart';
 
 /// Admin order detail: the shared [OrderDetailView] plus a status action bar
@@ -39,21 +42,15 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
     if (!mounted) return;
     setState(() => _updating = false);
 
-    final messenger = ScaffoldMessenger.of(context);
     result.fold(
-      onSuccess: (updated) => messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.markedAs(
-              updated.orderNumber,
-              orderStatusLabel(context, next),
-            ),
-          ),
+      onSuccess: (updated) => showSuccessSnackBar(
+        context,
+        context.l10n.markedAs(
+          updated.orderNumber,
+          orderStatusLabel(context, next),
         ),
       ),
-      onFailure: (error) => messenger.showSnackBar(
-        SnackBar(content: Text(context.errorText(error))),
-      ),
+      onFailure: (error) => showErrorSnackBar(context, error),
     );
   }
 
@@ -61,15 +58,15 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.orderTitle)),
+      appBar: AppBar(
+        title: Text(l10n.orderTitle),
+        actions: const [AdminStorefrontAction()],
+      ),
       body: StreamBuilder<Order?>(
         stream: getIt<OrderRepository>().watchOrderById(widget.orderId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return MessageView(
-              icon: Icons.error_outline,
-              title: l10n.couldNotLoadOrder,
-            );
+            return ErrorView(title: l10n.couldNotLoadOrder);
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

@@ -6,6 +6,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/entities/order.dart';
 import '../../../../core/entities/order_status.dart';
 import '../../../l10n/l10n_ext.dart';
+import '../../../widgets/error_view.dart';
 import '../../../widgets/message_view.dart';
 import '../../orders/order_list_tile.dart';
 import '../../orders/status_visuals.dart';
@@ -38,11 +39,7 @@ class _AdminOrdersView extends StatelessWidget {
         builder: (context, state) => switch (state) {
           AdminOrdersLoading() =>
             const Center(child: CircularProgressIndicator()),
-          AdminOrdersError() => MessageView(
-              icon: Icons.error_outline,
-              title: l10n.somethingWentWrong,
-              message: l10n.errorLoadFailed,
-            ),
+          AdminOrdersError() => const ErrorView(),
           AdminOrdersLoaded() => _LoadedOrders(state: state),
         },
       ),

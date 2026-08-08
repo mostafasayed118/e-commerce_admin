@@ -35,19 +35,37 @@ class Order extends Equatable {
     required this.shipping,
     this.items = const [],
     this.statusHistory = const [],
+    this.couponCode,
+    this.couponDiscountCents = 0,
     this.createdAt,
     this.updatedAt,
   });
 
   final int id;
+
+  /// Stable human-readable identifier (e.g. `ORD-000001`), generated once at
+  /// purchase and never reused. Rendered **canonically in every locale** — the
+  /// digits stay Western even in Arabic mode, the same treatment coupon codes
+  /// get (identifiers stay stable so they can be quoted back verbatim); only
+  /// the UI's *display* helpers convert it if ever needed.
   final String orderNumber;
   final OrderStatus status;
 
   /// Sum of all line items at undiscounted prices, snapshot at purchase.
   final int subtotalCents;
 
-  /// Total discount applied, snapshot at purchase.
+  /// Total discount applied, snapshot at purchase: line savings + any coupon.
   final int discountCents;
+
+  /// Snapshot of the applied promo code, if any (the receipt shows it).
+  final String? couponCode;
+
+  /// The coupon's contribution to [discountCents]; 0 when no coupon.
+  final int couponDiscountCents;
+
+  /// Line-item (product) savings only — what the receipt's "Savings" row
+  /// shows, so the coupon is itemized separately.
+  int get lineDiscountCents => discountCents - couponDiscountCents;
 
   /// What the customer actually pays: subtotal - discount.
   final int totalCents;
@@ -70,6 +88,8 @@ class Order extends Equatable {
         shipping,
         items,
         statusHistory,
+        couponCode,
+        couponDiscountCents,
         createdAt,
         updatedAt,
       ];

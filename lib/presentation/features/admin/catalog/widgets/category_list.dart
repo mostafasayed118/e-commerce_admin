@@ -49,7 +49,7 @@ class CategoryList extends StatelessWidget {
                 : context.categoryName(category)[0]),
           ),
           title: Text(context.categoryName(category)),
-          subtitle: Text(l10n.productCount(productCount)),
+          subtitle: Text(context.localizeDigits(l10n.productCount(productCount))),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

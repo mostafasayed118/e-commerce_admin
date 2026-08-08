@@ -56,4 +56,29 @@ extension ResultX<T> on Result<T> {
         Success(:final value) => value,
         Failure(:final error) => throw error,
       };
+
+  /// Transforms the value on success; failures pass through unchanged.
+  Result<R> map<R>(R Function(T value) onSuccess) => fold(
+        onSuccess: (value) => Success(onSuccess(value)),
+        onFailure: (error) => Failure(error),
+      );
+
+  /// Chains a synchronous [Result]-returning operation on success; failures
+  /// pass through unchanged. Prefer over a hand-rolled `fold` with an
+  /// `onFailure: (error) => Failure(error)` passthrough.
+  Result<R> flatMap<R>(Result<R> Function(T value) onSuccess) => fold(
+        onSuccess: onSuccess,
+        onFailure: (error) => Failure(error),
+      );
+
+  /// Chains an asynchronous [Result]-returning operation on success; failures
+  /// pass through unchanged. The composition workhorse for use cases that
+  /// delegate one repository call, then run a rule on its value.
+  Future<Result<R>> flatMapAsync<R>(
+    Future<Result<R>> Function(T value) onSuccess,
+  ) async =>
+      switch (this) {
+        Success(:final value) => await onSuccess(value),
+        Failure(:final error) => Failure(error),
+      };
 }

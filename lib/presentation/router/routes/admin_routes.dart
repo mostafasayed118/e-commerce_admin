@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/admin/catalog/categories_screen.dart';
 import '../../features/admin/catalog/products_screen.dart';
+import '../../features/admin/coupons/coupons_screen.dart';
 import '../../features/admin/gate/admin_gate_screen.dart';
 import '../../features/admin/orders/admin_orders_screen.dart';
 import '../../features/admin/overview/admin_overview_screen.dart';
@@ -47,6 +48,15 @@ List<RouteBase> adminRoutes() => [
                 path: '/admin/categories',
                 name: RouteNames.adminCategories,
                 builder: (context, state) => const CategoriesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/coupons',
+                name: RouteNames.adminCoupons,
+                builder: (context, state) => const CouponsScreen(),
               ),
             ],
           ),

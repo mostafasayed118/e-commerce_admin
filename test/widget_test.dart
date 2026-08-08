@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/presentation/app.dart';
 import 'package:shop_admin/presentation/shells/shell_scaffold.dart';
 import 'package:shop_admin/presentation/theme/theme_cubit.dart';
 
 import 'helpers/drift_settle.dart';
+import 'helpers/shop_flow.dart';
 import 'helpers/test_di.dart';
 
 void main() {
@@ -23,13 +23,8 @@ void main() {
   });
 
   Future<void> pumpApp(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const ShopAdminApp());
-    // The catalog cubit subscribes to drift watch streams on startup; give
-    // the background isolate a chance to deliver (FakeAsync cannot see it).
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
+    // Fresh install: no seed — the boot tests assert the empty states.
+    await pumpFullApp(tester, seed: false);
   }
 
   testWidgets('boots into the shop shell and navigates branches',
@@ -41,9 +36,7 @@ void main() {
     expect(find.text('Shop'), findsWidgets); // nav label + screen title
 
     await tester.tap(find.text('Cart'));
-    await tester.pump();
-    await settleDrift(tester); // CartCubit watch streams
-    await tester.pumpAndSettle();
+    await settleAction(tester); // CartCubit watch streams
     expect(find.text('Your cart is empty'), findsOneWidget);
 
     await unmountApp(tester);
@@ -73,12 +66,8 @@ void main() {
 
   testWidgets('switches to the rail layout on wide viewports',
       (WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(const ShopAdminApp());
-    await settleDrift(tester);
-    await tester.pumpAndSettle();
+    // Fresh install on a wide surface (no seed — layout-only asserts).
+    await pumpFullApp(tester, size: const Size(1200, 800), seed: false);
 
     // The 720px breakpoint: wide means NavigationRail, no bottom bar.
     expect(find.byType(NavigationRail), findsOneWidget);

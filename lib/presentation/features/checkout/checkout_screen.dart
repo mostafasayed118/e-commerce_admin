@@ -7,10 +7,14 @@ import '../../../core/error/result.dart';
 import '../../../domain/repositories/settings_repository.dart';
 import '../../../domain/usecases/checkout/place_order.dart';
 import '../../../domain/usecases/checkout/validate_shipping.dart';
+import '../../../domain/usecases/coupons/apply_coupon.dart';
 import '../../l10n/error_messages.dart';
 import '../../l10n/l10n_ext.dart';
 import '../../widgets/shipping_info_fields.dart';
+import '../cart/cart_cubit.dart';
 import 'order_success_view.dart';
+import 'widgets/checkout_summary_card.dart';
+import 'widgets/coupon_field.dart';
 
 /// Checkout: the shipping form → [PlaceOrder] → the success screen
 /// ([OrderSuccessView]).
@@ -33,11 +37,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _name = TextEditingController();
   final _phone = TextEditingController();
   final _address = TextEditingController();
+  final _couponController = TextEditingController();
 
   bool _saveProfile = true;
   bool _placing = false;
   String? _error;
   Order? _placed; // non-null → success view
+
+  // Applied-coupon state: code + its previewed discount. The placement
+  // re-validates the coupon (authoritative), so this is advisory only.
+  String? _appliedCouponCode;
+  int _appliedCouponDiscountCents = 0;
+  String? _couponError;
 
   @override
   void initState() {
@@ -65,7 +76,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _name.dispose();
     _phone.dispose();
     _address.dispose();
+    _couponController.dispose();
     super.dispose();
+  }
+
+  /// Applies the entered code via [ApplyCoupon] against the line-discounted
+  /// cart subtotal (the same eligible-spend baseline the placement uses).
+  Future<void> _applyCoupon() async {
+    if (_couponController.text.trim().isEmpty) return; // nothing to apply
+    final cart = getIt<CartCubit>().state;
+    final eligible = switch (cart) {
+      CartLoaded(:final subtotalCents, :final discountCents) =>
+        subtotalCents - discountCents,
+      _ => 0,
+    };
+    final result =
+        await getIt<ApplyCoupon>()(_couponController.text, eligible);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (application) => setState(() {
+        _appliedCouponCode = application.coupon.code;
+        _appliedCouponDiscountCents = application.discountCents;
+        _couponError = null;
+      }),
+      onFailure: (error) => setState(() {
+        _couponError = context.errorText(error);
+      }),
+    );
+  }
+
+  void _removeCoupon() {
+    setState(() {
+      _couponController.clear();
+      _appliedCouponCode = null;
+      _appliedCouponDiscountCents = 0;
+      _couponError = null;
+    });
   }
 
   /// Field validators reuse the domain rules (validate_shipping.dart) so the
@@ -94,6 +140,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         address: _address.text,
       ),
       saveProfile: _saveProfile,
+      couponCode: _appliedCouponCode,
     );
     if (!mounted) return;
 
@@ -162,7 +209,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 style: TextStyle(color: scheme.error),
               ),
             ],
+            const SizedBox(height: 24),
+            Text(
+              l10n.checkoutSummary,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            CheckoutSummaryCard(
+              couponCode: _appliedCouponCode,
+              couponDiscountCents: _appliedCouponDiscountCents,
+            ),
             const SizedBox(height: 16),
+            CouponField(
+              controller: _couponController,
+              appliedCode: _appliedCouponCode,
+              appliedDiscountCents: _appliedCouponDiscountCents,
+              errorText: _couponError,
+              onApply: _placing ? () {} : _applyCoupon,
+              onRemove: _removeCoupon,
+            ),
+            const SizedBox(height: 24),
             FilledButton(
               onPressed: _placing ? null : _placeOrder,
               style: FilledButton.styleFrom(

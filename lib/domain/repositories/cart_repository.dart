@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../core/entities/cart_item.dart';
 import '../../core/error/result.dart';
 
@@ -29,4 +31,19 @@ abstract interface class CartRepository {
 
   /// Empties the cart.
   Future<Result<void>> clear();
+}
+
+/// The current quantity of [productId] in [cart] (0 when absent — one row
+/// per product). Shared by the quantity-changing use cases ([AddToCart],
+/// [UpdateCartQuantity]) so the read-current-then-write shape lives in one
+/// place instead of two near-identical folds.
+Future<int> currentCartQuantity(CartRepository cart, int productId) async {
+  final items = await cart.watchCart().first;
+  var quantity = 0;
+  for (final item in items) {
+    if (item.productId == productId) {
+      quantity += item.quantity;
+    }
+  }
+  return quantity;
 }
