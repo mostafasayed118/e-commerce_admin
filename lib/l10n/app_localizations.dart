@@ -1549,6 +1549,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try different filters.'**
   String get noOrdersMatchMessage;
+
+  /// No description provided for @exportOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Export orders'**
+  String get exportOrders;
+
+  /// No description provided for @exportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {count} orders to CSV.'**
+  String exportDone(int count);
 }
 
 class _AppLocalizationsDelegate

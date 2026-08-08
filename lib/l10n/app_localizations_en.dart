@@ -850,4 +850,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noOrdersMatchMessage => 'Try different filters.';
+
+  @override
+  String get exportOrders => 'Export orders';
+
+  @override
+  String exportDone(int count) {
+    return 'Exported $count orders to CSV.';
+  }
 }

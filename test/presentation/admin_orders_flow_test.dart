@@ -42,6 +42,15 @@ void main() {
     expect(find.text('ORD-000001'), findsOneWidget);
     expect(find.text('ORD-000006'), findsOneWidget);
 
+    // The CSV export action is present (enabled — orders are visible). It is
+    // not tapped here: the native save dialog is a platform boundary outside
+    // widget tests; the serialization is unit-tested in order_csv_test.
+    expect(find.byTooltip('Export orders'), findsOneWidget);
+    final exportButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.download_outlined),
+    );
+    expect(exportButton.onPressed, isNotNull);
+
     // --- Filter by Pending: only ORD-000004 remains -----------------------
     // Target the ChoiceChip, not the status chip on the ORD-000004 tile.
     await tester.tap(find.widgetWithText(ChoiceChip, 'Pending'));
@@ -115,6 +124,14 @@ void main() {
     // Every seeded order predates today, so the range leaves nothing; the
     // adapted empty state offers Clear filters, which restores everything.
     expect(find.text('No matching orders'), findsOneWidget);
+
+    // With nothing visible, the export action disables (the BlocBuilder
+    // gate in action).
+    final disabledExport = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.download_outlined),
+    );
+    expect(disabledExport.onPressed, isNull);
+
     await tester.tap(find.text('Clear filters'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));

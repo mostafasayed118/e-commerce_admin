@@ -858,4 +858,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noOrdersMatchMessage => 'جرّب فلاتر مختلفة.';
+
+  @override
+  String get exportOrders => 'تصدير الطلبات';
+
+  @override
+  String exportDone(int count) {
+    return 'تم تصدير $count طلبًا إلى CSV.';
+  }
 }

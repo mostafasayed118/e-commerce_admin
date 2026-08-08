@@ -276,5 +276,7 @@
   "toDate": "إلى",
   "clearDates": "مسح التواريخ",
   "noOrdersMatchTitle": "لا توجد طلبات مطابقة",
-  "noOrdersMatchMessage": "جرّب فلاتر مختلفة."
+  "noOrdersMatchMessage": "جرّب فلاتر مختلفة.",
+  "exportOrders": "تصدير الطلبات",
+  "exportDone": "تم تصدير {count} طلبًا إلى CSV."
 }

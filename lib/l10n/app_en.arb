@@ -469,5 +469,12 @@
   "toDate": "To",
   "clearDates": "Clear dates",
   "noOrdersMatchTitle": "No matching orders",
-  "noOrdersMatchMessage": "Try different filters."
+  "noOrdersMatchMessage": "Try different filters.",
+  "exportOrders": "Export orders",
+  "exportDone": "Exported {count} orders to CSV.",
+  "@exportDone": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

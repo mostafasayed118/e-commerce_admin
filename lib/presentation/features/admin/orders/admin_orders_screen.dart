@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/order_csv.dart';
 import '../../../../core/entities/order.dart';
 import '../../../../core/entities/order_status.dart';
 import '../../../l10n/l10n_ext.dart';
@@ -32,11 +36,60 @@ class AdminOrdersScreen extends StatelessWidget {
 class _AdminOrdersView extends StatelessWidget {
   const _AdminOrdersView();
 
+  /// Writes the CURRENTLY FILTERED orders (what the admin sees) to a CSV the
+  /// user chooses via the native save dialog. Only the dialog + write touch
+  /// the platform — the serialization itself is the pure, unit-tested
+  /// [ordersToCsvBytes].
+  Future<void> _exportOrders(BuildContext context) async {
+    final cubit = context.read<AdminOrdersCubit>();
+    final state = cubit.state;
+    if (state is! AdminOrdersLoaded || state.visibleOrders.isEmpty) return;
+    final l10n = context.l10n;
+    final location = await getSaveLocation(
+      suggestedName: 'orders_${isoDate(DateTime.now())}.csv',
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'CSV', extensions: ['csv']),
+      ],
+    );
+    if (location == null) return; // user cancelled the dialog
+    await XFile.fromData(
+      Uint8List.fromList(ordersToCsvBytes(state.visibleOrders)),
+      mimeType: 'text/csv',
+    ).saveTo(location.path);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            // The count follows the active locale's digits (Task 23).
+            context.localizeDigits(l10n.exportDone(state.visibleOrders.length)),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.orders)),
+      appBar: AppBar(
+        title: Text(l10n.orders),
+        actions: [
+          // Gated on the live state so the action is inert (disabled) while
+          // loading/erroring or when nothing is visible to export.
+          BlocBuilder<AdminOrdersCubit, AdminOrdersState>(
+            builder: (context, state) {
+              final canExport =
+                  state is AdminOrdersLoaded && state.visibleOrders.isNotEmpty;
+              return IconButton(
+                icon: const Icon(Icons.download_outlined),
+                tooltip: l10n.exportOrders,
+                onPressed: canExport ? () => _exportOrders(context) : null,
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocBuilder<AdminOrdersCubit, AdminOrdersState>(
         builder: (context, state) => switch (state) {
           AdminOrdersLoading() =>
