@@ -6,6 +6,7 @@ import '../../core/error/result.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../database/app_database.dart';
 import '../database/daos/cart_dao.dart';
+import '../guarded_result.dart';
 
 /// drift-backed [CartRepository].
 class CartRepositoryImpl implements CartRepository {
@@ -34,9 +35,9 @@ class CartRepositoryImpl implements CartRepository {
         ),
       );
     }
-    try {
-      // Read-modify-write upsert: preserves addedAt on quantity changes so
-      // items keep their original position in the cart.
+    // Read-modify-write upsert: preserves addedAt on quantity changes so
+    // items keep their original position in the cart.
+    return guardedResult(() async {
       final existing = await _dao.getById(productId);
       if (existing == null) {
         await _dao.insert(CartItemsCompanion.insert(
@@ -49,34 +50,24 @@ class CartRepositoryImpl implements CartRepository {
         await _dao.updateQuantityById(productId, quantity);
       }
       return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not update cart', cause: error),
-      );
-    }
+    }, message: 'Could not update cart');
   }
 
   @override
-  Future<Result<void>> removeItem(int productId) async {
-    try {
-      await _dao.deleteById(productId);
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not remove item from cart', cause: error),
+  Future<Result<void>> removeItem(int productId) => guardedResult(
+        () async {
+          await _dao.deleteById(productId);
+          return const Success<void>(null);
+        },
+        message: 'Could not remove item from cart',
       );
-    }
-  }
 
   @override
-  Future<Result<void>> clear() async {
-    try {
-      await _dao.deleteAll();
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not clear cart', cause: error),
+  Future<Result<void>> clear() => guardedResult(
+        () async {
+          await _dao.deleteAll();
+          return const Success<void>(null);
+        },
+        message: 'Could not clear cart',
       );
-    }
-  }
 }

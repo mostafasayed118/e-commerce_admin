@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/error/app_error.dart';
 import '../../core/error/result.dart';
+import '../guarded_result.dart';
 
 /// Owns product image files: picks are copied into `<documents>/images/` and
 /// the *relative* path is what gets stored on [Product.imagePath] (the app
@@ -24,23 +25,21 @@ class ImageStore {
 
   /// Copies [source] into `images/` under a unique name and returns the
   /// relative path (e.g. `images/1754..._12345.png`).
-  Future<Result<String>> saveImage(File source) async {
-    try {
-      final imagesDir = await _ensureImagesDir();
-      final name =
-          '${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1 << 31)}${_extensionOf(source.path)}';
-      await source.copy('${imagesDir.path}${Platform.pathSeparator}$name');
-      return Success('images${Platform.pathSeparator}$name');
-    } on Exception catch (error) {
-      return Failure(
-        ImageError(
+  Future<Result<String>> saveImage(File source) => guardedResult(
+        () async {
+          final imagesDir = await _ensureImagesDir();
+          final name =
+              '${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1 << 31)}${_extensionOf(source.path)}';
+          await source.copy('${imagesDir.path}${Platform.pathSeparator}$name');
+          return Success('images${Platform.pathSeparator}$name');
+        },
+        message: 'Could not save image',
+        onError: (message, error) => ImageError(
           code: AppErrorCode.imageSave,
-          message: 'Could not save image',
+          message: message,
           cause: error,
         ),
       );
-    }
-  }
 
   /// Resolves a stored relative path to an absolute [File] for display.
   Future<File> fileFor(String relativePath) async {
@@ -50,23 +49,21 @@ class ImageStore {
 
   /// Deletes a stored image file (best-effort — orphans are harmless, so a
   /// missing file is Success, not an error).
-  Future<Result<void>> deleteImage(String relativePath) async {
-    try {
-      final file = await fileFor(relativePath);
-      if (await file.exists()) {
-        await file.delete();
-      }
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        ImageError(
+  Future<Result<void>> deleteImage(String relativePath) => guardedResult(
+        () async {
+          final file = await fileFor(relativePath);
+          if (await file.exists()) {
+            await file.delete();
+          }
+          return const Success<void>(null);
+        },
+        message: 'Could not delete image',
+        onError: (message, error) => ImageError(
           code: AppErrorCode.imageDelete,
-          message: 'Could not delete image',
+          message: message,
           cause: error,
         ),
       );
-    }
-  }
 
   Future<Directory> _ensureImagesDir() async {
     final documents = await _documentsDirectory();

@@ -29,19 +29,15 @@ class UpdateCartQuantity {
         ),
       );
     }
-    return (await _products.getById(productId)).fold(
-      onSuccess: (product) => _set(product, quantity),
-      onFailure: (error) => Failure(error),
+    return (await _products.getById(productId)).flatMapAsync(
+      (product) => _set(product, quantity),
     );
   }
 
   Future<Result<void>> _set(Product product, int quantity) async {
     // Current quantity in the cart (0 when absent) — needed to distinguish a
     // raise from a reduction.
-    final items = await _cart.watchCart().first;
-    final current = items
-        .where((item) => item.productId == product.id)
-        .fold(0, (sum, item) => sum + item.quantity);
+    final current = await currentCartQuantity(_cart, product.id);
 
     if (quantity > current && quantity > product.stock) {
       return Failure(StockLimitError(

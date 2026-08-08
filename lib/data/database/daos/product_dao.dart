@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../app_database.dart';
 import '../tables.dart';
+import 'int_id_crud_mixin.dart';
 
 part 'product_dao.g.dart';
 
@@ -9,8 +10,17 @@ part 'product_dao.g.dart';
 /// entities happens in the repository layer, so drift types never escape the
 /// data layer.
 @DriftAccessor(tables: [Products])
-class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
+class ProductDao extends DatabaseAccessor<AppDatabase>
+    with
+        _$ProductDaoMixin,
+        IntIdCrudDaoMixin<$ProductsTable, ProductRow, ProductsCompanion> {
   ProductDao(super.attachedDatabase);
+
+  @override
+  $ProductsTable get table => products;
+
+  @override
+  GeneratedColumn<int> get idColumn => products.id;
 
   /// Reactive list of all products, ordered by name.
   Stream<List<ProductRow>> watchAll() {
@@ -22,23 +32,5 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
   Stream<ProductRow?> watchById(int id) {
     return (select(products)..where((t) => t.id.equals(id)))
         .watchSingleOrNull();
-  }
-
-  Future<ProductRow?> getById(int id) {
-    return (select(products)..where((t) => t.id.equals(id))).getSingleOrNull();
-  }
-
-  /// Returns the new row id.
-  Future<int> insert(ProductsCompanion companion) =>
-      into(products).insert(companion);
-
-  /// Applies only the non-absent fields of [companion]; returns affected rows.
-  Future<int> updateById(int id, ProductsCompanion companion) {
-    return (update(products)..where((t) => t.id.equals(id))).write(companion);
-  }
-
-  /// Returns the number of deleted rows.
-  Future<int> deleteById(int id) {
-    return (delete(products)..where((t) => t.id.equals(id))).go();
   }
 }

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../app_database.dart';
 import '../tables.dart';
+import 'int_id_crud_mixin.dart';
 
 part 'category_dao.g.dart';
 
@@ -9,33 +10,21 @@ part 'category_dao.g.dart';
 /// entities happens in the repository layer.
 @DriftAccessor(tables: [Categories, Products])
 class CategoryDao extends DatabaseAccessor<AppDatabase>
-    with _$CategoryDaoMixin {
+    with
+        _$CategoryDaoMixin,
+        IntIdCrudDaoMixin<$CategoriesTable, CategoryRow, CategoriesCompanion> {
   CategoryDao(super.attachedDatabase);
+
+  @override
+  $CategoriesTable get table => categories;
+
+  @override
+  GeneratedColumn<int> get idColumn => categories.id;
 
   /// Reactive list of all categories, ordered by name.
   Stream<List<CategoryRow>> watchAll() {
     return (select(categories)..orderBy([(t) => OrderingTerm.asc(t.name)]))
         .watch();
-  }
-
-  Future<CategoryRow?> getById(int id) {
-    return (select(categories)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
-  }
-
-  /// Returns the new row id.
-  Future<int> insert(CategoriesCompanion companion) =>
-      into(categories).insert(companion);
-
-  /// Applies only the non-absent fields of [companion]; returns affected rows.
-  Future<int> updateById(int id, CategoriesCompanion companion) {
-    return (update(categories)..where((t) => t.id.equals(id)))
-        .write(companion);
-  }
-
-  /// Returns the number of deleted rows.
-  Future<int> deleteById(int id) {
-    return (delete(categories)..where((t) => t.id.equals(id))).go();
   }
 
   /// How many products reference [categoryId] — used to block deletion of a

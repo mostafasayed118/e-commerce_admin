@@ -1,5 +1,6 @@
 import '../../../core/entities/shipping_info.dart';
 import '../../../core/error/app_error.dart';
+import '../../../core/error/result.dart';
 
 /// Field keys used in the returned error map.
 const String kShippingNameField = 'name';
@@ -29,4 +30,27 @@ Map<String, AppErrorCode> validateShipping(ShippingInfo shipping) {
     errors[kShippingAddressField] = AppErrorCode.addressRequired;
   }
   return errors;
+}
+
+/// Trims [input] and validates it, returning the normalized profile on
+/// success or a [ValidationError] carrying the first failing field's code
+/// (the English text stays for logs; the UI maps the code to the locale).
+///
+/// Shared by the order-placement and profile-save use cases — the two
+/// writers of the same single-row profile table — so their
+/// normalize → validate → fail contract literally cannot drift apart.
+Result<ShippingInfo> normalizeAndValidateShipping(ShippingInfo input) {
+  final normalized = ShippingInfo(
+    name: input.name.trim(),
+    phone: input.phone.trim(),
+    address: input.address.trim(),
+  );
+  final errors = validateShipping(normalized);
+  if (errors.isNotEmpty) {
+    return Failure(ValidationError(
+      code: errors.values.first,
+      message: 'Validation failed: ${errors.values.first.name}',
+    ));
+  }
+  return Success(normalized);
 }

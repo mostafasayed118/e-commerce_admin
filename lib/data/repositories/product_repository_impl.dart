@@ -7,6 +7,7 @@ import '../../domain/repositories/product_repository.dart';
 import '../database/app_database.dart';
 import '../database/daos/product_dao.dart';
 import '../database/mappers/product_mapper.dart';
+import '../guarded_result.dart';
 
 /// drift-backed [ProductRepository].
 ///
@@ -27,28 +28,19 @@ class ProductRepositoryImpl implements ProductRepository {
       _dao.watchById(id).map((row) => row == null ? null : _mapper.toEntity(row));
 
   @override
-  Future<Result<Product>> getById(int id) async {
-    try {
-      final row = await _dao.getById(id);
-      if (row == null) {
-        return const Failure(NotFoundError(
-          code: AppErrorCode.productNotFound,
-          message: 'Product not found',
-        ));
-      }
-      return Success(_mapper.toEntity(row));
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not load product', cause: error),
+  Future<Result<Product>> getById(int id) => guardedLoadById(
+        () => _dao.getById(id),
+        message: 'Could not load product',
+        notFoundCode: AppErrorCode.productNotFound,
+        notFoundMessage: 'Product not found',
+        map: _mapper.toEntity,
       );
-    }
-  }
 
   @override
-  Future<Result<Product>> createProduct(Product product) async {
-    try {
-      final now = DateTime.now();
-      final id = await _dao.insert(ProductsCompanion.insert(
+  Future<Result<Product>> createProduct(Product product) => guardedResult(
+        () async {
+          final now = DateTime.now();
+          final id = await _dao.insert(ProductsCompanion.insert(
             categoryId: product.categoryId,
             name: product.name,
             description: Value(product.description),
@@ -61,34 +53,31 @@ class ProductRepositoryImpl implements ProductRepository {
             createdAt: now.millisecondsSinceEpoch,
             updatedAt: now.millisecondsSinceEpoch,
           ));
-      // Product.copyWith deliberately cannot change identity (id), so the
-      // persisted entity is constructed explicitly with the generated id.
-      return Success(Product(
-        id: id,
-        categoryId: product.categoryId,
-        name: product.name,
-        description: product.description,
-        nameAr: product.nameAr,
-        descriptionAr: product.descriptionAr,
-        priceCents: product.priceCents,
-        discountPercent: product.discountPercent,
-        stock: product.stock,
-        imagePath: product.imagePath,
-        createdAt: now,
-        updatedAt: now,
-      ));
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not create product', cause: error),
+          // Product.copyWith deliberately cannot change identity (id), so the
+          // persisted entity is constructed explicitly with the generated id.
+          return Success(Product(
+            id: id,
+            categoryId: product.categoryId,
+            name: product.name,
+            description: product.description,
+            nameAr: product.nameAr,
+            descriptionAr: product.descriptionAr,
+            priceCents: product.priceCents,
+            discountPercent: product.discountPercent,
+            stock: product.stock,
+            imagePath: product.imagePath,
+            createdAt: now,
+            updatedAt: now,
+          ));
+        },
+        message: 'Could not create product',
       );
-    }
-  }
 
   @override
   Future<Result<Product>> updateProduct(Product product) async {
-    try {
-      final now = DateTime.now();
-      final updated = await _dao.updateById(
+    final now = DateTime.now();
+    return guardedAffectedRows(
+      () => _dao.updateById(
         product.id,
         ProductsCompanion(
           categoryId: Value(product.categoryId),
@@ -102,36 +91,19 @@ class ProductRepositoryImpl implements ProductRepository {
           imagePath: Value(product.imagePath),
           updatedAt: Value(now.millisecondsSinceEpoch),
         ),
-      );
-      if (updated == 0) {
-        return const Failure(NotFoundError(
-          code: AppErrorCode.productNotFound,
-          message: 'Product not found',
-        ));
-      }
-      return Success(product.copyWith(updatedAt: now));
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not update product', cause: error),
-      );
-    }
+      ),
+      message: 'Could not update product',
+      notFoundCode: AppErrorCode.productNotFound,
+      notFoundMessage: 'Product not found',
+      onAffected: () => product.copyWith(updatedAt: now),
+    );
   }
 
   @override
-  Future<Result<void>> deleteProduct(int id) async {
-    try {
-      final deleted = await _dao.deleteById(id);
-      if (deleted == 0) {
-        return const Failure(NotFoundError(
-          code: AppErrorCode.productNotFound,
-          message: 'Product not found',
-        ));
-      }
-      return const Success<void>(null);
-    } on Exception catch (error) {
-      return Failure(
-        DatabaseError(message: 'Could not delete product', cause: error),
+  Future<Result<void>> deleteProduct(int id) => guardedAffectedRows(
+        () => _dao.deleteById(id),
+        message: 'Could not delete product',
+        notFoundCode: AppErrorCode.productNotFound,
+        notFoundMessage: 'Product not found',
       );
-    }
-  }
 }
