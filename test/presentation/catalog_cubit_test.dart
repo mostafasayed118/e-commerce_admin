@@ -168,6 +168,53 @@ void main() {
         ['Classic Tee']);
   });
 
+  test('normalizeSearchText maps hamza forms, alef maqsura, and strips '
+      'tashkeel; English passes through', () {
+    // Hamza forms أ إ آ all collapse to plain alef ا.
+    expect(normalizeSearchText('إيما'), 'ايما');
+    expect(normalizeSearchText('أحمد'), 'احمد');
+    expect(normalizeSearchText('آدم'), 'ادم');
+    // Alef maqsura ى -> ya ي.
+    expect(normalizeSearchText('رمى'), 'رمي');
+    // Tashkeel (diacritics) stripped.
+    expect(normalizeSearchText('كِتابُ'), 'كتاب');
+    // English is only lowercased.
+    expect(normalizeSearchText('Classic Tee'), 'classic tee');
+    // Idempotent: normalizing an already-normalized string changes nothing.
+    expect(normalizeSearchText(normalizeSearchText('إيما كِتاب')),
+        normalizeSearchText('إيما كِتاب'));
+  });
+
+  test('setQuery matches Arabic despite hamza and tashkeel differences',
+      () async {
+    emitProducts([
+      Product(
+        id: 1,
+        categoryId: 1,
+        name: 'Yoga Mat',
+        nameAr: 'إيما كِتاب',
+        priceCents: 2000,
+        stock: 10,
+        createdAt: DateTime(2026, 7, 1),
+      ),
+      product(id: 2, name: 'Wireless Earbuds'),
+    ]);
+    emitCategories(categories);
+    await settle();
+
+    // Typed without hamza or tashkeel — still matches the vocalized variant.
+    cubit.setQuery('ايما كتاب');
+    await settle();
+    expect((cubit.state as CatalogLoaded).products.map((p) => p.name),
+        ['Yoga Mat']);
+
+    // The vocalized form matches the plain query too (both are normalized).
+    cubit.setQuery('إيما');
+    await settle();
+    expect((cubit.state as CatalogLoaded).products.map((p) => p.name),
+        ['Yoga Mat']);
+  });
+
   test('setSort orders by final price', () async {
     emitProducts([
       product(id: 1, name: 'A', priceCents: 3000),

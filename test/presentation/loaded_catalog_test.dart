@@ -148,6 +148,35 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('the one-tap clear button empties the field and restores the '
+      'grid', (WidgetTester tester) async {
+    await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());
+    router = await pumpCatalog(tester);
+
+    // No text yet -> no clear affordance.
+    expect(find.byIcon(Icons.clear), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'yoga');
+    await tester.pump(); // controller listener -> suffix appears
+
+    expect(find.byIcon(Icons.clear), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.clear));
+    // Timed pumps only (the focused field's cursor blinks forever).
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Field emptied, grid restored ('Classic Tee' is first alphabetically,
+    // so it is on-screen; later products like 'Yoga Mat' stay unbuilt in the
+    // lazy grid), and the clear affordance is gone again.
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text, isEmpty);
+    expect(find.text('Classic Tee'), findsOneWidget);
+    expect(find.byIcon(Icons.clear), findsNothing);
+
+    await unmountApp(tester);
+  });
+
   testWidgets('an active filter with no matches shows the no-matches view '
       'and Clear filters restores the grid', (WidgetTester tester) async {
     await tester.runAsync(() => getIt<SeedData>().seedIfNeeded());

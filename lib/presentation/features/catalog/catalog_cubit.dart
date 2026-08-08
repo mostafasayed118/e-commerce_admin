@@ -11,6 +11,32 @@ import 'catalog_state.dart';
 
 export 'catalog_state.dart';
 
+/// The tashkeel (diacritics) to strip from search text. Hoisted so
+/// [normalizeSearchText] — which runs per product field per recompute — does
+/// not recompile it on every call.
+final RegExp _tashkeelRegExp = RegExp('[\u064B-\u0652\u0670]');
+
+/// Search text normalized for matching. Arabic shoppers routinely omit
+/// hamza and tashkeel, so BOTH the query and the stored product text pass
+/// through this before `contains` — otherwise 'ايما' would never match
+/// 'إيما' and vocalized text ('كِتاب') would dodge an unvocalized query
+/// ('كتاب'). English text is unaffected beyond the existing lowercase.
+///
+/// Normalizations (deliberately conservative — no ة/ه collapse, which can
+/// change meaning):
+///   * hamza forms أ إ آ → plain alef ا (three fixed `replaceAll`s — no regex)
+///   * alef maqsura ى  → ya ي
+///   * tashkeel (U+064B..U+0652, U+0670) stripped
+String normalizeSearchText(String input) {
+  return input
+      .toLowerCase()
+      .replaceAll('أ', 'ا')
+      .replaceAll('إ', 'ا')
+      .replaceAll('آ', 'ا')
+      .replaceAll('ى', 'ي')
+      .replaceAll(_tashkeelRegExp, '');
+}
+
 /// Drives the customer catalog: combines the product and category watch
 /// streams (manual — no rxdart dependency), applies the current filter, query
 /// and sort, and re-emits whenever any of them change.
@@ -91,17 +117,20 @@ class CatalogCubit extends Cubit<CatalogState> {
       return;
     }
 
-    final query = _query.trim().toLowerCase();
+    final query = normalizeSearchText(_query.trim());
     final filtered = all.where((product) {
       final inCategory =
           _selectedCategoryId == null || product.categoryId == _selectedCategoryId;
-      // Matches against BOTH languages so an Arabic shopper can search in
-      // Arabic while the canonical text stays searchable in English.
+      // Matches against BOTH languages (each normalized the same way as the
+      // query) so an Arabic shopper can search in Arabic while the canonical
+      // text stays searchable in English.
       final matchesQuery = query.isEmpty ||
-          product.name.toLowerCase().contains(query) ||
-          product.description.toLowerCase().contains(query) ||
-          (product.nameAr?.toLowerCase().contains(query) ?? false) ||
-          (product.descriptionAr?.toLowerCase().contains(query) ?? false);
+          normalizeSearchText(product.name).contains(query) ||
+          normalizeSearchText(product.description).contains(query) ||
+          (product.nameAr != null &&
+              normalizeSearchText(product.nameAr!).contains(query)) ||
+          (product.descriptionAr != null &&
+              normalizeSearchText(product.descriptionAr!).contains(query));
       return inCategory && matchesQuery;
     }).toList()
       ..sort(_sort.compare);
