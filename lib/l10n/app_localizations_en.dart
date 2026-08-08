@@ -941,6 +941,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteReviewTooltip => 'Delete review';
 
   @override
+  String get receiptTitle => 'Order receipt';
+
+  @override
+  String get downloadReceipt => 'Download receipt';
+
+  @override
+  String receiptSaved(String file) {
+    return 'Receipt saved as $file';
+  }
+
+  @override
+  String get errorReceiptExport => 'Could not save the receipt.';
+
+  @override
   String get searchOrders => 'Search orders';
 
   @override

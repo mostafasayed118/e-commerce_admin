@@ -955,6 +955,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteReviewTooltip => 'حذف المراجعة';
 
   @override
+  String get receiptTitle => 'إيصال الطلب';
+
+  @override
+  String get downloadReceipt => 'تنزيل الإيصال';
+
+  @override
+  String receiptSaved(String file) {
+    return 'تم حفظ الإيصال كملف $file';
+  }
+
+  @override
+  String get errorReceiptExport => 'تعذّر حفظ الإيصال.';
+
+  @override
   String get searchOrders => 'ابحث في الطلبات';
 
   @override

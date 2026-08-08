@@ -70,6 +70,14 @@ extension L10nContext on BuildContext {
   String orderItemName(OrderItem item) =>
       _isArabic ? _arabicOrNull(item.productNameAr) ?? item.productName : item.productName;
 
+  /// An order line's quantity × unit-price note (with the per-unit discount),
+  /// digits converted to the active locale. Shared by the on-screen
+  /// [OrderItemRow] and the PDF receipt so the two can never drift apart.
+  String orderItemDetail(OrderItem item) => localizeDigits(
+        '${item.quantity} × ${formatCents(item.unitFinalPriceCents)}'
+        '${item.discountPercent > 0 ? ' ${l10n.percentOff(item.discountPercent)}' : ''}',
+      );
+
   /// Null-safe, empty-safe Arabic fallback: `''` or whitespace is treated as
   /// "no Arabic text" so a cleared field degrades to English, never blank.
   static String? _arabicOrNull(String? value) => value == null ? null : emptyToNull(value);

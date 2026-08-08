@@ -318,6 +318,17 @@
   "deleteReviewMessage": "ستُحذف هذه المراجعة نهائيًا.",
   "deleteReviewTooltip": "حذف المراجعة",
 
+  "receiptTitle": "إيصال الطلب",
+  "downloadReceipt": "تنزيل الإيصال",
+  "receiptSaved": "تم حفظ الإيصال كملف {file}",
+  "@receiptSaved": {
+    "description": "SnackBar after saving the order-confirmation PDF receipt.",
+    "placeholders": {
+      "file": { "type": "String" }
+    }
+  },
+  "errorReceiptExport": "تعذّر حفظ الإيصال.",
+
   "searchOrders": "ابحث في الطلبات",
   "fromDate": "من",
   "toDate": "إلى",

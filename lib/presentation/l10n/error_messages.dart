@@ -14,6 +14,7 @@ String errorTextForCode(BuildContext context, AppErrorCode code) =>
       AppErrorCode.database => context.l10n.errorDatabase,
       AppErrorCode.imageSave => context.l10n.errorImageSave,
       AppErrorCode.imageDelete => context.l10n.errorImageDelete,
+      AppErrorCode.receiptExport => context.l10n.errorReceiptExport,
       AppErrorCode.productNotFound => context.l10n.errorProductNotFound,
       AppErrorCode.categoryNotFound => context.l10n.errorCategoryNotFound,
       AppErrorCode.orderNotFound => context.l10n.errorOrderNotFound,

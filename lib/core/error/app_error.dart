@@ -16,6 +16,9 @@ enum AppErrorCode {
   imageSave,
   imageDelete,
 
+  /// Saving the order-confirmation receipt PDF failed (export/write).
+  receiptExport,
+
   // --- Not found ----------------------------------------------------------
 
   productNotFound,
@@ -133,6 +136,12 @@ final class NotFoundError extends AppError {
 /// Image picking or file storage failed.
 final class ImageError extends AppError {
   const ImageError({required super.code, required super.message, super.cause});
+}
+
+/// The order-confirmation receipt could not be generated or written to disk.
+final class ReceiptExportError extends AppError {
+  const ReceiptExportError({required super.message, super.cause})
+      : super(code: AppErrorCode.receiptExport);
 }
 
 /// PIN/security related failure (wrong PIN, PIN not set, ...).

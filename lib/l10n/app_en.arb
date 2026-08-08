@@ -511,6 +511,17 @@
   "deleteReviewMessage": "This review will be removed permanently.",
   "deleteReviewTooltip": "Delete review",
 
+  "receiptTitle": "Order receipt",
+  "downloadReceipt": "Download receipt",
+  "receiptSaved": "Receipt saved as {file}",
+  "@receiptSaved": {
+    "description": "SnackBar after saving the order-confirmation PDF receipt.",
+    "placeholders": {
+      "file": { "type": "String" }
+    }
+  },
+  "errorReceiptExport": "Could not save the receipt.",
+
   "searchOrders": "Search orders",
   "fromDate": "From",
   "toDate": "To",

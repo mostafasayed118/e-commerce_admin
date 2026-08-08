@@ -14,7 +14,6 @@ class OrderItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -30,12 +29,10 @@ class OrderItemRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  // The quantity and the discount % follow the active
-                  // locale's digit shapes; the money is already converted.
-                  context.localizeDigits(
-                    '${item.quantity} × ${context.formatCents(item.unitFinalPriceCents)}'
-                    '${item.discountPercent > 0 ? ' ${l10n.percentOff(item.discountPercent)}' : ''}',
-                  ),
+                  // Shared with the PDF receipt (l10n_ext.orderItemDetail) —
+                  // quantity/discount digits follow the active locale; the
+                  // money is already converted.
+                  context.orderItemDetail(item),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

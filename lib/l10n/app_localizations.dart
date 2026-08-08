@@ -1688,6 +1688,30 @@ abstract class AppLocalizations {
   /// **'Delete review'**
   String get deleteReviewTooltip;
 
+  /// No description provided for @receiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order receipt'**
+  String get receiptTitle;
+
+  /// No description provided for @downloadReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Download receipt'**
+  String get downloadReceipt;
+
+  /// SnackBar after saving the order-confirmation PDF receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt saved as {file}'**
+  String receiptSaved(String file);
+
+  /// No description provided for @errorReceiptExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the receipt.'**
+  String get errorReceiptExport;
+
   /// No description provided for @searchOrders.
   ///
   /// In en, this message translates to:

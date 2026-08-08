@@ -102,6 +102,17 @@ dependencies:
   # pick+save — we only need save), hand-rolled platform channels (no).
   file_selector: ^1.1.0
 
+  # Customer PDF receipt export (roadmap): pure-Dart PDF generation — no
+  # platform channels, works identically on Windows + Android (our two
+  # targets). The SDK has no PDF support; alternatives rejected: printing
+  # (adds print/share dialogs on top of pdf — heavier than a save-to-file
+  # export), hand-rolled PDF writer (never). Arabic renders via the bundled
+  # OFL font (assets/fonts/Amiri-Regular.ttf) — pdf's built-in fonts are
+  # Latin-only, so ar receipts need an embedded TrueType font. The bytes are
+  # produced by a pure serializer (core/utils/order_receipt_pdf) and only the
+  # Save-As dialog + write touch the platform (same split as the CSV export).
+  pdf: ^3.13.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -154,10 +165,10 @@ flutter:
   # generating AppLocalizations into lib/l10n/ (see l10n.yaml).
   generate: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  # The bundled Arabic receipt font (OFL-1.1, Google Fonts): pdf's built-in
+  # fonts are Latin-only, so Arabic order receipts embed this TrueType font.
+  assets:
+    - assets/fonts/Amiri-Regular.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

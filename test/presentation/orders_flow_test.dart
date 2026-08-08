@@ -56,6 +56,16 @@ void main() {
     expect(find.text('ORD-000001'), findsOneWidget);
     expect(find.text('Amira Hassan'), findsOneWidget); // shipping snapshot
 
+    // The receipt-export action is present (enabled — the order is loaded).
+    // It is not tapped: the native save dialog is a platform boundary
+    // outside widget tests; the serialization is unit-tested in
+    // order_receipt_pdf_test.
+    expect(find.byTooltip('Download receipt'), findsOneWidget);
+    final downloadButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.download_outlined),
+    );
+    expect(downloadButton.onPressed, isNotNull);
+
     // Snapshot items (they survive product edits/deletions — Decision E).
     expect(find.text('Classic Tee'), findsOneWidget);
     expect(find.text('Leather Belt'), findsOneWidget);
