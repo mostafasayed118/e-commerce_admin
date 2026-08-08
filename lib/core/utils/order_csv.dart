@@ -45,7 +45,7 @@ List<int> ordersToCsvBytes(List<Order> orders) {
       ]),
   ];
   // UTF-8 BOM so Excel detects UTF-8 (Arabic names survive).
-  return [0xEF, 0xBB, 0xBF, ...utf8.encode(rows.join('\r\n') + '\r\n')];
+  return [0xEF, 0xBB, 0xBF, ...utf8.encode('${rows.join('\r\n')}\r\n')];
 }
 
 /// `DateTime(2026, 3, 7) -> '2026-03-07'`. Zero-padded, locale-independent
