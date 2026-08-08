@@ -26,7 +26,7 @@ class SeedData {
 
   /// Version of the seed dataset. Bump to refresh demo data on existing
   /// installs (assumes a demo/clean database — see class docs).
-  static const int version = 3;
+  static const int version = 4;
 
   /// Seeds if needed. Safe to call on every launch: the version check is a
   /// single SELECT, and the seed itself runs atomically in one transaction —
@@ -45,6 +45,7 @@ class SeedData {
       await _db.delete(_db.products).go();
       await _db.delete(_db.categories).go();
       await _db.delete(_db.coupons).go();
+      await _db.delete(_db.productReviews).go();
 
       final base = DateTime(2026, 7, 1, 9).millisecondsSinceEpoch;
       final day = const Duration(days: 1).inMilliseconds;
@@ -347,6 +348,98 @@ class SeedData {
           (status: OrderStatus.pending, changedAt: base - 8 * day),
           (status: OrderStatus.cancelled, changedAt: base - 7 * day),
         ],
+      );
+
+      // --- Demo reviews ----------------------------------------------------
+      // Approved reviews drive the storefront section (Classic Tee carries
+      // four, averaging 4.5); Sara Nabil's 2-star submission is deliberately
+      // left HIDDEN so the admin moderation screen has a pending row to
+      // approve — the seed demos both halves of the moderation contract.
+      Future<void> insertReview({
+        required int productId,
+        required int rating,
+        required String reviewerName,
+        required String comment,
+        required int at,
+        bool isApproved = true,
+      }) {
+        return _db.into(_db.productReviews).insert(
+          ProductReviewsCompanion.insert(
+            productId: productId,
+            rating: rating,
+            reviewerName: reviewerName,
+            comment: Value(comment),
+            isApproved: Value(isApproved),
+            createdAt: at,
+          ),
+        );
+      }
+
+      await insertReview(
+        productId: tee,
+        rating: 5,
+        reviewerName: 'Amira Hassan',
+        comment: 'Soft and true to size — my new favorite tee.',
+        at: base - 2 * day,
+      );
+      await insertReview(
+        productId: tee,
+        rating: 4,
+        reviewerName: 'Karim Adel',
+        comment: 'Great quality for the price.',
+        at: base - 3 * day,
+      );
+      await insertReview(
+        productId: tee,
+        rating: 5,
+        reviewerName: 'Lina Fathy',
+        comment: 'The cotton feels premium. Would buy again.',
+        at: base - 5 * day,
+      );
+      await insertReview(
+        productId: tee,
+        rating: 4,
+        reviewerName: 'Omar Khaled',
+        comment: 'Nice fit, washes well.',
+        at: base - 7 * day,
+      );
+      // The pending (hidden) review — the moderation demo.
+      await insertReview(
+        productId: tee,
+        rating: 2,
+        reviewerName: 'Sara Nabil',
+        comment: 'Runs small for me.',
+        at: base - day,
+        isApproved: false,
+      );
+
+      await insertReview(
+        productId: earbuds,
+        rating: 5,
+        reviewerName: 'Hany Ibrahim',
+        comment: 'Crisp sound, the battery really lasts all day.',
+        at: base - 4 * day,
+      );
+      await insertReview(
+        productId: earbuds,
+        rating: 4,
+        reviewerName: 'Sara Nabil',
+        comment: 'Good for the price, bass is a bit light.',
+        at: base - 6 * day,
+      );
+      await insertReview(
+        productId: flutterBook,
+        rating: 5,
+        reviewerName: 'Karim Adel',
+        comment: 'The clearest Flutter guide I have read.',
+        at: base - 9 * day,
+      );
+      await insertReview(
+        productId: yogaMat,
+        rating: 5,
+        reviewerName: 'Lina Fathy',
+        comment: 'Excellent grip — no slipping in hot yoga.',
+        at: base - 10 * day,
       );
 
       await insertOrder(

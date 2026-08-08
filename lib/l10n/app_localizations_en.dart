@@ -834,6 +834,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorCouponCodeTaken => 'That code is already in use.';
 
   @override
+  String get errorReviewNotFound => 'Review not found.';
+
+  @override
+  String get errorReviewRatingInvalid => 'Choose a rating from 1 to 5.';
+
+  @override
+  String get tabReviews => 'Reviews';
+
+  @override
+  String get reviewsTitle => 'Reviews';
+
+  @override
+  String get noReviewsTitle => 'No reviews yet';
+
+  @override
+  String get noReviewsMessage => 'Be the first to write a review.';
+
+  @override
+  String get writeReview => 'Write a review';
+
+  @override
+  String get reviewRatingLabel => 'Rating';
+
+  @override
+  String get reviewNameLabel => 'Your name';
+
+  @override
+  String get reviewCommentLabel => 'Your review';
+
+  @override
+  String get submitReview => 'Submit review';
+
+  @override
+  String get reviewSubmitted =>
+      'Thank you! Your review will appear after approval.';
+
+  @override
+  String reviewCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '1 review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String averageRating(String average) {
+    return '$average / 5';
+  }
+
+  @override
+  String get reviewPending => 'Pending';
+
+  @override
+  String get reviewApproved => 'Approved';
+
+  @override
+  String get approveReview => 'Approve';
+
+  @override
+  String get hideReview => 'Hide';
+
+  @override
+  String get noReviewsPendingTitle => 'No reviews to moderate';
+
+  @override
+  String get noReviewsPendingMessage =>
+      'Reviews submitted by customers will appear here.';
+
+  @override
+  String get deleteReviewTitle => 'Delete review?';
+
+  @override
+  String get deleteReviewMessage => 'This review will be removed permanently.';
+
+  @override
+  String get deleteReviewTooltip => 'Delete review';
+
+  @override
   String get searchOrders => 'Search orders';
 
   @override

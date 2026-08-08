@@ -464,6 +464,41 @@
     }
   },
   "errorCouponCodeTaken": "That code is already in use.",
+  "errorReviewNotFound": "Review not found.",
+  "errorReviewRatingInvalid": "Choose a rating from 1 to 5.",
+
+  "tabReviews": "Reviews",
+  "reviewsTitle": "Reviews",
+  "noReviewsTitle": "No reviews yet",
+  "noReviewsMessage": "Be the first to write a review.",
+  "writeReview": "Write a review",
+  "reviewRatingLabel": "Rating",
+  "reviewNameLabel": "Your name",
+  "reviewCommentLabel": "Your review",
+  "submitReview": "Submit review",
+  "reviewSubmitted": "Thank you! Your review will appear after approval.",
+  "reviewCount": "{count, plural, one{1 review} other{{count} reviews}}",
+  "@reviewCount": {
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "averageRating": "{average} / 5",
+  "@averageRating": {
+    "placeholders": {
+      "average": { "type": "String" }
+    }
+  },
+  "reviewPending": "Pending",
+  "reviewApproved": "Approved",
+  "approveReview": "Approve",
+  "hideReview": "Hide",
+  "noReviewsPendingTitle": "No reviews to moderate",
+  "noReviewsPendingMessage": "Reviews submitted by customers will appear here.",
+  "deleteReviewTitle": "Delete review?",
+  "deleteReviewMessage": "This review will be removed permanently.",
+  "deleteReviewTooltip": "Delete review",
+
   "searchOrders": "Search orders",
   "fromDate": "From",
   "toDate": "To",

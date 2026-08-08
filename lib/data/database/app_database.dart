@@ -20,6 +20,7 @@ part 'app_database.g.dart';
 @DriftDatabase(tables: [
   Categories,
   Products,
+  ProductReviews,
   WishlistItems,
   CartItems,
   Coupons,
@@ -38,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,6 +72,11 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(coupons);
             await m.addColumn(orders, orders.couponCode);
             await m.addColumn(orders, orders.couponDiscountCents);
+          }
+          // v6 adds the ProductReviews table (reviews & ratings feature).
+          // Pure additive CREATE TABLE — no existing data is touched.
+          if (from < 6) {
+            await m.createTable(productReviews);
           }
         },
         beforeOpen: (details) async {

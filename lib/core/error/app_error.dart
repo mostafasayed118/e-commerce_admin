@@ -22,6 +22,7 @@ enum AppErrorCode {
   categoryNotFound,
   orderNotFound,
   cartProductUnavailable,
+  reviewNotFound,
 
   // --- Validation / business rules ----------------------------------------
 
@@ -64,6 +65,11 @@ enum AppErrorCode {
 
   /// Admin tried to save a coupon whose code already exists.
   couponCodeTaken,
+
+  // --- Reviews -----------------------------------------------------------
+
+  /// The review's rating is outside 1-5 (validation, typed in the use case).
+  reviewRatingInvalid,
 
   nameRequired,
   phoneRequired,
@@ -223,4 +229,10 @@ final class CouponUsageLimitError extends ValidationError {
 
   final String couponCode;
   final int maxUses;
+}
+
+/// A review's rating is outside 1-5.
+final class ReviewRatingInvalidError extends ValidationError {
+  const ReviewRatingInvalidError({required super.message})
+      : super(code: AppErrorCode.reviewRatingInvalid);
 }

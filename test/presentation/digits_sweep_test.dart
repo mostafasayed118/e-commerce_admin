@@ -133,6 +133,8 @@ void main() {
     // --- Product detail -----------------------------------------------
     await tester.tap(find.text('تيشيرت كلاسيك'));
     await tester.pumpAndSettle();
+    // The reviews section renders here too: approved seeded reviews with
+    // their dates + the Eastern-digit average/count.
     await _sweepNoWesternDigits(tester, where: 'product detail');
     await goBack(tester);
 
@@ -212,6 +214,13 @@ void main() {
     await tapAdminFab(tester);
     await _sweepNoWesternDigits(tester, where: 'coupon form');
     await goBack(tester);
+
+    // --- Admin: reviews moderation -----------------------------------------
+    await tester.tap(find.text('المراجعات').last);
+    await settleAction(tester);
+    // Seeded review comments are English content (typed data, never
+    // reformatted); the review dates and the average/count convert.
+    await _sweepNoWesternDigits(tester, where: 'admin reviews');
 
     // --- Admin: orders list -----------------------------------------------
     await tester.tap(find.text('الطلبات').last);

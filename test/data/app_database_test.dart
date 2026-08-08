@@ -57,9 +57,9 @@ void main() {
 
     // The simulated old install is created from the CURRENT table
     // definitions (tables.dart is shared), so drop the v3 Arabic columns,
-    // the v4 wishlist table AND the v5 coupon additions to match the real
-    // v2-era shape — otherwise the upgrade's ALTER TABLE / CREATE TABLE
-    // would collide with objects that already exist.
+    // the v4 wishlist table, the v5 coupon additions AND the v6 reviews
+    // table to match the real v2-era shape — otherwise the upgrade's ALTER
+    // TABLE / CREATE TABLE would collide with objects that already exist.
     for (final statement in [
       'ALTER TABLE products DROP COLUMN name_ar;',
       'ALTER TABLE products DROP COLUMN description_ar;',
@@ -69,6 +69,7 @@ void main() {
       'ALTER TABLE orders DROP COLUMN coupon_discount_cents;',
       'DROP TABLE coupons;',
       'DROP TABLE wishlist_items;',
+      'DROP TABLE product_reviews;',
     ]) {
       await v1.customStatement(statement);
     }
@@ -149,6 +150,31 @@ void main() {
             .getSingle();
     expect(withCoupon.couponCode, 'SAVE10');
     expect(withCoupon.couponDiscountCents, 100);
+
+    // The v6 product_reviews table was created by the onUpgrade branch and
+    // works, and its rating CHECK constraint is enforced.
+    await upgraded.into(upgraded.productReviews).insert(
+          ProductReviewsCompanion.insert(
+            productId: product.id,
+            rating: 5,
+            reviewerName: 'Ada',
+            isApproved: const Value(false),
+            createdAt: 1,
+          ),
+        );
+    expect(await upgraded.select(upgraded.productReviews).get(), hasLength(1));
+    await expectLater(
+      upgraded.into(upgraded.productReviews).insert(
+            ProductReviewsCompanion.insert(
+              productId: product.id,
+              rating: 6,
+              reviewerName: 'Ada',
+              createdAt: 1,
+            ),
+          ),
+      throwsA(isA<SqliteException>()),
+      reason: 'CHECK (rating BETWEEN 1 AND 5) rejects a 6-star review',
+    );
 
     await upgraded.close();
   });
@@ -333,12 +359,23 @@ CREATE TABLE app_meta (
     expect(withCoupon.couponCode, 'SAVE5');
     expect(withCoupon.couponDiscountCents, 100);
 
+    // The v6 product_reviews table was created for this raw v1 install too
+    // (a real shipped v1 has no product_reviews), and the seed populated it.
+    final reviews = await upgraded.select(upgraded.productReviews).get();
+    expect(reviews, isNotEmpty, reason: 'seed v4 carries demo reviews');
+    expect(
+      reviews.where((r) => !r.isApproved),
+      isNotEmpty,
+      reason: 'the seed demos a hidden (pending) review for moderation',
+    );
+
     await upgraded.close();
   });
 
-  test('opens with all twelve tables empty', () async {
+  test('opens with all thirteen tables empty', () async {
     expect(await db.select(db.categories).get(), isEmpty);
     expect(await db.select(db.products).get(), isEmpty);
+    expect(await db.select(db.productReviews).get(), isEmpty);
     expect(await db.select(db.wishlistItems).get(), isEmpty);
     expect(await db.select(db.coupons).get(), isEmpty);
     expect(await db.select(db.cartItems).get(), isEmpty);
@@ -531,6 +568,34 @@ CREATE TABLE app_meta (
       throwsA(isA<SqliteException>()),
       reason: 'the UNIQUE constraint is the backstop for the repo pre-check',
     );
+  });
+
+  test('deleting a product cascades its reviews away', () async {
+    final categoryId = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'C', createdAt: 1),
+        );
+    final productId = await db.into(db.products).insert(ProductsCompanion.insert(
+          categoryId: categoryId,
+          name: 'P',
+          priceCents: 100,
+          discountPercent: 0,
+          stock: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        ));
+    await db.into(db.productReviews).insert(
+          ProductReviewsCompanion.insert(
+            productId: productId,
+            rating: 5,
+            reviewerName: 'Ada',
+            createdAt: 1,
+          ),
+        );
+    expect(await db.select(db.productReviews).get(), hasLength(1));
+
+    await (db.delete(db.products)..where((t) => t.id.equals(productId))).go();
+
+    expect(await db.select(db.productReviews).get(), isEmpty);
   });
 
   test('deleting a product cascades its wishlist rows away', () async {

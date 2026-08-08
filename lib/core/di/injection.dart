@@ -7,15 +7,18 @@ import '../../data/database/daos/wishlist_dao.dart';
 import '../../data/database/daos/category_dao.dart';
 import '../../data/database/daos/coupon_dao.dart';
 import '../../data/database/daos/order_dao.dart';
+import '../../data/database/daos/review_dao.dart';
 import '../../data/database/daos/product_dao.dart';
 import '../../data/database/daos/settings_dao.dart';
 import '../../data/database/mappers/category_mapper.dart';
 import '../../data/database/mappers/coupon_mapper.dart';
+import '../../data/database/mappers/review_mapper.dart';
 import '../../data/services/image_store.dart';
 import '../../data/database/mappers/order_mapper.dart';
 import '../../data/database/mappers/product_mapper.dart';
 import '../../data/repositories/cart_repository_impl.dart';
 import '../../data/repositories/coupon_repository_impl.dart';
+import '../../data/repositories/review_repository_impl.dart';
 import '../../data/repositories/wishlist_repository_impl.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../data/repositories/order_repository_impl.dart';
@@ -23,6 +26,7 @@ import '../../data/repositories/product_repository_impl.dart';
 import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../../domain/repositories/coupon_repository.dart';
+import '../../domain/repositories/review_repository.dart';
 import '../../domain/repositories/wishlist_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/order_repository.dart';
@@ -37,6 +41,7 @@ import '../../domain/usecases/wishlist/toggle_wishlist.dart';
 import '../../domain/usecases/checkout/place_order.dart';
 import '../../domain/usecases/coupons/apply_coupon.dart';
 import '../../domain/usecases/profile/save_profile.dart';
+import '../../domain/usecases/reviews/add_review.dart';
 import '../../presentation/features/admin/catalog/admin_catalog_cubit.dart';
 import '../../presentation/features/admin/orders/admin_orders_cubit.dart';
 import '../../presentation/features/admin/overview/admin_overview_cubit.dart';
@@ -44,6 +49,7 @@ import '../../presentation/features/cart/cart_cubit.dart';
 import '../../presentation/features/catalog/catalog_cubit.dart';
 import '../../presentation/features/wishlist/wishlist_cubit.dart';
 import '../../presentation/features/admin/coupons/admin_coupons_cubit.dart';
+import '../../presentation/features/admin/reviews/admin_reviews_cubit.dart';
 import '../../presentation/features/orders/orders_cubit.dart';
 import '../../presentation/features/profile/profile_cubit.dart';
 import '../../presentation/locale/locale_cubit.dart';
@@ -66,6 +72,7 @@ void setupDependencies() {
   getIt.registerLazySingleton<ProductDao>(() => ProductDao(getIt<AppDatabase>()));
   getIt.registerLazySingleton<CategoryDao>(() => CategoryDao(getIt<AppDatabase>()));
   getIt.registerLazySingleton<CouponDao>(() => CouponDao(getIt<AppDatabase>()));
+  getIt.registerLazySingleton<ReviewDao>(() => ReviewDao(getIt<AppDatabase>()));
   getIt.registerLazySingleton<CartDao>(() => CartDao(getIt<AppDatabase>()));
   getIt.registerLazySingleton<WishlistDao>(
     () => WishlistDao(getIt<AppDatabase>()),
@@ -77,6 +84,7 @@ void setupDependencies() {
   getIt.registerLazySingleton<ProductMapper>(ProductMapper.new);
   getIt.registerLazySingleton<CategoryMapper>(CategoryMapper.new);
   getIt.registerLazySingleton<CouponMapper>(CouponMapper.new);
+  getIt.registerLazySingleton<ReviewMapper>(ReviewMapper.new);
   getIt.registerLazySingleton<OrderMapper>(OrderMapper.new);
 
   // Domain interfaces → data implementations.
@@ -92,6 +100,12 @@ void setupDependencies() {
     () => CouponRepositoryImpl(
       getIt<CouponDao>(),
       getIt<CouponMapper>(),
+    ),
+  );
+  getIt.registerLazySingleton<ReviewRepository>(
+    () => ReviewRepositoryImpl(
+      getIt<ReviewDao>(),
+      getIt<ReviewMapper>(),
     ),
   );
   getIt.registerLazySingleton<CartRepository>(
@@ -145,6 +159,9 @@ void setupDependencies() {
   getIt.registerLazySingleton<ApplyCoupon>(
     () => ApplyCoupon(getIt<CouponRepository>()),
   );
+  getIt.registerLazySingleton<AddReview>(
+    () => AddReview(getIt<ReviewRepository>()),
+  );
   getIt.registerLazySingleton<SaveProfile>(
     () => SaveProfile(getIt<SettingsRepository>()),
   );
@@ -191,6 +208,9 @@ void setupDependencies() {
   ));
   getIt.registerLazySingleton<AdminCouponsCubit>(
     () => AdminCouponsCubit(getIt<CouponRepository>()),
+  );
+  getIt.registerLazySingleton<AdminReviewsCubit>(
+    () => AdminReviewsCubit(getIt<ReviewRepository>()),
   );
   getIt.registerLazySingleton<ProfileCubit>(() => ProfileCubit(
     getIt<SettingsRepository>(),

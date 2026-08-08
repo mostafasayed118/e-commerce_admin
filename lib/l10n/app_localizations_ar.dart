@@ -842,6 +842,89 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorCouponCodeTaken => 'هذا الرمز مستخدم بالفعل.';
 
   @override
+  String get errorReviewNotFound => 'المراجعة غير موجودة.';
+
+  @override
+  String get errorReviewRatingInvalid => 'اختر تقييمًا من 1 إلى 5.';
+
+  @override
+  String get tabReviews => 'المراجعات';
+
+  @override
+  String get reviewsTitle => 'المراجعات';
+
+  @override
+  String get noReviewsTitle => 'لا توجد مراجعات بعد';
+
+  @override
+  String get noReviewsMessage => 'كن أول من يكتب مراجعة.';
+
+  @override
+  String get writeReview => 'اكتب مراجعة';
+
+  @override
+  String get reviewRatingLabel => 'التقييم';
+
+  @override
+  String get reviewNameLabel => 'اسمك';
+
+  @override
+  String get reviewCommentLabel => 'مراجعتك';
+
+  @override
+  String get submitReview => 'إرسال المراجعة';
+
+  @override
+  String get reviewSubmitted => 'شكرًا لك! ستظهر مراجعتك بعد الموافقة عليها.';
+
+  @override
+  String reviewCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مراجعة',
+      many: '$count مراجعةً',
+      few: '$count مراجعات',
+      two: 'مراجعتان',
+      one: 'مراجعة واحدة',
+      zero: 'لا مراجعات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String averageRating(String average) {
+    return '$average من 5';
+  }
+
+  @override
+  String get reviewPending => 'قيد الانتظار';
+
+  @override
+  String get reviewApproved => 'معتمدة';
+
+  @override
+  String get approveReview => 'اعتماد';
+
+  @override
+  String get hideReview => 'إخفاء';
+
+  @override
+  String get noReviewsPendingTitle => 'لا توجد مراجعات للمراجعة';
+
+  @override
+  String get noReviewsPendingMessage => 'ستظهر مراجعات العملاء هنا.';
+
+  @override
+  String get deleteReviewTitle => 'حذف المراجعة؟';
+
+  @override
+  String get deleteReviewMessage => 'ستُحذف هذه المراجعة نهائيًا.';
+
+  @override
+  String get deleteReviewTooltip => 'حذف المراجعة';
+
+  @override
   String get searchOrders => 'ابحث في الطلبات';
 
   @override

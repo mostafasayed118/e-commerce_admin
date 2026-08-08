@@ -1514,6 +1514,144 @@ abstract class AppLocalizations {
   /// **'That code is already in use.'**
   String get errorCouponCodeTaken;
 
+  /// No description provided for @errorReviewNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Review not found.'**
+  String get errorReviewNotFound;
+
+  /// No description provided for @errorReviewRatingInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a rating from 1 to 5.'**
+  String get errorReviewRatingInvalid;
+
+  /// No description provided for @tabReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get tabReviews;
+
+  /// No description provided for @reviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviewsTitle;
+
+  /// No description provided for @noReviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get noReviewsTitle;
+
+  /// No description provided for @noReviewsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to write a review.'**
+  String get noReviewsMessage;
+
+  /// No description provided for @writeReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review'**
+  String get writeReview;
+
+  /// No description provided for @reviewRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get reviewRatingLabel;
+
+  /// No description provided for @reviewNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get reviewNameLabel;
+
+  /// No description provided for @reviewCommentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review'**
+  String get reviewCommentLabel;
+
+  /// No description provided for @submitReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review'**
+  String get submitReview;
+
+  /// No description provided for @reviewSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you! Your review will appear after approval.'**
+  String get reviewSubmitted;
+
+  /// No description provided for @reviewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 review} other{{count} reviews}}'**
+  String reviewCount(num count);
+
+  /// No description provided for @averageRating.
+  ///
+  /// In en, this message translates to:
+  /// **'{average} / 5'**
+  String averageRating(String average);
+
+  /// No description provided for @reviewPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get reviewPending;
+
+  /// No description provided for @reviewApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get reviewApproved;
+
+  /// No description provided for @approveReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approveReview;
+
+  /// No description provided for @hideReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hideReview;
+
+  /// No description provided for @noReviewsPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews to moderate'**
+  String get noReviewsPendingTitle;
+
+  /// No description provided for @noReviewsPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews submitted by customers will appear here.'**
+  String get noReviewsPendingMessage;
+
+  /// No description provided for @deleteReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete review?'**
+  String get deleteReviewTitle;
+
+  /// No description provided for @deleteReviewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This review will be removed permanently.'**
+  String get deleteReviewMessage;
+
+  /// No description provided for @deleteReviewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete review'**
+  String get deleteReviewTooltip;
+
   /// No description provided for @searchOrders.
   ///
   /// In en, this message translates to:

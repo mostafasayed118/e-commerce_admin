@@ -36,6 +36,11 @@ class AdminShell extends StatelessWidget {
           label: context.l10n.tabCoupons,
         ),
         ShellDestination(
+          icon: Icons.rate_review_outlined,
+          selectedIcon: Icons.rate_review,
+          label: context.l10n.tabReviews,
+        ),
+        ShellDestination(
           icon: Icons.receipt_long_outlined,
           selectedIcon: Icons.receipt_long,
           label: context.l10n.tabOrders,

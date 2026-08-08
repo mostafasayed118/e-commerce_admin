@@ -271,6 +271,41 @@
   "errorCouponMinSpend": "أنفق {required} على الأقل لاستخدام هذا الرمز (مجموعك الحالي {current}).",
   "errorCouponUsageLimit": "بلغ الرمز {code} الحد الأقصى لاستخداماته ({maxUses}).",
   "errorCouponCodeTaken": "هذا الرمز مستخدم بالفعل.",
+  "errorReviewNotFound": "المراجعة غير موجودة.",
+  "errorReviewRatingInvalid": "اختر تقييمًا من 1 إلى 5.",
+
+  "tabReviews": "المراجعات",
+  "reviewsTitle": "المراجعات",
+  "noReviewsTitle": "لا توجد مراجعات بعد",
+  "noReviewsMessage": "كن أول من يكتب مراجعة.",
+  "writeReview": "اكتب مراجعة",
+  "reviewRatingLabel": "التقييم",
+  "reviewNameLabel": "اسمك",
+  "reviewCommentLabel": "مراجعتك",
+  "submitReview": "إرسال المراجعة",
+  "reviewSubmitted": "شكرًا لك! ستظهر مراجعتك بعد الموافقة عليها.",
+  "reviewCount": "{count, plural, zero{لا مراجعات} one{مراجعة واحدة} two{مراجعتان} few{{count} مراجعات} many{{count} مراجعةً} other{{count} مراجعة}}",
+  "@reviewCount": {
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "averageRating": "{average} من 5",
+  "@averageRating": {
+    "placeholders": {
+      "average": { "type": "String" }
+    }
+  },
+  "reviewPending": "قيد الانتظار",
+  "reviewApproved": "معتمدة",
+  "approveReview": "اعتماد",
+  "hideReview": "إخفاء",
+  "noReviewsPendingTitle": "لا توجد مراجعات للمراجعة",
+  "noReviewsPendingMessage": "ستظهر مراجعات العملاء هنا.",
+  "deleteReviewTitle": "حذف المراجعة؟",
+  "deleteReviewMessage": "ستُحذف هذه المراجعة نهائيًا.",
+  "deleteReviewTooltip": "حذف المراجعة",
+
   "searchOrders": "ابحث في الطلبات",
   "fromDate": "من",
   "toDate": "إلى",

@@ -199,6 +199,8 @@ const Map<String, String> _allowed = {
       'screen — driven by admin_coupons_flow_test',
   'lib/presentation/features/admin/orders/admin_orders_screen.dart':
       'screen — driven by admin_orders_flow_test',
+  'lib/presentation/features/admin/reviews/reviews_screen.dart':
+      'screen — driven by admin_reviews_flow_test',
   'lib/presentation/features/admin/overview/admin_overview_screen.dart':
       'screen — driven by admin_overview_flow_test',
   'lib/presentation/features/catalog/catalog_screen.dart':

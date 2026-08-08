@@ -12,6 +12,7 @@ import '../../widgets/snack_bar.dart';
 import '../wishlist/widgets/wishlist_heart.dart';
 import 'widgets/product_image.dart';
 import 'widgets/product_price_row.dart';
+import 'widgets/reviews_section.dart';
 import 'widgets/stock_status_label.dart';
 
 /// Product detail: reactive product via [ProductRepository.watchProductById]
@@ -168,6 +169,12 @@ class _ProductDetailBody extends StatelessWidget {
             WishlistHeartButton(product: product),
           ],
         ),
+        const SizedBox(height: 32),
+        const Divider(height: 1),
+        const SizedBox(height: 16),
+        // Approved customer reviews (moderated: hidden reviews never reach
+        // the storefront read stream) + the write-review dialog.
+        ReviewsSection(productId: product.id),
       ],
     );
   }

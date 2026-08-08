@@ -18,13 +18,14 @@ GoRouter adminRouter() => GoRouter(
               AdminShell(navigationShell),
           branches: [
             // The branch order must mirror AdminShell.destinations (the shell
-            // maps destinations to branches positionally): Coupons sits
-            // before Orders in the app.
+            // maps destinations to branches positionally): Reviews sits
+            // between Coupons and Orders in the app.
             for (final (path, label) in [
               ('/admin/overview', 'Branch Overview'),
               ('/admin/products', 'Branch Products'),
               ('/admin/categories', 'Branch Categories'),
               ('/admin/coupons', 'Branch Coupons'),
+              ('/admin/reviews', 'Branch Reviews'),
               ('/admin/orders', 'Branch Orders'),
             ])
               StatefulShellBranch(
@@ -51,7 +52,7 @@ Future<void> pumpAdminShell(WidgetTester tester, {Locale? locale}) async {
 }
 
 void main() {
-  testWidgets('renders the five admin destinations with English labels',
+  testWidgets('renders the six admin destinations with English labels',
       (WidgetTester tester) async {
     await pumpAdminShell(tester);
 
@@ -59,8 +60,9 @@ void main() {
       'Overview',
       'Products',
       'Categories',
-      'Orders',
       'Coupons',
+      'Reviews',
+      'Orders',
     ]) {
       expect(find.text(label), findsOneWidget);
     }
@@ -84,8 +86,9 @@ void main() {
       'نظرة عامة',
       'المنتجات',
       'التصنيفات',
-      'الطلبات',
       'القسائم',
+      'المراجعات',
+      'الطلبات',
     ]) {
       expect(find.text(label), findsOneWidget);
     }
@@ -136,7 +139,7 @@ void main() {
 
     expect(
       labels,
-      ['Overview', 'Products', 'Categories', 'Coupons', 'Orders'],
+      ['Overview', 'Products', 'Categories', 'Coupons', 'Reviews', 'Orders'],
     );
   });
 }
