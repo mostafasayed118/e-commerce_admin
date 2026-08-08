@@ -401,6 +401,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recentOrders => 'أحدث الطلبات';
 
   @override
+  String get revenueTrendTitle => 'اتجاه الإيرادات';
+
+  @override
+  String get orderVolumeTitle => 'حجم الطلبات';
+
+  @override
+  String get topProductsTitle => 'المنتجات الأكثر مبيعًا';
+
+  @override
+  String get last7Days => 'آخر 7 أيام';
+
+  @override
+  String unitsSold(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count وحدة',
+      many: '$count وحدة',
+      few: '$count وحدات',
+      two: 'وحدتان',
+      one: 'وحدة واحدة',
+      zero: 'لا وحدات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noTopProducts => 'لا توجد منتجات مباعة بعد.';
+
+  @override
   String get overviewActiveCoupons => 'قسائم نشطة';
 
   @override

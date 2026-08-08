@@ -183,6 +183,18 @@
   "lowStock": "Low stock",
   "ordersByStatus": "Orders by status",
   "recentOrders": "Recent orders",
+  "revenueTrendTitle": "Revenue trend",
+  "orderVolumeTitle": "Order volume",
+  "topProductsTitle": "Top products",
+  "last7Days": "Last 7 days",
+  "unitsSold": "{count, plural, one{1 unit} other{{count} units}}",
+  "@unitsSold": {
+    "description": "Units-sold label on the dashboard's top-products ranking.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "noTopProducts": "No products sold yet.",
   "overviewActiveCoupons": "Active coupons",
   "couponUsageTitle": "Coupon usage",
   "noCouponUsage": "No coupon usage yet.",

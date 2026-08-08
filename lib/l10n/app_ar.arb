@@ -155,6 +155,18 @@
     }
   },
   "recentOrders": "أحدث الطلبات",
+  "revenueTrendTitle": "اتجاه الإيرادات",
+  "orderVolumeTitle": "حجم الطلبات",
+  "topProductsTitle": "المنتجات الأكثر مبيعًا",
+  "last7Days": "آخر 7 أيام",
+  "unitsSold": "{count, plural, zero{لا وحدات} one{وحدة واحدة} two{وحدتان} few{{count} وحدات} many{{count} وحدة} other{{count} وحدة}}",
+  "@unitsSold": {
+    "description": "Units-sold label on the dashboard's top-products ranking.",
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "noTopProducts": "لا توجد منتجات مباعة بعد.",
   "noOrdersYet": "لا توجد طلبات بعد.",
   "allStockedUp": "المخزون مكتمل.",
   "onlyXLeft": "متبقي {stock} فقط",

@@ -400,6 +400,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentOrders => 'Recent orders';
 
   @override
+  String get revenueTrendTitle => 'Revenue trend';
+
+  @override
+  String get orderVolumeTitle => 'Order volume';
+
+  @override
+  String get topProductsTitle => 'Top products';
+
+  @override
+  String get last7Days => 'Last 7 days';
+
+  @override
+  String unitsSold(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count units',
+      one: '1 unit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noTopProducts => 'No products sold yet.';
+
+  @override
   String get overviewActiveCoupons => 'Active coupons';
 
   @override

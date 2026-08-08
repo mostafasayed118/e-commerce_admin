@@ -97,8 +97,9 @@ void main() {
 
   Future<void> pumpArabicApp(WidgetTester tester) async {
     // Tall + wide: the admin rail layout, and long screens (overview) fit
-    // without scrolling so the sweep sees the whole screen.
-    await pumpFullApp(tester, size: const Size(900, 2200));
+    // without scrolling so the sweep sees the whole screen (the dashboard
+    // gained two trend charts + a top-products ranking).
+    await pumpFullApp(tester, size: const Size(900, 3600));
 
     // Switch to Arabic via the DI-owned LocaleCubit (the full app listens).
     await getIt<LocaleCubit>().setLocaleCode('ar');

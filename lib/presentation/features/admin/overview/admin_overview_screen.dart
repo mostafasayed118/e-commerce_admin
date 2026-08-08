@@ -10,9 +10,12 @@ import '../../orders/order_list_tile.dart';
 import 'admin_overview_cubit.dart';
 import 'widgets/coupon_usage_tile.dart';
 import 'widgets/low_stock_tile.dart';
+import 'widgets/order_volume_chart.dart';
 import 'widgets/orders_by_status_chart.dart';
+import 'widgets/revenue_trend_chart.dart';
 import 'widgets/stat_card.dart';
 import 'widgets/top_coupon_tile.dart';
+import 'widgets/top_product_tile.dart';
 
 /// The admin dashboard: derived metrics (revenue, orders, low stock), the
 /// orders-by-status bar chart, recent orders, and low-stock alerts. Every
@@ -92,6 +95,30 @@ class _Dashboard extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
+        // --- Sales trends ------------------------------------------------
+        // Revenue and order volume across the trailing 7-day window,
+        // sharing the SectionHeader row's trailing "Last 7 days" caption so
+        // the window is self-documenting without a second header.
+        Row(
+          children: [
+            Expanded(child: SectionHeader(l10n.revenueTrendTitle)),
+            Text(
+              context.localizeDigits(l10n.last7Days),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        RevenueTrendChart(trend: state.dailyTrend),
+        const SizedBox(height: 24),
+
+        SectionHeader(l10n.orderVolumeTitle),
+        const SizedBox(height: 12),
+        OrderVolumeChart(trend: state.dailyTrend),
+        const SizedBox(height: 24),
+
         // --- Orders by status chart ---------------------------------------
         SectionHeader(l10n.ordersByStatus),
         const SizedBox(height: 12),
@@ -119,6 +146,24 @@ class _Dashboard extends StatelessWidget {
               order: order,
               onTap: () => context.push('/admin/orders/${order.id}'),
             ),
+        const SizedBox(height: 24),
+
+        // --- Top products --------------------------------------------------
+        SectionHeader(l10n.topProductsTitle),
+        const SizedBox(height: 4),
+        if (state.topProducts.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              l10n.noTopProducts,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          for (final ranking in state.topProducts)
+            TopProductTile(ranking: ranking),
         const SizedBox(height: 24),
 
         // --- Top coupons ---------------------------------------------------

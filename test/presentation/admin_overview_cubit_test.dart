@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:shop_admin/core/entities/coupon.dart';
 import 'package:shop_admin/core/entities/order.dart';
+import 'package:shop_admin/core/entities/order_item.dart';
 import 'package:shop_admin/core/entities/order_status.dart';
 import 'package:shop_admin/core/entities/product.dart';
 import 'package:shop_admin/core/entities/shipping_info.dart';
@@ -35,6 +36,7 @@ void main() {
     String? couponCode,
     int couponDiscountCents = 0,
     DateTime? createdAt,
+    List<OrderItem> items = const [],
   }) =>
       Order(
         id: id,
@@ -46,6 +48,7 @@ void main() {
         couponCode: couponCode,
         couponDiscountCents: couponDiscountCents,
         shipping: shipping,
+        items: items,
         createdAt: createdAt,
       );
 
@@ -346,6 +349,186 @@ void main() {
     final loaded = cubit.state as AdminOverviewLoaded;
     expect(loaded.topCoupons, hasLength(AdminOverviewLoaded.topCouponsLimit));
     expect(loaded.topCoupons.first.code, 'C6');
+
+    cubit.close();
+  });
+
+  test('dailyTrend builds a data-anchored 7-day window, zero-filled', () {
+    final fixed = DateTime(2026, 7, 15);
+    final cubit = buildCubit(now: () => fixed);
+    ordersCtrl.add([
+      order(1, OrderStatus.pending, 1000, createdAt: DateTime(2026, 7, 10, 9)),
+      // Cancelled: contributes neither revenue nor count (the status chart
+      // shows cancellations separately).
+      order(2, OrderStatus.cancelled, 9999, createdAt: DateTime(2026, 7, 11, 9)),
+      order(3, OrderStatus.delivered, 2500, createdAt: DateTime(2026, 7, 13, 9)),
+    ]);
+    productsCtrl.add(const []);
+    couponsCtrl.add(const []);
+
+    final loaded = cubit.state as AdminOverviewLoaded;
+    // The window is data-anchored: it ends at the latest order day (July
+    // 13), NOT the injected clock (July 15) — the chart never depends on
+    // the wall clock while orders exist.
+    expect(loaded.dailyTrend, hasLength(AdminOverviewLoaded.trendDays));
+    expect(loaded.dailyTrend.first.day, DateTime(2026, 7, 7));
+    expect(loaded.dailyTrend.last.day, DateTime(2026, 7, 13));
+    // Zero-filled middle day (July 8): no sales.
+    expect(loaded.dailyTrend[1].revenueCents, 0);
+    expect(loaded.dailyTrend[1].orderCount, 0);
+    // July 10: one pending order → 1000 / 1.
+    final day10 =
+        loaded.dailyTrend.singleWhere((d) => d.day == DateTime(2026, 7, 10));
+    expect(day10.revenueCents, 1000);
+    expect(day10.orderCount, 1);
+    // July 11: cancelled → the day exists in the window but reads zero.
+    final day11 =
+        loaded.dailyTrend.singleWhere((d) => d.day == DateTime(2026, 7, 11));
+    expect(day11.revenueCents, 0);
+    expect(day11.orderCount, 0);
+    // July 13: 2500 / 1.
+    final day13 =
+        loaded.dailyTrend.singleWhere((d) => d.day == DateTime(2026, 7, 13));
+    expect(day13.revenueCents, 2500);
+    expect(day13.orderCount, 1);
+
+    cubit.close();
+  });
+
+  test('dailyTrend ignores cancelled orders when anchoring the window', () {
+    final fixed = DateTime(2026, 7, 15);
+    final cubit = buildCubit(now: () => fixed);
+    ordersCtrl.add([
+      order(1, OrderStatus.pending, 1000, createdAt: DateTime(2026, 7, 10, 9)),
+      // Cancelled AFTER the latest sale: it must neither anchor the window
+      // (which would push the last bar to a non-sale zero day) nor count.
+      order(2, OrderStatus.cancelled, 9999, createdAt: DateTime(2026, 7, 14, 9)),
+    ]);
+    productsCtrl.add(const []);
+    couponsCtrl.add(const []);
+
+    final loaded = cubit.state as AdminOverviewLoaded;
+    // Window ends at July 10 (the latest non-cancelled day), not July 14.
+    expect(loaded.dailyTrend.last.day, DateTime(2026, 7, 10));
+    expect(loaded.dailyTrend.first.day, DateTime(2026, 7, 4));
+    // The cancelled order's day isn't even inside the window.
+    expect(
+      loaded.dailyTrend.any((d) => d.day == DateTime(2026, 7, 14)),
+      isFalse,
+    );
+
+    cubit.close();
+  });
+
+  test('dailyTrend falls back to the injected clock when no orders exist',
+      () {
+    final fixed = DateTime(2026, 7, 15);
+    final cubit = buildCubit(now: () => fixed);
+    ordersCtrl.add(const []);
+    productsCtrl.add(const []);
+    couponsCtrl.add(const []);
+
+    final loaded = cubit.state as AdminOverviewLoaded;
+    expect(loaded.dailyTrend, hasLength(AdminOverviewLoaded.trendDays));
+    expect(loaded.dailyTrend.last.day, DateTime(2026, 7, 15));
+    expect(loaded.dailyTrend.first.day, DateTime(2026, 7, 9));
+    expect(
+      loaded.dailyTrend.every(
+        (d) => d.revenueCents == 0 && d.orderCount == 0,
+      ),
+      isTrue,
+    );
+
+    cubit.close();
+  });
+
+  test('topProducts aggregates non-cancelled line snapshots, by revenue then '
+      'units', () {
+    final cubit = buildCubit();
+    ordersCtrl.add([
+      order(1, OrderStatus.pending, 1000, items: [
+        OrderItem(orderId: 1, productName: 'Tee', unitPriceCents: 1000, quantity: 2),
+        OrderItem(orderId: 1, productName: 'Mug', unitPriceCents: 500, quantity: 1),
+      ]),
+      order(2, OrderStatus.delivered, 1000, items: [
+        OrderItem(orderId: 2, productName: 'Tee', unitPriceCents: 1000, quantity: 1),
+      ]),
+      // Cancelled: its (huge) lines never rank.
+      order(3, OrderStatus.cancelled, 1000, items: [
+        OrderItem(orderId: 3, productName: 'Giant', unitPriceCents: 9000, quantity: 99),
+      ]),
+    ]);
+    productsCtrl.add(const []);
+    couponsCtrl.add(const []);
+
+    final loaded = cubit.state as AdminOverviewLoaded;
+    // Tee: 3 units × $10 = $30 revenue; Mug: 1 × $5 = $5. Revenue desc.
+    expect(loaded.topProducts.map((p) => p.name), ['Tee', 'Mug']);
+    expect(loaded.topProducts.first.unitsSold, 3);
+    expect(loaded.topProducts.first.revenueCents, 3000);
+    expect(loaded.topProducts.last.unitsSold, 1);
+    expect(loaded.topProducts.last.revenueCents, 500);
+    expect(
+      loaded.topProducts.any((p) => p.name == 'Giant'),
+      isFalse,
+      reason: 'cancelled orders never contribute to the ranking',
+    );
+
+    cubit.close();
+  });
+
+  test('topProducts carries the Arabic snapshot label and caps at the limit',
+      () {
+    final cubit = buildCubit();
+    ordersCtrl.add([
+      order(1, OrderStatus.pending, 1000, items: [
+        // Tee outsells every other product (2 × $10 = $20 revenue), so it
+        // ranks FIRST — proving the Arabic label rides along.
+        OrderItem(
+          orderId: 1,
+          productName: 'Tee',
+          productNameAr: 'تيشيرت',
+          unitPriceCents: 1000,
+          quantity: 2,
+        ),
+        OrderItem(
+          orderId: 1,
+          productName: 'Mug',
+          unitPriceCents: 1000,
+          quantity: 1,
+        ),
+      ]),
+      for (var i = 2; i <= 5; i++)
+        order(i, OrderStatus.pending, 1000, items: [
+          OrderItem(
+            orderId: i,
+            productName: 'Product $i',
+            unitPriceCents: 1000,
+            quantity: 1,
+          ),
+        ]),
+    ]);
+    productsCtrl.add(const []);
+    couponsCtrl.add(const []);
+
+    final loaded = cubit.state as AdminOverviewLoaded;
+    // 6 products total → capped at 5. Tee (2000) ranks first; the five
+    // $10-revenue products tie on revenue and units, so name asc fills the
+    // rest — 'Mug', 'Product 2'..'Product 4' — and 'Product 5' drops.
+    expect(loaded.topProducts, hasLength(AdminOverviewLoaded.topProductsLimit));
+    expect(loaded.topProducts.first.name, 'Tee');
+    expect(loaded.topProducts.first.nameAr, 'تيشيرت');
+    expect(loaded.topProducts.first.unitsSold, 2);
+    expect(
+      loaded.topProducts.any((p) => p.name == 'Product 5'),
+      isFalse,
+      reason: 'the limit drops the last name-asc tie',
+    );
+    expect(
+      loaded.topProducts.any((p) => p.name == 'Mug' && p.nameAr == null),
+      isTrue,
+      reason: 'a product without an Arabic snapshot keeps nameAr null',
+    );
 
     cubit.close();
   });

@@ -818,6 +818,42 @@ abstract class AppLocalizations {
   /// **'Recent orders'**
   String get recentOrders;
 
+  /// No description provided for @revenueTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue trend'**
+  String get revenueTrendTitle;
+
+  /// No description provided for @orderVolumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order volume'**
+  String get orderVolumeTitle;
+
+  /// No description provided for @topProductsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top products'**
+  String get topProductsTitle;
+
+  /// No description provided for @last7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get last7Days;
+
+  /// Units-sold label on the dashboard's top-products ranking.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 unit} other{{count} units}}'**
+  String unitsSold(num count);
+
+  /// No description provided for @noTopProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No products sold yet.'**
+  String get noTopProducts;
+
   /// No description provided for @overviewActiveCoupons.
   ///
   /// In en, this message translates to:
