@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/entities/product.dart';
 import '../../../../l10n/l10n_ext.dart';
+import 'overview_list_tile.dart';
 
 /// A low-stock / out-of-stock product row on the dashboard, tapping into the
 /// product edit form.
@@ -20,20 +21,17 @@ class LowStockTile extends StatelessWidget {
     final color = out ? scheme.error : scheme.tertiary;
     final background = out ? scheme.errorContainer : scheme.tertiaryContainer;
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
+    return OverviewListTile(
+      avatarBackground: background,
+      avatarForeground: color,
+      avatarIcon: out ? Icons.block : Icons.warning_amber_outlined,
+      title: context.productName(product),
+      titleStyle: theme.textTheme.titleSmall,
       onTap: () => context.push('/admin/products/${product.id}/edit'),
-      leading: CircleAvatar(
-        backgroundColor: background,
-        foregroundColor: color,
-        child: Icon(
-          out ? Icons.block : Icons.warning_amber_outlined,
-          size: 20,
-        ),
-      ),
-      title: Text(context.productName(product), style: theme.textTheme.titleSmall),
       subtitle: Text(
-        out ? l10n.outOfStock : l10n.onlyXLeft(product.stock),
+        out
+            ? l10n.outOfStock
+            : context.localizeDigits(l10n.onlyXLeft(product.stock)),
         style: theme.textTheme.bodySmall?.copyWith(color: color),
       ),
       trailing: Text(

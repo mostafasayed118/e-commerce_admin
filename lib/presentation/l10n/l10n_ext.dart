@@ -31,6 +31,15 @@ extension L10nContext on BuildContext {
   /// (typed variants supply the data for parameterized messages).
   String errorText(AppError error) => localizedErrorMessage(this, error);
 
+  /// Translates Western digits in [text] to the active locale's digit shapes
+  /// (Eastern Arabic numerals for `ar`, unchanged otherwise) — the same
+  /// treatment prices and dates get, so coupon counts and percentages match.
+  /// Idempotent for strings that already went through [formatCents].
+  String localizeDigits(String text) => money.arabicIndicDigits(
+        text,
+        Localizations.localeOf(this).languageCode,
+      );
+
   // --- Localized *content* (seed/admin data carries both labels) -----------
   //
   // Unlike UI chrome, product/category names and descriptions are data. The

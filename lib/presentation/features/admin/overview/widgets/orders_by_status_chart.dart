@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/entities/order_status.dart';
+import '../../../../l10n/l10n_ext.dart';
 import '../../../orders/status_visuals.dart';
 
 /// Bar chart of order counts per status, colored by each status's theme
@@ -81,7 +82,7 @@ class OrdersByStatusChart extends StatelessWidget {
                     if (index < 0 || index >= statuses.length) return null;
                     return BarTooltipItem(
                       '${orderStatusLabel(context, statuses[index])}: '
-                      '${byStatus[statuses[index]]}',
+                      '${context.localizeDigits('${byStatus[statuses[index]]}')}',
                       theme.textTheme.labelMedium!.copyWith(
                         color: scheme.onInverseSurface,
                       ),

@@ -6,9 +6,10 @@ import 'package:shop_admin/l10n/app_localizations.dart';
 import 'package:shop_admin/presentation/features/catalog/widgets/product_card.dart';
 
 Future<void> pumpCard(WidgetTester tester, Product product,
-        {VoidCallback? onTap}) =>
+        {VoidCallback? onTap, Locale? locale}) =>
     tester.pumpWidget(
       MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -51,6 +52,26 @@ void main() {
     final original = tester.widget<Text>(find.text(r'$20.00'));
     expect(original.style?.decoration, TextDecoration.lineThrough);
     expect(find.text(r'$15.00'), findsOneWidget); // final price
+  });
+
+  testWidgets('Arabic renders the discount badge in Eastern digits',
+      (WidgetTester tester) async {
+    await pumpCard(
+      tester,
+      product(priceCents: 2000, discountPercent: 25),
+      locale: const Locale('ar'),
+    );
+
+    expect(find.text('-٢٥%'), findsOneWidget);
+    expect(find.text('-25%'), findsNothing);
+  });
+
+  testWidgets('Arabic renders the low-stock count in Eastern digits',
+      (WidgetTester tester) async {
+    await pumpCard(tester, product(stock: 3), locale: const Locale('ar'));
+
+    expect(find.text('كمية منخفضة: متبقي ٣'), findsOneWidget);
+    expect(find.text('Low stock: 3 left'), findsNothing);
   });
 
   testWidgets('a low-stock product shows the remaining-count message',

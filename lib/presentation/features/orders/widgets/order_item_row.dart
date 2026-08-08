@@ -30,8 +30,12 @@ class OrderItemRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${item.quantity} × ${context.formatCents(item.unitFinalPriceCents)}'
-                  '${item.discountPercent > 0 ? ' ${l10n.percentOff(item.discountPercent)}' : ''}',
+                  // The quantity and the discount % follow the active
+                  // locale's digit shapes; the money is already converted.
+                  context.localizeDigits(
+                    '${item.quantity} × ${context.formatCents(item.unitFinalPriceCents)}'
+                    '${item.discountPercent > 0 ? ' ${l10n.percentOff(item.discountPercent)}' : ''}',
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

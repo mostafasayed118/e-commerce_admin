@@ -30,6 +30,9 @@ class OrderSuccessView extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
+              // The summary keeps the *canonical* order number (an
+              // identifier, like coupon codes); the total is already Eastern
+              // via formatCents — so no blanket localizeDigits here.
               Text(
                 l10n.orderPlacedSummary(
                   order.orderNumber,
@@ -41,7 +44,7 @@ class OrderSuccessView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                l10n.weWillCall(order.shipping.phone),
+                context.localizeDigits(l10n.weWillCall(order.shipping.phone)),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,

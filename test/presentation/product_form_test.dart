@@ -6,10 +6,10 @@ import 'package:shop_admin/core/di/injection.dart';
 import 'package:shop_admin/core/entities/category.dart';
 import 'package:shop_admin/core/entities/product.dart';
 import 'package:shop_admin/data/database/app_database.dart';
-import 'package:shop_admin/l10n/app_localizations.dart';
 import 'package:shop_admin/presentation/features/admin/catalog/widgets/product_form.dart';
 
 import '../helpers/drift_settle.dart';
+import '../helpers/test_app.dart';
 import '../helpers/test_di.dart';
 
 /// A router hosting the form on /form so its save path (`context.pop()`)
@@ -31,17 +31,17 @@ GoRouter formRouter(ProductForm form) => GoRouter(
       ],
     );
 
-Future<void> pumpForm(WidgetTester tester, ProductForm form) async {
+Future<void> pumpForm(WidgetTester tester, ProductForm form,
+    {Locale? locale}) async {
   // Tall surface so the whole form (including the description fields and
   // the save button) is laid out without scrolling.
-  await tester.binding.setSurfaceSize(const Size(800, 1600));
-  addTearDown(() => tester.binding.setSurfaceSize(null));
   final router = formRouter(form);
-  await tester.pumpWidget(MaterialApp.router(
-    routerConfig: router,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-  ));
+  await pumpRouterSurface(
+    tester,
+    router: router,
+    size: const Size(800, 1600),
+    locale: locale,
+  );
   // Push the form so it sits on top of '/' (pop returns to home). go()
   // would replace the stack entry, leaving pop() with nothing beneath.
   router.push('/form');
@@ -135,6 +135,39 @@ void main() {
     expect(price, '12.34'); // _centsToInput: 1234 -> "12.34"
     expect(discount, '25');
     expect(stock, '25');
+  });
+
+  testWidgets('Arabic: validation errors render Eastern digits',
+      (WidgetTester tester) async {
+    final category = await seedCategory(tester);
+    await pumpForm(
+      tester,
+      ProductForm(product: null, categories: [category]),
+      locale: const Locale('ar'),
+    );
+
+    // Empty required fields: the price error's '0' converts.
+    await tester.tap(find.text('حفظ المنتج')); // Save product
+    await tester.pump();
+    expect(find.text('أدخل سعرًا أكبر من ٠'), findsOneWidget);
+    expect(find.text('Enter a price greater than 0'), findsNothing);
+
+    // Out-of-range percent: '0-100' → '٠-١٠٠'.
+    await tester.enterText(find.byKey(const Key('product-name')), 'Tee');
+    await tester.enterText(find.byKey(const Key('product-price')), '10');
+    await tester.enterText(find.byKey(const Key('product-discount')), '150');
+    await tester.tap(find.text('حفظ المنتج'));
+    await tester.pump();
+    expect(find.text('٠-١٠٠'), findsOneWidget);
+    expect(find.text('0-100'), findsNothing);
+
+    // Negative stock: '0 or more' → '٠ أو أكثر'.
+    await tester.enterText(find.byKey(const Key('product-discount')), '10');
+    await tester.enterText(find.byKey(const Key('product-stock')), '-1');
+    await tester.tap(find.text('حفظ المنتج'));
+    await tester.pump();
+    expect(find.text('٠ أو أكثر'), findsOneWidget);
+    expect(find.text('0 or more'), findsNothing);
   });
 
   testWidgets('a valid create saves through the real cubit and pops',
